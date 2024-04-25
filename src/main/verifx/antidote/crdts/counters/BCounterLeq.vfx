@@ -1,0 +1,113 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof
+import antidote.crdts.counters.GCounter
+
+////////////////////////////////////////////
+//   Bounded Counter without Transfers   //
+//          Less or equal than          //
+//////////////////////////////////////////
+
+class BCounterLeq(rightsHold: GCounter, rightsConsumed: GCounter, bound: Int, initialValue: Int = 0) extends CvRDT[BCounterLeq] {
+
+  def value() =
+    this.bound - this.rightsHold.value() + this.rightsConsumed.value()
+
+  def localRights(replica: Int) =
+    this.rightsHold.valueOfEntry(replica) - this.rightsConsumed.valueOfEntry(replica)
+
+  def increment(replica: Int, n: Int) = {
+    if(this.localRights(replica) >= n)
+      new BCounterLeq(this.rightsHold, this.rightsConsumed.increment(replica, n), this.bound, this.initialValue)
+    else
+      new BCounterLeq(this.rightsHold, this.rightsConsumed, this.bound, this.initialValue)
+  }
+
+  def decrement(replica: Int, n: Int) =
+    new BCounterLeq(this.rightsHold.increment(replica, n), this.rightsConsumed, this.bound, this.initialValue)
+
+  def invariant(): Boolean =
+    this.value() <= this.bound
+
+  def merge(that: BCounterLeq): BCounterLeq = {
+    val rightsHoldMerged = this.rightsHold.merge(that.rightsHold)
+    val rightsConsumedMerged = this.rightsConsumed.merge(that.rightsConsumed)
+    new BCounterLeq(rightsHoldMerged, rightsConsumedMerged, this.bound, this.initialValue)
+  }
+
+  override def reachable() = {
+    val rightsHoldEntries = this.rightsHold.entries
+    val rightsConsumedEntries = this.rightsConsumed.entries
+
+    this.initialValue <= this.bound &&
+    this.rightsHold.wellFormed() && this.rightsConsumed.wellFormed() &&
+    this.rightsHold.networkSize() == this.rightsConsumed.networkSize() &&
+    this.rightsHold.networkSize() <= 5 &&
+    rightsHoldEntries.positions.keys().forall((idx: Int) => rightsConsumedEntries.get(idx) >= 0 &&
+      rightsConsumedEntries.get(idx) <= rightsHoldEntries.get(idx)) &&
+    this.rightsHold.value() >= this.bound - this.initialValue //garante que existem pelo menos tantos direitos como os que
+                                                         //devem ser gerados inicialmente
+  }
+
+  def compare(that: BCounterLeq): Boolean =
+    this.rightsHold.compare(that.rightsHold) && this.rightsConsumed.compare(that.rightsConsumed)
+
+  override def compatible(that: BCounterLeq) =
+    this.rightsHold.networkSize() == that.rightsHold.networkSize() && this.bound == that.bound &&
+    this.initialValue == that.initialValue
+
+}
+
+object BCounterLeqProofs extends CvRDTProof[BCounterLeq] {
+  proof BCounterLeq_holds_invariant {
+    forall (s1: BCounterLeq, s2: BCounterLeq) {
+        (s1.invariant() && s2.invariant() && s1.reachable() && s2.reachable() && s1.compatible(s2)) =>: s1.merge(s2).invariant()
+    }
+  }
+
+  proof BCounterLeq_concurrent_incs {
+    forall (s: BCounterLeq, r1: Int, r2: Int, v1: Int, v2: Int) {
+
+      ( s.invariant() && s.reachable() && r1 != r2 && r1 >= 0 && r1 < s.rightsHold.networkSize()
+        && r2 >= 0 && r2 < s.rightsHold.networkSize() && v1 >= 0 && v2 >= 0 ) =>: {
+
+        val s1 = s.increment(r1, v1)
+        val s2 = s.increment(r2, v2)
+        val mergedState = s1.merge(s2)
+
+        mergedState.invariant() && mergedState.reachable() //&& mergedState.value() == s.value() + v1 + v2
+      }
+    }
+  }
+
+  proof BCounterLeq_concurrent_decs {
+    forall (s: BCounterLeq, r1: Int, r2: Int, v1: Int, v2: Int) {
+
+      ( s.invariant() && s.reachable() && r1 != r2 && r1 >= 0 && r1 < s.rightsHold.networkSize() &&
+        r2 >= 0 && r2 < s.rightsHold.networkSize() && v1 >= 0 && v2 >= 0 ) =>: {
+
+        val s1 = s.decrement(r1, v1)
+        val s2 = s.decrement(r2, v2)
+        val mergedState = s1.merge(s2)
+
+        mergedState.invariant() && mergedState.reachable() && mergedState.value() == s.value() - v1 - v2
+      }
+    }
+  }
+
+  proof BCounterLeq_concurrent_decs_incs {
+    forall (s: BCounterLeq, r1: Int, r2: Int, v1: Int, v2: Int) {
+
+      ( s.invariant() && s.reachable() && r1 != r2 && r1 >= 0 && r1 < s.rightsHold.networkSize() &&
+        r2 >= 0 && r2 < s.rightsHold.networkSize() && v1 >= 0 && v2 >= 0 ) =>: {
+
+        val s1 = s.increment(r1, v1)
+        val s2 = s.decrement(r2, v2)
+        val mergedState = s1.merge(s2)
+
+        mergedState.invariant() && mergedState.reachable()
+      }
+    }
+  }
+
+
+}

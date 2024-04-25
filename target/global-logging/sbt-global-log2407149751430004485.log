@@ -1,0 +1,14 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(publishLocal, None, None)[0m
+[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: publishLocal[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mWrote /Users/kevin/Documents/VUB/Phd/Programming/Scala/CRDT Proofs/target/scala-2.13/crdt-proofs_2.13-0.2-SNAPSHOT.pom[0m
+[0m[[0m[33mwarn[0m] [0m[0mThere may be incompatibilities among your library dependencies; run 'evicted' to see detailed eviction warnings.[0m
+[0m[[0m[0minfo[0m] [0m[0m:: delivering :: be.vub.kdeporre#crdt-proofs_2.13;0.2-SNAPSHOT :: 0.2-SNAPSHOT :: integration :: Thu Apr 07 15:37:22 CEST 2022[0m
+[0m[[0m[0minfo[0m] [0m[0m	delivering ivy file to /Users/kevin/Documents/VUB/Phd/Programming/Scala/CRDT Proofs/target/scala-2.13/ivy-0.2-SNAPSHOT.xml[0m
+[0m[[0m[0minfo[0m] [0m[0m	published crdt-proofs_2.13 to /Users/kevin/.ivy2/local/be.vub.kdeporre/crdt-proofs_2.13/0.2-SNAPSHOT/poms/crdt-proofs_2.13.pom[0m
+[0m[[0m[0minfo[0m] [0m[0m	published crdt-proofs_2.13 to /Users/kevin/.ivy2/local/be.vub.kdeporre/crdt-proofs_2.13/0.2-SNAPSHOT/jars/crdt-proofs_2.13.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published crdt-proofs_2.13 to /Users/kevin/.ivy2/local/be.vub.kdeporre/crdt-proofs_2.13/0.2-SNAPSHOT/srcs/crdt-proofs_2.13-sources.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published crdt-proofs_2.13 to /Users/kevin/.ivy2/local/be.vub.kdeporre/crdt-proofs_2.13/0.2-SNAPSHOT/docs/crdt-proofs_2.13-javadoc.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published ivy to /Users/kevin/.ivy2/local/be.vub.kdeporre/crdt-proofs_2.13/0.2-SNAPSHOT/ivys/ivy.xml[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 1 s, completed Apr 7, 2022, 3:37:22 PM[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(idea-shell, None, None)[0m

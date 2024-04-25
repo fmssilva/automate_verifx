@@ -1,0 +1,60 @@
+import antidote.crdts.registers.LWWRegister
+import antidote.crdts.LamportClock
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof
+
+/////////////////////////////////////////
+//
+// CREATE UPDATE-WINS TABLE Albums (
+//    title VARCHAR PRIMARY KEY,
+//    artist VARCHAR,
+//    year LWW INT
+// )
+/////////////////////////////////////////
+
+class Album(title: String, artist: String, year: LWWRegister[Int]) extends CvRDT[Album] {
+
+  def updateYear(newYear: Int, stampYear: LamportClock) = {
+    if(newYear >= 1900 && newYear <= 2022)
+      new Album(this.title, this.artist, this.year.assign(newYear, stampYear))
+    else
+      this
+  }
+
+  def merge(that: Album) =
+    new Album(this.title, this.artist, this.year.merge(that.year))
+
+  def compare(that: Album) =
+    this.year.compare(that.year)
+
+  override def compatible(that: Album) =
+    this.title == that.title &&
+    this.artist == that.artist &&
+    this.year.compatible(that.year)
+
+  override def reachable() =
+    this.year.value >= 1900 && this.year.value <= 2022
+
+}
+
+object Album extends CvRDTProof[Album] {
+
+  proof Album_updateYear_works {
+    forall(a: Album, year1: Int, year2: Int, c1: LamportClock, c2: LamportClock) {
+      ( a.reachable() && c1.smaller(c2) &&
+      year1 >= 1900 && year1 <= 2022 && year2 >= 1900 && year2 <= 2022 ) =>: {
+          val a1 = a.updateYear(year1, c1)
+          val a2 = a.updateYear(year2, c2)
+          val a12 = a1.merge(a2)
+
+          a1.title == a.title && a2.title == a.title &&
+          a1.artist == a.artist && a2.artist == a.artist &&
+          a1.year.value == year1 && a2.year.value == year2 &&
+          a12.title == a.title &&
+          a12.artist == a.artist &&
+          a12.year.value == year2
+      }
+    }
+  }
+
+}

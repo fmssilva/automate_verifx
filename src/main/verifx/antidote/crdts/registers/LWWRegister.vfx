@@ -1,0 +1,34 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof1
+import antidote.crdts.LamportClock
+
+/*
+ * State-based implementation of a Last-Writer-Wins Register CvRDT.
+ * The register keeps a value and a timestamp.
+ * When assigning a value to the register, the application is expected to provide a timestamp.
+ * When merging two registers, the value with the latest timestamp wins.
+ * Timestamps are assumed unique, totally ordered, and consistent with causal order.
+ * This
+ */
+
+class LWWRegister[V](value: V, stamp: LamportClock) extends CvRDT[LWWRegister[V]] {
+  def getValue() = this.value
+
+  def assign(x: V, timestamp: LamportClock) =
+    new LWWRegister(x, timestamp)
+
+  def merge(that: LWWRegister[V]) = {
+    if (this.stamp.smallerOrEqual(that.stamp))
+      that
+    else
+      this
+  }
+
+  def compare(that: LWWRegister[V]) =
+    this.stamp.smallerOrEqual(that.stamp)
+
+  override def compatible(that: LWWRegister[V]) =
+    (this.stamp == that.stamp) =>: (this.value == that.value)
+}
+
+object LWWRegister extends CvRDTProof1[LWWRegister]

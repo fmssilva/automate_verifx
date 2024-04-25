@@ -1,0 +1,89 @@
+[debug] > Exec(early(addDefaultCommands), None, None)
+[debug] > Exec(addDefaultCommands, None, None)
+[debug] > Exec(early(initialize), None, None)
+[debug] > Exec(initialize, None, None)
+[debug] > Exec(boot, None, None)
+[debug] > Exec(writeSbtVersion, None, None)
+[debug] > Exec(reload, None, None)
+[debug] > Exec(sbtStashOnFailure, None, None)
+[debug] > Exec(onFailure loadFailed, None, None)
+[debug] > Exec(loadp, None, None)
+[info] welcome to sbt 1.4.6 (Oracle Corporation Java 11.0.13)
+[debug]       Load.loadUnit: plugins took 204.676655ms
+[debug]       Load.loadUnit: defsScala took 0.670736ms
+[debug] [Loading] Scanning directory /Users/dina.borrego/.sbt/1.0/plugins
+[debug] [Loading] Found non-root projects 
+[debug] [Loading] Done in /Users/dina.borrego/.sbt/1.0/plugins, returning: ()
+[debug] deducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(List(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin))), Clause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin))), Clause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin))), Clause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin))), Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin)))))
+[debug]   :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)
+[debug] Plugins.deducer#function took 40.706745 ms
+[debug]           Load.resolveProject(global-plugins) took 80.488056ms
+[debug]         Load.loadTransitive: finalizeProject(Project(id global-plugins, base: /Users/dina.borrego/.sbt/1.0/plugins, plugins: List(<none>))) took 169.800134ms
+[debug] [Loading] Done in /Users/dina.borrego/.sbt/1.0/plugins, returning: (global-plugins)
+[debug]       Load.loadUnit: loadedProjectsRaw took 213.150607ms
+[debug]       Load.loadUnit: cleanEvalClasses took 0.993468ms
+[debug]     Load.loadUnit(file:/Users/dina.borrego/.sbt/1.0/plugins/, ...) took 439.272467ms
+[debug]   Load.apply: load took 854.624911ms
+[debug]   Load.apply: resolveProjects took 11.631754ms
+[debug]   Load.apply: finalTransforms took 107.428133ms
+[debug]   Load.apply: config.delegates took 13.008897ms
+[debug]   Load.apply: Def.make(settings)... took 501.586146ms
+[debug]   Load.apply: structureIndex took 97.713709ms
+[debug]   Load.apply: mkStreams took 2.385169ms
+[info] loading global plugins from /Users/dina.borrego/.sbt/1.0/plugins
+[debug] Running task... Cancel: Signal, check cycles: false, forcegc: true
+[debug] Load.defaultLoad until apply took 3360.27289ms
+[debug]           Load.loadUnit: plugins took 18.512277ms
+[debug]           Load.loadUnit: defsScala took 0.004121ms
+[debug] [Loading] Scanning directory /Users/dina.borrego/Downloads/AntidoteSQL/project
+[debug] [Loading] Found non-root projects 
+[debug] [Loading] Done in /Users/dina.borrego/Downloads/AntidoteSQL/project, returning: ()
+[debug] deducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(List(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin))), Clause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin))), Clause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin))), Clause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin))), Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin)))))
+[debug]   :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)
+[debug] Plugins.deducer#function took 1.743288 ms
+[debug]               Load.resolveProject(antidotesql-build) took 1.008516ms
+[debug]             Load.loadTransitive: finalizeProject(Project(id antidotesql-build, base: /Users/dina.borrego/Downloads/AntidoteSQL/project, plugins: List(<none>))) took 3.325149ms
+[debug] [Loading] Done in /Users/dina.borrego/Downloads/AntidoteSQL/project, returning: (antidotesql-build)
+[debug]           Load.loadUnit: loadedProjectsRaw took 5.973518ms
+[debug]           Load.loadUnit: cleanEvalClasses took 0.023192ms
+[debug]         Load.loadUnit(file:/Users/dina.borrego/Downloads/AntidoteSQL/project/, ...) took 25.299213ms
+[debug]       Load.apply: load took 26.814133ms
+[debug]       Load.apply: resolveProjects took 0.202216ms
+[debug]       Load.apply: finalTransforms took 8.745955ms
+[debug]       Load.apply: config.delegates took 0.574834ms
+[debug]       Load.apply: Def.make(settings)... took 77.072438ms
+[debug]       Load.apply: structureIndex took 26.03612ms
+[debug]       Load.apply: mkStreams took 0.003243ms
+[info] loading project definition from /Users/dina.borrego/Downloads/AntidoteSQL/project
+[debug] Running task... Cancel: Signal, check cycles: false, forcegc: true
+[debug]     Load.loadUnit: plugins took 297.072024ms
+[debug]     Load.loadUnit: defsScala took 0.006936ms
+[debug] [Loading] Scanning directory /Users/dina.borrego/Downloads/AntidoteSQL
+[debug]       Load.loadUnit: mkEval took 12.497057ms
+[debug] [Loading] Found non-root projects 
+[debug] [Loading] Done in /Users/dina.borrego/Downloads/AntidoteSQL, returning: ()
+[debug] deducing auto plugins based on known facts Set(Atom(sbt.plugins.CorePlugin)) and clauses Clauses(List(Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.IvyPlugin))), Clause(Atom(sbt.ScriptedPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.SbtPlugin),Set(Atom(sbt.ScriptedPlugin))), Clause(Atom(sbt.plugins.SemanticdbPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.JUnitXmlReportPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.MiniDependencyTreePlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.IvyPlugin))), Clause(Atom(sbt.plugins.IvyPlugin),Set(Atom(sbt.plugins.JvmPlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.SemanticdbPlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.JUnitXmlReportPlugin))), Clause(Atom(sbt.plugins.CorePlugin),Set(Atom(sbt.plugins.Giter8TemplatePlugin))), Clause(Atom(sbt.plugins.JvmPlugin),Set(Atom(sbt.plugins.MiniDependencyTreePlugin)))))
+[debug]   :: deduced result: Matched(sbt.plugins.CorePlugin,sbt.plugins.Giter8TemplatePlugin,sbt.plugins.IvyPlugin,sbt.plugins.JvmPlugin,sbt.plugins.MiniDependencyTreePlugin,sbt.plugins.JUnitXmlReportPlugin,sbt.plugins.SemanticdbPlugin)
+[debug] Plugins.deducer#function took 2.846841 ms
+[info] loading settings for project antidotesql from build.sbt ...
+[debug]         Load.resolveProject(antidotesql) took 4.7246ms
+[debug]       Load.loadTransitive: finalizeProject(Project(id antidotesql, base: /Users/dina.borrego/Downloads/AntidoteSQL, plugins: List(<none>))) took 9.130013ms
+[debug] [Loading] Done in /Users/dina.borrego/Downloads/AntidoteSQL, returning: (antidotesql)
+[debug]     Load.loadUnit: loadedProjectsRaw took 170.756242ms
+[debug]     Load.loadUnit: cleanEvalClasses took 9.818973ms
+[debug]   Load.loadUnit(file:/Users/dina.borrego/Downloads/AntidoteSQL/, ...) took 479.099071ms
+[debug] Load.apply: load took 481.296624ms
+[debug] Load.apply: resolveProjects took 0.153884ms
+[debug] Load.apply: finalTransforms took 11.818715ms
+[debug] Load.apply: config.delegates took 0.495292ms
+[debug] Load.apply: Def.make(settings)... took 145.593595ms
+[debug] Load.apply: structureIndex took 36.436873ms
+[debug] Load.apply: mkStreams took 0.00381ms
+[info] set current project to crdt-proofs (in build file:/Users/dina.borrego/Downloads/AntidoteSQL/)
+[debug] > Exec(sbtPopOnFailure, None, None)
+[debug] > Exec(resumeFromFailure, None, None)
+[debug] > Exec(notifyUsersAboutShell, None, None)
+[debug] > Exec(iflast shell, None, None)
+[debug] > Exec(shell, None, None)
+[info] sbt server started at local:///Users/dina.borrego/.sbt/1.0/server/f12202615dc19c8e932c/sock
+[info] started sbt server

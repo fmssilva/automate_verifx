@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <profile name="sbt 1" modules="antidote-sql-on-verifx,antidotesql_6658,crdt-library-for-antidote-sql,crdt-proofs" />
+  </component>
+</project>

@@ -1,0 +1,117 @@
+class VersionVector(vector: Vector[Int]) {
+  def increment(replica: Int) = {
+    val count = this.vector.get(replica)
+    new VersionVector(this.vector.write(replica, count + 1))
+  }
+
+  def before(that: VersionVector) = {
+    val vs = this.vector.zip(that.vector)
+    vs.forall((counts: Tuple[Int, Int]) => counts.fst <= counts.snd) &&
+    vs.exists((counts: Tuple[Int, Int]) => counts.fst < counts.snd)
+  }
+
+  def beforeOrEqual(that: VersionVector) = this == that || this.before(that)
+
+  def after(that: VersionVector) = that.before(this)
+
+  def afterOrEqual(that: VersionVector) = this == that || this.after(that)
+
+  def concurrent(that: VersionVector) =
+    this != that && !this.before(that) && !that.before(this)
+
+  private def max(t: Tuple[Int, Int]) = if (t.fst >= t.snd) t.fst else t.snd
+
+  def sync(that: VersionVector) = {
+    val newVector = this.vector.zip(that.vector).map(this.max _)
+    new VersionVector(newVector)
+  }
+
+  def wellFormed() = {
+    this.vector.wellFormed()
+  }
+
+  def wellFormedWithSize() = {
+    this.vector.wellFormed() && this.vector.size == 3
+  }
+
+  def networkSize() = {
+    this.vector.size
+  }
+}
+
+//TODO: alterar o nome das provas
+object VersionVector {
+
+  proof syncCommutative {
+    forall(t1: VersionVector, t2: VersionVector) {
+      ( t1.wellFormed() && t2.wellFormed() && t1.networkSize() == t2.networkSize() ) =>: {
+          t1.sync(t2) == t2.sync(t1)
+      }
+    }
+  }
+
+  proof syncIdempotent {
+    forall(t1: VersionVector) {
+      ( t1.wellFormed() ) =>: {
+          t1.sync(t1) == t1
+      }
+    }
+  }
+
+  proof syncAssociative {
+    forall(t1: VersionVector, t2: VersionVector, t3: VersionVector) {
+      ( t1.wellFormed() && t2.wellFormed() && t3.wellFormed() && t1.networkSize() == t2.networkSize() &&
+        t1.networkSize() == t3.networkSize() ) =>: {
+          t1.sync(t2).sync(t3) == t1.sync(t2.sync(t3))
+      }
+    }
+  }
+
+  proof aux1 {
+    forall(t1: VersionVector, t2: VersionVector) {
+      ( t1.wellFormed() && t2.wellFormed() && t1.networkSize() == t2.networkSize() && t1.before(t2) ) =>: {
+          t1.sync(t2) == t2
+      }
+    }
+  }
+
+
+  proof aux2 {
+    forall(t1: VersionVector, t2: VersionVector, t3: VersionVector) {
+      ( t1.wellFormed() && t2.wellFormed() && t3.wellFormed() && t1.networkSize() == t2.networkSize() &&
+        t1.networkSize() == t3.networkSize() && t1.before(t3) && t2.before(t3) ) =>: {
+          t1.sync(t2).beforeOrEqual(t3)
+      }
+    }
+  }
+
+  proof aux3 {
+    forall(t1: VersionVector, t2: VersionVector, t3: VersionVector) {
+      ( t1.wellFormed() && t2.wellFormed() && t3.wellFormed() && t1.networkSize() == t2.networkSize() &&
+        t1.networkSize() == t3.networkSize() && t1.concurrent(t2) && t1.concurrent(t3) && t3.before(t2) ) =>: {
+          t3.before(t1.sync(t2))
+      }
+    }
+  }
+
+  proof aux4 {
+    forall(t1: VersionVector, t2: VersionVector, t3: VersionVector) {
+      ( t1.wellFormed() && t2.wellFormed() && t3.wellFormed() && t1.networkSize() == t2.networkSize() &&
+        t1.networkSize() == t3.networkSize() && t1.concurrent(t2) && t1.concurrent(t3) && t2.concurrent(t3) ) =>: {
+          !t1.sync(t2).before(t3) //&& t1.sync(t2) != t3
+          //t1.sync(t2).concurrent(t3)
+      }
+    }
+  }
+
+ proof aux5 {
+    forall(t1: VersionVector, t2: VersionVector, t3: VersionVector) {
+      ( t1.wellFormedWithSize() && t2.wellFormedWithSize() && t3.wellFormedWithSize() && //t1.networkSize() == t2.networkSize() && t1.networkSize() == t3.networkSize() &&
+        t1.after(t2) && t1.concurrent(t3) && t2.concurrent(t3) ) =>: {
+          //t2.sync(t3).afterOrEqual(t1) || t2.sync(t3).concurrent(t1)
+          !t2.sync(t3).before(t1)
+      }
+    }
+  }
+
+}

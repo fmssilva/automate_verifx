@@ -1,0 +1,70 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof1
+import antidote.crdts.LamportClock
+import antidote.crdts.VersionVector
+import albumsSystem.artists.ArtistsTable
+import albumsSystem.albums.AlbumsTable
+
+class AlbumsSystem[Time](albums: AlbumsTable[Time], artists: ArtistsTable[Time])
+                         extends CvRDT[AlbumsSystem[Time]] {
+
+  def refIntegrityHolds(title: String) = {
+    (this.albums.isVisible(title) ) =>: {
+       val album = this.albums.get(title)
+       this.artists.isVisible(album.fst.artist)
+    }
+  }
+
+  override def reachable(): Boolean =
+    this.artists.reachable() && this.albums.reachable()
+
+  def reachableWithAssociativityAssumptions(): Boolean = {
+    this.artists.reachable() && this.albums.reachable() &&
+    this.mergeValuesAssumptions()
+  }
+
+  private def mergeValuesAssumptions(): Boolean = {
+    forall(v1: AlbumsTable[Time], v2: AlbumsTable[Time], v3: AlbumsTable[Time]) {
+      v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+    } &&
+    forall(v1: ArtistsTable[Time], v2: ArtistsTable[Time], v3: ArtistsTable[Time]) {
+      v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+    }
+  }
+
+
+  override def compatible(that: AlbumsSystem[Time]): Boolean =
+    this.artists.compatible(that.artists) && this.albums.compatible(that.albums)
+
+  def merge(that: AlbumsSystem[Time]) =
+    new AlbumsSystem(this.albums.merge(that.albums), this.artists.merge(that.artists))
+
+  def compare(that: AlbumsSystem[Time]) = //ignore
+    true
+
+  override def equals(that: AlbumsSystem[Time]) =
+    this == that
+}
+
+object AlbumsSystem extends CvRDTProof1[AlbumsSystem] {
+
+  proof genericReferentialIntegrity[Time] {
+    forall(s1: AlbumsSystem[Time], s2: AlbumsSystem[Time], title: String) {
+      ( s1.reachable() && s2.reachable() && s1.compatible(s2) &&
+        s1.refIntegrityHolds(title) && s2.refIntegrityHolds(title) ) =>: {
+          s1.merge(s2).refIntegrityHolds(title)
+        }
+    }
+  }
+
+  proof mergeIsAssociative[Time] {
+    forall(s1: AlbumsSystem[Time], s2: AlbumsSystem[Time], s3: AlbumsSystem[Time]) {
+      (s1.reachable() && s2.reachable() && s3.reachable() &&
+       s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3) ) =>: {
+         val aux = s1.merge(s2).merge(s3)
+         aux.equals(s1.merge(s2.merge(s3)))
+         aux.reachable()
+       }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(test, None, None)[0m
+[0m[[0m[0mdebug[0m] [0m[0mEvaluating tasks: Test / test[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning task... Cancel: Signal, check cycles: false, forcegc: true[0m
+[0m[[0m[0minfo[0m] [0m[0mcompiling 1 Scala source to /Users/kevin/Documents/VUB/Phd/Programming/Scala/CRDT Proofs/target/scala-2.13/test-classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mNon-compiled module 'compiler-bridge_2.13' for Scala 2.13.1. Compiling...[0m
+[0m[[0m[0minfo[0m] [0m[0m  Compilation completed in 7.199s.[0m
+[0m[[0m[0minfo[0m] [0m[0mdone compiling[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mProofTests:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mCounter[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mGCounter[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPNCounter[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPNCounter2[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mLWWRegister[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMVRegister[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mGSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m2PSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mUSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mLWWSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mEfficientLWWSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPNSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mORSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMWSSet[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m2P2PGraph[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAddOnlyDAG[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should works[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAddRemovePartialOrder[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mContinuumSeq[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CmRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mGMap[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be a CvRDT[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 2 minutes, 6 seconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 34[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 1, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 34, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 135 s (02:15), completed Feb 3, 2021, 4:46:24 PM[0m
+[0m[[0m[0mdebug[0m] [0m[0m> Exec(idea-shell, None, None)[0m

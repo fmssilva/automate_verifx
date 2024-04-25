@@ -1,0 +1,54 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof1
+import antidote.crdts.registers.MVRegister
+
+class EWFlag[Time](flags: MVRegister[Boolean, Time]) extends CvRDT[EWFlag[Time]] {
+
+  def isEnabled(): Boolean =
+    this.flags.contains(true)
+
+  def getBeforeFunction() =
+    this.flags.before
+
+  override def reachable() =
+    this.flags.reachable()
+
+  //def reachableWithBeforeFunction(before: (Time, Time) => Boolean) = {
+    //this.flags.reachableWithoutTime(before)
+  //}
+
+  override def compatible(that: EWFlag[Time]) = {
+    this.flags.compatible(that.flags)
+    // If two replicas have the same timestamp, they must hold the same boolean value
+    //((this.time == that.time) =>: (this.enabled == that.enabled))
+  }
+
+  def enable(t: Time) = new EWFlag(this.flags.assign(true, t))
+
+  def disable(t: Time) = new EWFlag(this.flags.assign(false, t))
+
+  def merge(that: EWFlag[Time]) =
+    new EWFlag(this.flags.merge(that.flags))
+
+  def compare(that: EWFlag[Time]) = this.flags.compare(that.flags)
+
+  override def equals(that: EWFlag[Time]) = this == that
+}
+
+object EWFlag extends CvRDTProof1[EWFlag] {
+  proof EWFlag_works[Time] {
+    forall(before: (Time, Time) => Boolean, t1: Time, t2: Time, t3: Time, t4: Time) {
+      (before(t1, t2) =>: !before(t2, t1) && !before(t1, t1) && (before(t1, t2) &&
+        before(t2, t3)) =>: before(t1, t3) && !before(t1, t4) && !before(t4, t1) && t1 != t4 && before(t1, t2)) =>: {
+
+          val r = new MVRegister(before, new Set[Tuple[Boolean, Time]])
+          val f1 = new EWFlag(r).enable(t1)
+          val f2 = new EWFlag(r).disable(t2)
+          val f3 = new EWFlag(r).disable(t4)
+
+          f1.isEnabled() && !f2.isEnabled() && !f1.merge(f2).isEnabled() && //t1 is before t2
+          !f3.isEnabled() && f1.merge(f3).isEnabled() //t1 and t4 are concurrent
+        }
+    }
+  }
+}

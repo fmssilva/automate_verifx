@@ -1,0 +1,81 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.LamportClock
+import antidote.crdts.VersionVector
+import antidote.crdts.lemmas.CvRDTProof1
+import systemTables.albs.AlbsTable
+import systemTables.arts.ArtsTable
+
+class Albs_FK_System[Time](albs: AlbsTable[Time], arts: ArtsTable[Time]) 
+			 extends CvRDT[Albs_FK_System[Time]] {
+
+	//override default implementation of methods in CvRDT trait
+
+	override def reachable(): Boolean =
+		this.albs.reachable() && this.arts.reachable()
+
+	override def compatible(that: Albs_FK_System[Time]): Boolean =
+		this.albs.compatible(that.albs) && this.arts.compatible(that.arts)
+
+	override def equals(that: Albs_FK_System[Time]) =
+		this == that
+
+	//implement declared methods in CvRDT trait
+
+	def merge(that: Albs_FK_System[Time]) =
+		new Albs_FK_System(this.albs.merge(that.albs), this.arts.merge(that.arts))
+
+	def compare(that: Albs_FK_System[Time]) = //ignore
+		true
+
+	//methods to use in the Ref Integrity Proof
+
+	def refIntegrityHolds(title: String) = {
+		(this.albs.isVisible(title) 
+		) =>: {
+			val alb = this.albs.get(title)
+			this.arts.isVisible(alb.fst.title)
+		}
+	}
+
+	//other methods??
+
+	def reachableWithAssociativityAssumptions(): Boolean = {
+		this.albs.reachable() && this.arts.reachable() &&
+			this.mergeValuesAssumptions()
+	}
+
+	private def mergeValuesAssumptions(): Boolean = {
+		forall(v1: AlbsTable[Time], v2: AlbsTable[Time], v3: AlbsTable[Time]) {
+		  v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+		} &&
+		forall(v1: ArtsTable[Time], v2: ArtsTable[Time], v3: ArtsTable[Time]) {
+		   v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+		}
+	}}
+
+	//OBJECT FOR OTHER PROOFS
+
+object Albs_FK_System extends CvRDTProof1[Albs_FK_System] {
+
+	proof genericReferentialIntegrity[Time] {
+		forall(s1: Albs_FK_System[Time], s2: Albs_FK_System[Time], title: String) {
+			( s1.reachable() && s2.reachable() && 
+			  s1.compatible(s2) &&
+			  s1.refIntegrityHolds(title) && s2.refIntegrityHolds(title) 
+			) =>: {
+				s1.merge(s2).refIntegrityHolds(title)
+			}
+		}
+	}
+
+	proof mergeIsAssociative[Time] {
+		forall(s1: Albs_FK_System[Time], s2: Albs_FK_System[Time], s3: Albs_FK_System[Time]) {
+			(s1.reachable() && s2.reachable() && s3.reachable() &&
+			  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)
+			) =>: {
+				val aux = s1.merge(s2).merge(s3)
+				aux.equals(s1.merge(s2.merge(s3)))
+				aux.reachable()
+				}
+		}
+	}}
