@@ -21,7 +21,6 @@ import scala.util.{Failure, Success, Try}
 @SerialVersionUID(1594622920505253437L)
 class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: mutable.Map[String, Table]) extends Serializable {
   private val TABLE_UPDATE_POLICIES = Array("UPDATE-WINS", "DELETE-WINS", "NO_CONCURRENCY")
-  private val CRDT_CLOCK = "LamportClock" //clock to be used for CRDTs
 
   private val tokens_initial_line = line
 
@@ -30,9 +29,13 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
    */
   private val lineTokens = cmdTokens(line)._2
   println("Line " + line + ": " + lineTokens.mkString(", ") + " \t\t» creating table at CreateTable class ")
-  private val update_policy = getTableUpdatePolicy()
+  val update_policy = getTableUpdatePolicy()
   val tableName: String = getTableName()
   val attributesList: mutable.Seq[TabAttribute] = getTableAttributes()
+  val fk_attributes = attributesList.filter(_.attribInvariant.fk_options.isDefined)
+  println("\n\n\n "+ fk_attributes)
+  checkIfTableFKsReferenceAllPK(fk_attributes)
+
 
   /**
    * Create FOLDERS AND CLASSES
@@ -41,32 +44,40 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
   private var systemTablesFolderName = "systemTables"
   private var folderPath = s"./src/main/verifx/$systemTablesFolderName"
   createDirectory(folderPath)
+
   // folder "Table"
   folderPath = s"$folderPath/${tableName.toLowerCase()}s"
   createDirectory(folderPath)
+
   // file Element Class
   private var filePath = s"$folderPath/${tableName}.vfx"
-  private var classContent = generate_Elem_ClassCode()
+  private var classContent = ElemCodeGenerator.generate_Elem_ClassCode(this, cmdTokens.slice(tokens_initial_line, line))
   createClassFile()
+
   // file Elem TABLE Class
   filePath = s"$folderPath/${tableName}sTable.vfx"
-  classContent = generate_ElemTable_ClassCode()
+  classContent = ElemTableCodeGenerator.generate_ElemTable_ClassCode(this, systemTablesFolderName)
   createClassFile()
+
   // file Table_FK_References Class
-  val fk_attributes: mutable.Seq[TabAttribute] = attributesList.filter(_.attribInvariant.fk_options.isDefined)
   val fk_system_name = s"${tableName}s_FK_System"
   if (fk_attributes.nonEmpty) {
     filePath = s"$folderPath/${fk_system_name}.vfx"
-    classContent = generate_FK_References_ClassCode()
+    classContent = FK_References_Class.generate_FK_References_ClassCode(this, systemTablesFolderName, fk_system_name)
     createClassFile()
   }
-  // folder TESTS directory
-  systemTablesFolderName = s"${systemTablesFolderName}Tests"
+
+
+
+
+
+  // folder PROOFS directory
+  systemTablesFolderName = s"${systemTablesFolderName}Proofs"
   folderPath = s"./src/test/scala/${systemTablesFolderName}"
   createDirectory(folderPath)
-  // file TESTS Elem class
-  filePath = s"$folderPath/${tableName}Tests.scala"
-  classContent = generate_Tests_ClassCode()
+  // file PROOFS Elem class
+  filePath = s"$folderPath/${tableName}Proofs.scala"
+  classContent = generate_Proofs_ClassCode()
   createClassFile()
 
 
@@ -112,12 +123,42 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     val listOfAttributes = ListBuffer[TabAttribute]()
     line += 1
     while (line < cmdTokens.length && cmdTokens(line)._2(0) != ")") {
-      listOfAttributes.addOne(new TabAttribute(cmdTokens(line)._2, line, sysTablesMap))
+      val tokens = cmdTokens(line)._2
+      if (tokens(0) == "PRIMARY") {
+        tokens match {
+          case Array("PRIMARY", "KEY", "(", tail@_*) =>
+            tail.foreach {
+              case "," | ")" => // Do nothing for these cases
+              case str => {
+                val at = listOfAttributes.find(_.attribName.toUpperCase() == str)
+                if (at.isEmpty)
+                  throw new IllegalArgumentException(s"At Create Table - At Line: $line - Attribute $str must be declared before setting as PK")
+                else
+                  at.get.setAttribPK()
+              }
+            }
+          case _ =>
+            throw new IllegalArgumentException(s"At Create Table - At Line: $line - To set multiple attributes as PK write: PRIMARY KEY (at1, at2 ... atn), and just AFTER declaring each of those attributes")
+        }
+      }
+      else {
+        listOfAttributes.addOne(new TabAttribute(tokens, line, sysTablesMap))
+      }
       line += 1
     }
     line += 1 //to pass the line of closing ) of the create table command
     listOfAttributes
   }
+
+  private def checkIfTableFKsReferenceAllPK(fk_attributes: mutable.Seq[TabAttribute]): Unit = {
+    fk_attributes.foreach { at =>
+      val referencedTable = at.attribInvariant.getReferencedTable()
+      val refTab_PKs = referencedTable.attributesList.filter(_.attribInvariant.isPrimaryKey)
+      if (!refTab_PKs.forall(pk => fk_attributes.exists(att_in => att_in.attribInvariant.getReferencedPK().attribName.equals(pk.attribName))))
+        throw new IllegalArgumentException(s"Table ${tableName} should reference all PK's of the referenced table " + referencedTable.tableName)
+    }
+  }
+
 
   /**
    * Create Directories
@@ -149,449 +190,14 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     }
   }
 
-  /**
-   * ///////////////////////////////////////////////////////
-   * /////////////////       ELEMENT       /////////////////
-   * ///////////////////////////////////////////////////////
-   */
-  private def generate_Elem_ClassCode(): StringBuilder = {
-    println("generating file code at generate_Elem_ClassCode() at CreateTable class")
-
-    val classContent = new StringBuilder
-
-    //IMPORTS
-    classContent.append(
-      "import antidote.crdts.lemmas.CvRDT" +
-        s"\nimport antidote.crdts.lemmas.CvRDTProof" +
-        //TODO: confirmar mais imports pra outros tipos de dados além de "LWWRegister"??
-        (if (attributesList.exists(a => a.attribDataType_CRDT.contains("LWWRegister")))
-          s"\nimport antidote.crdts.registers.LWWRegister" +
-            s"\nimport antidote.crdts.${CRDT_CLOCK}"
-        else s""
-          )
-    )
-
-    //CLASS COMMENTS
-    classContent.append(
-      s"\n\n/**\n * Class representing the element:   ${tableName.toUpperCase()} " +
-        s"\n * given by the Antidote SQL command:" +
-        cmdTokens.slice(tokens_initial_line, line).map(
-          cmdToken => s"\n *\t\t${cmdToken._2.mkString(" ")}"
-        ).mkString +
-        s"\n */"
-    )
-
-    //CLASS HEADER
-    classContent.append(
-      s"\nclass $tableName(" +
-        attributesList.map(
-          at => s"${at.attribName}: ${if (at.allowConcurrentUpdates) at.attribDataType_CRDT else at.attribDataType}"
-        ).mkString(", ") +
-        s") extends CvRDT[$tableName] {"
-    )
-
-    //Implement Methods DECLARED in CvRDT trait
-    classContent.append("\n\n\n\t//Implementation of methods DECLARED in CvRDT trait")
-
-    // MERGE
-    classContent.append(
-      s"\n\n\tdef merge(that: $tableName) = " +
-        s"\n\t\tnew $tableName(" +
-        attributesList.map(
-          at =>
-            if (at.allowConcurrentUpdates) s"this.${at.attribName}.merge(that.${at.attribName})"
-            else s"this.${at.attribName}"
-        ).mkString(", ") +
-        ")"
-    )
-
-    // COMPARE
-    val updatablesAttributes = attributesList.filter(at => at.allowConcurrentUpdates)
-    classContent.append(
-      s"\n\n\tdef compare(that: $tableName) = " +
-        (if (updatablesAttributes.isEmpty)
-          s"\n\t\ttrue"
-        else
-          updatablesAttributes.map(
-            at => s"\n\t\tthis.${at.attribName}.compare(that.${at.attribName})").mkString(" &&")
-          )
-    )
-
-    //Override Methods IMPLEMENTED in CvRDT trait
-    classContent.append("\n\n\n\t//Override Methods IMPLEMENTED in CvRDT trait")
-
-    //REACHABLE
-    //if we have no CHECKs, we don't need to override. it's always TRUE
-    val attributesWithChecks = attributesList.filter(at => at.attribInvariant.check_options.isDefined)
-    if (attributesWithChecks.nonEmpty) {
-      classContent.append(
-        s"\n\n\toverride def reachable() = { " +
-          attributesWithChecks.map { at =>
-            "\n\t\t" + at.attribInvariant.check_options.get.map {
-              case attrib if (attributesList.exists(_.attribName.toUpperCase().equals(attrib))) => s" this.${attrib.toLowerCase()}.value"
-              case "AND" => " &&"
-              case "OR" => " ||"
-              case other => s" $other"
-              //TODO: falta outras coisas como IN, BETWEEN ... e arvore de parentesis...
-            }.mkString
-          }.mkString(" && ") +
-          "\n\t}"
-      )
-    }
-
-    // COMPATIBLE
-    classContent.append(
-      s"\n\n\toverride def compatible(that: $tableName) = \n\t\t" +
-        attributesList.map(
-          at =>
-            if (at.allowConcurrentUpdates)
-              s"this.${at.attribName}.compatible(that.${at.attribName})"
-            else
-              s"this.${at.attribName} == that.${at.attribName}"
-        ).mkString(" &&\n\t\t")
-    )
-
-
-    //UPDATE
-    //Implement methods for concurrently updatable attributes to be used by the tester, useful in CmRDT - Operations
-    if (updatablesAttributes.nonEmpty) {
-      //generate comment
-      classContent.append("\n\n\n\t//Implement methods for concurrently updatable attributes to be used by the tester,\n\t//useful in CmRDT - Operations")
-
-      //helper method
-      def code_for_newElement(atName: String) = {
-        s"\n\t\t\tnew $tableName(" +
-          attributesList.map(
-            at =>
-              if (at.attribName.equals(atName))
-                s"this.${at.attribName}.assign(new${atName.capitalize}, stamp${atName.capitalize})"
-              else
-                s"this.${at.attribName}"
-          ).mkString(", ") + ")"
-      }
-
-      // updateAtribute() generation code
-      updatablesAttributes.map {
-        at =>
-          val atName = at.attribName.capitalize
-          classContent.append(
-            s"\n\n\tdef update${atName}(new${atName}: ${at.attribDataType.capitalize}, stamp${atName}: ${CRDT_CLOCK}) = { " +
-              (if (at.attribInvariant.check_options.isDefined) {
-                s"\n\t\tif(" + at.attribInvariant.check_options.get.map {
-                  case word if word.equals(at.attribName.toUpperCase) => s" new$atName"
-                  case "AND" => " &&"
-                  case "OR" => " ||"
-                  case other => s" $other"
-                }.mkString + ")" +
-                  code_for_newElement(at.attribName) +
-                  "\n\t\telse" +
-                  "\n\t\t\tthis"
-              } else
-                code_for_newElement(at.attribName)
-                ) +
-              "\n\t}"
-          )
-      }
-    }
-
-    // CLASS CLOSING
-    classContent.append("\n\n}")
-
-
-    //PROOF OBJECT (INSIDE THE ELEM CLASS)
-    if (updatablesAttributes.isEmpty)
-      classContent.append("")
-    else {
-      //OBJECT COMMENTS
-      classContent.append("\n\n\n\n\n/*\n* Object to implement the proof functions for the updatable attributes\n*/")
-
-      //OBJECT HEADER
-      classContent.append(
-        s"\n\nobject ${tableName} extends CvRDTProof[${tableName}] {")
-
-      // UPDATE PROOFS
-      attributesList.filter(at => at.allowConcurrentUpdates).map {
-        at =>
-          val atName = at.attribName
-          classContent.append(
-            s"\n\n\tproof ${tableName}_update${atName.capitalize}_works {" +
-              //forall (...)
-              s"\n\t\tforall(elem: $tableName, ${atName}1: ${at.attribDataType}, ${atName}2: ${at.attribDataType}, c1: $CRDT_CLOCK, c2: $CRDT_CLOCK ) {" +
-              // assumptions to start
-              s"\n\t\t\t( elem.reachable()  &&  c1.smaller(c2)" +
-              (if (at.attribInvariant.check_options.isDefined) {
-                s" &&" +
-                  s"\n\t\t\t  " +
-                  (for (i <- 1 to 2) yield {
-                    at.attribInvariant.check_options.get.map {
-                      case word if (word.equals(atName.toUpperCase)) => s"${atName}$i"
-                      case "AND" => "&&"
-                      case "OR" => "||"
-                      case other => s"$other"
-                      //todo falta outras coisas como IN, BETWEEN ... e arvore de parentesis...
-                    }.mkString(" ")
-                  }).mkString(" && ")
-              } else ""
-                ) + "\n\t\t\t ) =>: {" +
-              // imply => {
-              s"\n\t\t\t\t //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12" +
-              s"\n\t\t\t\t val elem1 = elem.update${atName.capitalize}(${atName}1, c1)" +
-              s"\n\t\t\t\t val elem2 = elem.update${atName.capitalize}(${atName}2, c2)" +
-              s"\n\t\t\t\t val elem12 = elem1.merge(elem2)" +
-              s"\n\t\t\t\t //check if the update in elem 1 and 2 kept the correct values" +
-              attributesList.map(at_in =>
-                if (at_in.attribName.equals(atName))
-                  s"\n\t\t\t\t elem1.${atName}.value == ${atName}1 && elem2.${atName}.value == ${atName}2"
-                else
-                  s"\n\t\t\t\t elem1.${at_in.attribName} == elem.${at_in.attribName} && elem2.${at_in.attribName} == elem.${at_in.attribName}"
-              ).mkString(" &&") + " &&" +
-              s"\n\t\t\t\t //check if the merged values are correct and according to the chosen update-policy " +
-              attributesList.map(at_in =>
-                if (at_in.attribName.equals(atName)) {
-                  if (at_in.attribPolicy.equals("LWW") || at_in.attribPolicy.equals("NO_CONCURRENCY"))
-                    s"\n\t\t\t\t elem12.${atName}.value == ${atName}2"
-                  else if (at_in.attribPolicy.equals("ADDITIVE"))
-                    s"\n\t\t\t\t elem12.${atName}.value == elem.${atName} + ${atName}1 + ${atName}2"
-                  else //MULTI-VALUE
-                    s"\n\t\t\t\t elem12.${atName}.value == ???????" //TODO: ??????
-                } else
-                  s"\n\t\t\t\t elem12.${at_in.attribName} == elem.${at_in.attribName}"
-              ).mkString(" &&") +
-              s"\n\t\t\t}" +
-              s"\n\t\t}" +
-              s"\n\t}"
-          )
-      }
-
-      //OBJECT CLOSING
-      classContent.append("\n\n}")
-    }
-  }
-
 
   /**
    * ///////////////////////////////////////////////////////
-   * /////////////--------- Elem_Table---------/////////////
+   * ///////////////--------- PROOFS ---------///////////////
    * ///////////////////////////////////////////////////////
    */
-  private def generate_ElemTable_ClassCode(): StringBuilder = {
-    println("generating file code at generate_ElemTable_ClassCode() at CreateTable class")
-
-    val classContent = new StringBuilder
-
-    // IMPORTS
-    classContent.append(
-      s"import ${systemTablesFolderName}.${tableName.toLowerCase()}s.${tableName}" +
-        s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
-        (update_policy match {
-          case "UPDATE-WINS" => s"\nimport antidote.crdts.tables.UWTable"
-          //TODO: outros casos
-        })
-    )
-
-    //CLASS HEADER
-    classContent.append(
-      s"\n\nclass ${tableName}sTable[Time] (before: (Time, Time) => Boolean, " +
-        s"\n\t\t\t\telements: Map[String, Tuple[${tableName}, MVRegister[Int,Time]]])" +
-        (update_policy match {
-          case "UPDATE-WINS" => s"\n\t\t\t\textends UWTable[${tableName}, Time, ${tableName}sTable[Time]]{ "
-          case "DELETE-WINS" => throw new Exception("check args of DWTable trait")
-          case "NO_CONCURRENCY" => throw new Exception("What to do with table NO_CONCURRENCY")
-        })
-    )
-
-    classContent.append("\n\n\n\t//Implement Methods DECLARED in UWTable trait")
-    //COPY
-    classContent.append(
-      s"\n\n\tdef copy(newElements: Map[String, Tuple[${tableName}, MVRegister[Int, Time]]]) =" +
-        s"\n\t\t    new ${tableName}sTable(this.before, newElements)"
-    )
-
-    //MAINTAIN STATE
-    classContent.append(s"\n\n\tdef maintainState() = this")
-
-    //END CLASS
-    classContent.append(s"\n\n}")
-
-    //OBJECT CLASS
-    classContent.append(s"\n\nobject ${tableName}sTable extends CvRDTProof1[${tableName}sTable]")
-
-  }
-
-
-  /**
-   * ///////////////////////////////////////////////////////
-   * //////////-------- FK_SYSTEM_CLASS --------////////
-   * ///////////////////////////////////////////////////////
-   */
-  private def generate_FK_References_ClassCode() = {
-    println("generating file code at generate_FK_References_ClassCode() at CreateTable class")
-
-    val referencedTableNames = fk_attributes.map(_.attribInvariant.fk_options.map(_.referencedTable.tableName).get).toSet.toList
-    val at_name = attributesList.head.attribName
-    val fk_tab_name = referencedTableNames.head.toLowerCase()
-    val this_tab_name = tableName.toLowerCase()
-
-
-    val classContent = new StringBuilder
-
-    //IMPORTS
-    classContent.append(
-      s"import antidote.crdts.lemmas.CvRDT" +
-        s"\nimport antidote.crdts.LamportClock" +
-        s"\nimport antidote.crdts.VersionVector" +
-        s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
-        //TODO: import de CvRDTProof 2...
-        s"\nimport ${systemTablesFolderName}.${this_tab_name}s.${tableName}sTable" +
-        referencedTableNames.map(t_Name =>
-          s"\nimport ${systemTablesFolderName}.${t_Name.toLowerCase()}s.${t_Name}sTable"
-        ).mkString
-    )
-
-    // CLASS HEADER
-    classContent.append(
-      s"\n\nclass ${fk_system_name}[Time](" +
-        s"${this_tab_name}s: ${tableName}sTable[Time]," +
-        referencedTableNames.map(
-          t_Name =>
-            s" ${t_Name.toLowerCase()}s: ${t_Name}sTable[Time]"
-        ).mkString(", ")
-        + s") \n\t\t\t extends CvRDT[${fk_system_name}[Time]] {"
-    )
-
-
-    //override default implementation of methods in CvRDT trait
-    classContent.append("\n\n\t//override default implementation of methods in CvRDT trait")
-
-    //REACHABLE
-    classContent.append(
-      s"\n\n\toverride def reachable(): Boolean =" +
-        s"\n\t\tthis.${this_tab_name}s.reachable() && this.${fk_tab_name}s.reachable()"
-    )
-
-    //COMPATIBLE
-    classContent.append(
-      s"\n\n\toverride def compatible(that: ${fk_system_name}[Time]): Boolean =" +
-        s"\n\t\tthis.${this_tab_name}s.compatible(that.${this_tab_name}s) &&" +
-        s" this.${fk_tab_name}s.compatible(that.${fk_tab_name}s)"
-    )
-
-    //EQUALS
-    classContent.append(
-      s"\n\n\toverride def equals(that: ${fk_system_name}[Time]) =" +
-        s"\n\t\tthis == that"
-    )
-
-
-    //implement declared methods in CvRDT trait
-    classContent.append("\n\n\t//implement declared methods in CvRDT trait")
-
-    //MERGE
-    classContent.append(
-      s"\n\n\tdef merge(that: ${fk_system_name}[Time]) =" +
-        s"\n\t\tnew ${fk_system_name}(this.${this_tab_name}s.merge(that.${this_tab_name}s), " +
-        s"this.${fk_tab_name}s.merge(that.${fk_tab_name}s))"
-    )
-
-    //COMPARE
-    classContent.append(
-      s"\n\n\tdef compare(that: ${fk_system_name}[Time]) = //ignore" +
-        s"\n\t\ttrue"
-    )
-
-
-    //methods to use in the Ref Integrity Proof
-    classContent.append("\n\n\t//methods to use in the Ref Integrity Proof")
-
-    //DEF REF_INTEGRITY_PROOF
-    classContent.append(
-      s"\n\n\tdef refIntegrityHolds(${at_name}: ${fk_attributes.head.attribDataType}) = {" +
-        s"\n\t\t(this.${this_tab_name}s.isVisible(${at_name}) " +
-        s"\n\t\t) =>: {" +
-        s"\n\t\t\tval ${this_tab_name} = this.${this_tab_name}s.get(${at_name})" +
-        s"\n\t\t\tthis.${fk_tab_name}s.isVisible(${this_tab_name}.fst.${at_name})" +
-        s"\n\t\t}" +
-        s"\n\t}"
-    )
-
-
-
-
-    //other methods??
-    classContent.append("\n\n\t//other methods??")
-
-    classContent.append(
-      s"\n\n\tdef reachableWithAssociativityAssumptions(): Boolean = {" +
-        s"\n\t\tthis.${this_tab_name}s.reachable() && this.${fk_tab_name}s.reachable() &&" +
-        s"\n\t\t\tthis.mergeValuesAssumptions()" +
-        s"\n\t}"
-    )
-
-    classContent.append(
-      s"\n\n\tprivate def mergeValuesAssumptions(): Boolean = {" +
-        s"\n\t\tforall(v1: ${tableName}sTable[Time], v2: ${tableName}sTable[Time], v3: ${tableName}sTable[Time]) {" +
-        s"\n\t\t  v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative" +
-        s"\n\t\t} &&" +
-        s"\n\t\tforall(v1: ${fk_tab_name.capitalize}sTable[Time], v2: ${fk_tab_name.capitalize}sTable[Time], v3: ${fk_tab_name.capitalize}sTable[Time]) {" +
-        s"\n\t\t   v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative" +
-        s"\n\t\t}" +
-        s"\n\t}"
-    )
-
-    // CLASS END
-    classContent.append("}")
-
-
-    //OBJECT
-    classContent.append("\n\n\t//OBJECT FOR OTHER PROOFS")
-
-    //OBJECT HEADER
-    classContent.append(
-      s"\n\nobject ${fk_system_name} extends CvRDTProof1[${fk_system_name}] {"
-    )
-
-    //REF_INTEGRITY
-    classContent.append(
-      s"\n\n\tproof genericReferentialIntegrity[Time] {" +
-        s"\n\t\tforall(s1: ${fk_system_name}[Time], s2: ${fk_system_name}[Time], ${at_name}: ${fk_attributes.head.attribDataType}) {" +
-        s"\n\t\t\t( s1.reachable() && s2.reachable() && " +
-        s"\n\t\t\t  s1.compatible(s2) &&" +
-        s"\n\t\t\t  s1.refIntegrityHolds(${at_name}) && s2.refIntegrityHolds(${at_name}) " +
-        s"\n\t\t\t) =>: {" +
-        s"\n\t\t\t\ts1.merge(s2).refIntegrityHolds(${at_name})" +
-        s"\n\t\t\t}" +
-        s"\n\t\t}" +
-        s"\n\t}"
-    )
-
-    //MERGE_ASSOCIATIVE
-    classContent.append(
-      s"\n\n\tproof mergeIsAssociative[Time] {" +
-        s"\n\t\tforall(s1: ${fk_system_name}[Time], s2: ${fk_system_name}[Time], s3: ${fk_system_name}[Time]) {" +
-        s"\n\t\t\t(s1.reachable() && s2.reachable() && s3.reachable() &&" +
-        s"\n\t\t\t  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)" +
-        s"\n\t\t\t) =>: {" +
-        s"\n\t\t\t\tval aux = s1.merge(s2).merge(s3)" +
-        s"\n\t\t\t\taux.equals(s1.merge(s2.merge(s3)))" +
-        s"\n\t\t\t\taux.reachable()" +
-        s"\n\t\t\t\t}" +
-        s"\n\t\t}" +
-        s"\n\t}"
-    )
-
-    // OBJECT END
-    classContent.append("}")
-
-  }
-
-
-  /**
-   * ///////////////////////////////////////////////////////
-   * ///////////////--------- TESTS ---------///////////////
-   * ///////////////////////////////////////////////////////
-   */
-  private def generate_Tests_ClassCode(): StringBuilder = {
-    println("generating file code at generate_Tests_ClassCode() at CreateTable class")
+  private def generate_Proofs_ClassCode(): StringBuilder = {
+    println("generating file code at generate_Proofs_ClassCode() at CreateTable class")
 
     val classContent = new StringBuilder
 
@@ -603,10 +209,10 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
       s"\nimport org.scalatest.FlatSpec")
 
     // CLASS HEADER
-    classContent.append(s"\n\nclass ${tableName}Tests extends FlatSpec with Prover { ")
+    classContent.append(s"\n\nclass ${tableName}Proofs extends FlatSpec with Prover { ")
 
     // Helper methods to generate comment
-    def generateTestFunctionsComments(comment_str: String) = {
+    def generateProofFunctionsComments(comment_str: String) = {
       classContent.append(
         s"\n\n\t////////////////////////////////////////////////////////////" +
           s"\n\t// ${comment_str} " +
@@ -614,11 +220,11 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     }
 
     // Helper methods to generate given proofs for a given Element or Table name
-    def generateTestFunction(tests: mutable.LinkedHashMap[String, String], elemNameToTest: String): Unit = {
-      tests.foreach { case (key, value) =>
+    def generateProofFunction(proofs: mutable.LinkedHashMap[String, String], elemNameToProve: String): Unit = {
+      proofs.foreach { case (key, value) =>
         classContent.append(
-          s"""\n\n\t\"${elemNameToTest}\" should \"${key}\" in {""" +
-            s"""\n\t\tval p = (\"${elemNameToTest}\", \"${value}\") """ +
+          s"""\n\n\t\"${elemNameToProve}\" should \"${key}\" in {""" +
+            s"""\n\t\tval p = (\"${elemNameToProve}\", \"${value}\") """ +
             s"""\n\t\tprove(p)""" +
             s"""\n\t\tp""" +
             s"""\n\t}"""
@@ -626,39 +232,39 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
       }
     }
 
-    // GENERAL TESTS OF ELEMENT - CvRDTProof
-    generateTestFunctionsComments(s"GENERAL TESTS OF ELEMENT:  ${tableName}  - specified in CvRDTProof trait")
-    var tests = mutable.LinkedHashMap(
-      "be a CvRDT" -> "is_a_CvRDT", // WORKS, but table must have more than 1 arg???
+    // GENERAL PROOFS OF ELEMENT - CvRDTProof
+    generateProofFunctionsComments(s"GENERAL PROOFS OF ELEMENT:  ${tableName}  - specified in CvRDTProof trait")
+    var proofs = mutable.LinkedHashMap(
+      "be a CvRDT" -> "is_a_CvRDT", // WORKS
       "compatible commutes" -> "compatibleCommutes", // WORKS
       "compare correct" -> "compareCorrect") // WORKS
-    generateTestFunction(tests, tableName)
+    generateProofFunction(proofs, tableName)
 
-    // TESTS OF ELEMENT FOR UPDATABLE ATTRIBUTES - object TableName extends CvRDTProof
-    generateTestFunctionsComments(s"TESTS FOR UPDATABLE ATTRIBUTES OF ELEMENT - specified in object TableName extends CvRDTProof")
-    tests = mutable.LinkedHashMap() //updateYear for each concurrently updatable attribute
+    // PROOFS OF ELEMENT FOR UPDATABLE ATTRIBUTES - object TableName extends CvRDTProof
+    generateProofFunctionsComments(s"PROOFS FOR UPDATABLE ATTRIBUTES OF ELEMENT - specified in object TableName extends CvRDTProof")
+    proofs = mutable.LinkedHashMap() //updateYear for each concurrently updatable attribute
     attributesList.foreach( //        WORKS
       at => if (at.allowConcurrentUpdates)
-        tests += s"update${at.attribName.capitalize} works" -> s"${tableName}_update${at.attribName.capitalize}_works"
+        proofs += s"update${at.attribName.capitalize} works" -> s"${tableName}_update${at.attribName.capitalize}_works"
     )
-    generateTestFunction(tests, tableName)
+    generateProofFunction(proofs, tableName)
 
-    // GENERAL TESTS OF elem TABLE
-    generateTestFunctionsComments(s"GENERAL TESTS OF TABLE:  ${tableName}sTable - specified in CvRDTProof1 trait")
-    tests = mutable.LinkedHashMap(
+    // GENERAL PROOFS OF elem TABLE
+    generateProofFunctionsComments(s"GENERAL PROOFS OF TABLE:  ${tableName}sTable - specified in CvRDTProof1 trait")
+    proofs = mutable.LinkedHashMap(
       "be commutative" -> "mergeCommutative", //WORKS
       "be idempotent" -> "mergeIdempotent", //REBENTA???
       "be associative" -> "mergeAssociative", //REBENTA???
       "be associative2" -> "mergeAssociative2",
       "compatible commutes" -> "compatibleCommutes"
     )
-    generateTestFunction(tests, s"${tableName}sTable")
+    generateProofFunction(proofs, s"${tableName}sTable")
 
-    // FK REFERENTIAL TESTS
+    // FK REFERENTIAL PROOFS
     if (fk_attributes.nonEmpty) {
-      generateTestFunctionsComments(s"FK TESTS    ")
-      tests = mutable.LinkedHashMap(
-        "maintain referential integrity generic test" -> "genericReferentialIntegrity", //REBENTA
+      generateProofFunctionsComments(s"FK PROOFS    ")
+      proofs = mutable.LinkedHashMap(
+        "maintain referential integrity generic proof" -> "genericReferentialIntegrity", //REBENTA
         "be commutative" -> "mergeCommutative", // WORKS
         "be idempotent" -> "mergeIdempotent", // REBENTA
         "be associative" -> "mergeAssociative", // REBENTA
@@ -666,7 +272,7 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
         "be associative2" -> "mergeAssociative2", // REBENTA
         "compatible commutes" -> "compatibleCommutes" // WORKS
       )
-      generateTestFunction(tests, fk_system_name)
+      generateProofFunction(proofs, fk_system_name)
 
     }
 
@@ -674,8 +280,6 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     classContent.append(s"\n\n}")
 
   }
-
-
 
 
   override def toString: String = {

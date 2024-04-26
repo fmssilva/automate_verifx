@@ -1,8 +1,7 @@
 import scala.collection.mutable
 
-
 @SerialVersionUID(1594622920505453437L)
-case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesMap: mutable.Map[String, Table]) extends Serializable {
+case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesMap: mutable.Map[String, Table], thisAttrib: TabAttribute) extends Serializable {
   /**
    * Class Constants
    */
@@ -17,7 +16,7 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
   /**
    * Check Attribute invariants
    */
-  val isPrimaryKey: Boolean = check_if_isPrimaryKey
+  var isPrimaryKey: Boolean = check_if_isPrimaryKey
   val fk_options: Option[FK_Options] = check_if_isForeignKey()
   val check_options: Option[Array[String]] = check_if_hasCheck()
 
@@ -27,6 +26,10 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
   private def check_if_isPrimaryKey = {
     lineTokens.indexOf("PRIMARY") < lineTokens.length - 1 &&
       lineTokens(lineTokens.indexOf("PRIMARY") + 1) == "KEY"
+  }
+
+  def setAttribPK(): Unit = {
+    isPrimaryKey = true
   }
 
   private def check_if_isForeignKey(): Option[FK_Options] = {
@@ -46,9 +49,11 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
           case Some(fk_Table) =>
             fk_Table.attributesList.find(_.attribName.equals(referencedColumn.toLowerCase())) match {
               case None =>
-                throw new IllegalArgumentException(s"At Line: $line - The column ${referencedColumn} must exist as PK/UNIQUE in referenced table ${referencedTable} ")
+                throw new IllegalArgumentException(s"At Line: $line - The column ${referencedColumn} must exist as PK in referenced table ${referencedTable} ")
               case Some(at) if !at.attribInvariant.isPrimaryKey =>
-                throw new IllegalArgumentException(s"At Line: $line - The column ${referencedColumn} must exist as PK/UNIQUE in referenced table ${referencedTable} ")
+                throw new IllegalArgumentException(s"At Line: $line - The column ${referencedColumn} must exist as PK in referenced table ${referencedTable} ")
+              case Some(at) if !at.attribDataType.equals(thisAttrib.attribDataType) =>
+                throw new IllegalArgumentException(s"At Line: $line - The attribute ${thisAttrib.attribName} must have the same data type as in the PK ${referencedColumn} in referenced table ${referencedTable} ")
               case Some(at) =>
                 Some(FK_Options(policy, fk_Table, at, hasOnDeleteCascade))
             }
@@ -70,6 +75,16 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
     }
   }
 
+
+  def getReferencedTable(): Table = fk_options match {
+    case Some(options) => options.referencedTable
+    case None => throw new NoSuchElementException("No FK Referenced Table available")
+  }
+
+  def getReferencedPK(): TabAttribute = fk_options match {
+    case Some(options) => options.referencedColumn
+    case None => throw new NoSuchElementException("No FK Referenced PK available")
+  }
 
   /**
    * Other Methods

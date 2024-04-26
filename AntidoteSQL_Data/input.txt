@@ -1,11 +1,16 @@
 CREATE UPDATE-WINS TABLE Art (
-    art_name VARCHAR PRIMARY KEY
-    country LWW VARCHAR
+    art_name VARCHAR
+    country VARCHAR
+    PRIMARY KEY (art_name, country )
  )
-CREATE UPDATE-WINS TABLE Alb(
-    title VARCHAR PRIMARY KEY,
-    art_artist VARCHAR foreign key update-wins references Art(art_name),
-    year LWW INT check(year >= 1900 AND year <= 2022),
-    price LWW INT check(price >= 0 AND price <= 10000),
+
+ CREATE UPDATE-WINS TABLE Alb(
+     title VARCHAR PRIMARY KEY,
+     art_artist VARCHAR foreign key update-wins references Art(art_name),
+     art_country VARCHAR foreign key update-wins references Art(country),
+
+     year LWW INT check(year >= 1900 AND year <= 2022),
+     price LWW INT check(price >= 0 AND price <= 10000),
  )
+
 

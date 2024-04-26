@@ -28,7 +28,7 @@ class TabAttribute(lineTokens: Array[String], var line : Int, sysTablesMap : mut
   idx_of_token += 1
   val (attribDataType,attribDataType_CRDT): (String, String) = getAttribDataType()
 
-  val attribInvariant: AttribInvariants = new AttribInvariants(lineTokens, line, sysTablesMap)
+  val attribInvariant: AttribInvariants = new AttribInvariants(lineTokens, line, sysTablesMap, this)
 
   println("Created: " + this.toString)
 
@@ -62,6 +62,8 @@ class TabAttribute(lineTokens: Array[String], var line : Int, sysTablesMap : mut
     }
   }
 
+  def setAttribPK(): Unit = attribInvariant.setAttribPK()
+
   /**
    *  Other Methods
    */
@@ -69,6 +71,8 @@ class TabAttribute(lineTokens: Array[String], var line : Int, sysTablesMap : mut
   override def toString: String = {
     s"ATTRIBUTE: ${attribName.toUpperCase()}, $attribPolicy, $attribDataType, Invariants: ${attribInvariant.toString}"
   }
+
+
 }
 
 

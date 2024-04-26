@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/crdt-library-for-antidote-sql.iml" filepath="$PROJECT_DIR$/.idea/modules/crdt-library-for-antidote-sql.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/crdt-library-for-antidote-sql-build.iml" filepath="$PROJECT_DIR$/.idea/modules/crdt-library-for-antidote-sql-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/crdt-library-for-antidote-sql.crdt-library-for-antidote-sql-build.iml" filepath="$PROJECT_DIR$/.idea/modules/crdt-library-for-antidote-sql.crdt-library-for-antidote-sql-build.iml" />
     </modules>
   </component>
 </project>
