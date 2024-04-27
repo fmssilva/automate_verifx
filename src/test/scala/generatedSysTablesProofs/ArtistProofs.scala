@@ -1,4 +1,4 @@
-package systemTablesProofs
+package generatedSysTablesProofs
 
 import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec

@@ -1,4 +1,4 @@
-package systemTablesProofs
+package generatedSysTablesProofs
 
 import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec
@@ -6,7 +6,7 @@ import org.scalatest.FlatSpec
 class SongProofs extends FlatSpec with Prover { 
 
 	////////////////////////////////////////////////////////////
-	// SONG GENERAL PROOFS OF ELEMENT:  Song  - specified in CvRDTProof trait
+	// GENERAL PROOFS OF ELEMENT:  Song  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
 	"Song" should "be a CvRDT" in {

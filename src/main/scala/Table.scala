@@ -40,7 +40,7 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
    * Generate FOLDERS AND CLASSES
    */
   // folder systemTables
-  private var systemTablesFolderName = "systemTables"
+  private var systemTablesFolderName = "generatedSysTables"
   private var folderPath = s"./src/main/verifx/$systemTablesFolderName"
   createDirectory(folderPath)
 

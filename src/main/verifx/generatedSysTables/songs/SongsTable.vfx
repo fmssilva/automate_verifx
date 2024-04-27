@@ -1,4 +1,4 @@
-import systemTables.songs.Song
+import generatedSysTables.songs.Song
 import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 

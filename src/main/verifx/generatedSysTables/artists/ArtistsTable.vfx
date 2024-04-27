@@ -1,4 +1,4 @@
-import systemTables.artists.Artist
+import generatedSysTables.artists.Artist
 import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 

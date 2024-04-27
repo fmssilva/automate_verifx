@@ -1,4 +1,4 @@
-import systemTables.albums.Album
+import generatedSysTables.albums.Album
 import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 
