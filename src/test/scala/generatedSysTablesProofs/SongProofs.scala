@@ -75,44 +75,44 @@ class SongProofs extends FlatSpec with Prover {
 	// FK REFERENTIAL PROOFS     
 	////////////////////////////////////////////////////////////
 
-	"Songs_FK_System" should "maintain referential integrity generic proof" in {
-		val p = ("Songs_FK_System", "genericReferentialIntegrity") 
+	"Songs_FK_References" should "maintain referential integrity generic proof" in {
+		val p = ("Songs_FK_References", "genericReferentialIntegrity") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_System" should "be commutative" in {
-		val p = ("Songs_FK_System", "mergeCommutative") 
+	"Songs_FK_References" should "be commutative" in {
+		val p = ("Songs_FK_References", "mergeCommutative") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_System" should "be idempotent" in {
-		val p = ("Songs_FK_System", "mergeIdempotent") 
+	"Songs_FK_References" should "be idempotent" in {
+		val p = ("Songs_FK_References", "mergeIdempotent") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_System" should "be associative" in {
-		val p = ("Songs_FK_System", "mergeAssociative") 
+	"Songs_FK_References" should "be associative" in {
+		val p = ("Songs_FK_References", "mergeAssociative") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_System" should "be associative (with assumptions)" in {
-		val p = ("Songs_FK_System", "mergeIsAssociative") 
+	"Songs_FK_References" should "be associative (with assumptions)" in {
+		val p = ("Songs_FK_References", "mergeIsAssociative") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_System" should "be associative2" in {
-		val p = ("Songs_FK_System", "mergeAssociative2") 
+	"Songs_FK_References" should "be associative2" in {
+		val p = ("Songs_FK_References", "mergeAssociative2") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_System" should "compatible commutes" in {
-		val p = ("Songs_FK_System", "compatibleCommutes") 
+	"Songs_FK_References" should "compatible commutes" in {
+		val p = ("Songs_FK_References", "compatibleCommutes") 
 		prove(p)
 		p
 	}

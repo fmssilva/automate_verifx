@@ -4,25 +4,25 @@ import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
 /**
- * Class representing the element:   ALBUM 
+ * Class representing the element:   ALB 
  * given by the Antidote SQL command:
- *		CREATE UPDATE-WINS TABLE ALBUM (
+ *		CREATE UPDATE-WINS TABLE ALB (
  *		TITLE VARCHAR PRIMARY KEY ,
- *		ART_ARTIST VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ARTIST ( NAME ) ,
- *		ART_COUNTRY VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ARTIST ( COUNTRY ) ,
+ *		ART_ARTIST VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( NAME ) ,
+ *		ART_COUNTRY VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( COUNTRY ) ,
  *		YEAR LWW INT CHECK ( YEAR >= 1900 AND YEAR <= 2022 ) ,
  *		PRICE LWW INT CHECK ( PRICE >= 0 AND PRICE <= 10000 ) ,
  *		)
  */
-class Album(title: String, art_artist: String, art_country: String, year: LWWRegister[Int], price: LWWRegister[Int]) extends CvRDT[Album] {
+class Alb(title: String, art_artist: String, art_country: String, year: LWWRegister[Int], price: LWWRegister[Int]) extends CvRDT[Alb] {
 
 
 	//Implementation of methods DECLARED in CvRDT trait
 
-	def merge(that: Album) = 
-		new Album(this.title, this.art_artist, this.art_country, this.year.merge(that.year), this.price.merge(that.price))
+	def merge(that: Alb) = 
+		new Alb(this.title, this.art_artist, this.art_country, this.year.merge(that.year), this.price.merge(that.price))
 
-	def compare(that: Album) = 
+	def compare(that: Alb) = 
 		this.year.compare(that.year) &&
 		this.price.compare(that.price)
 
@@ -34,7 +34,7 @@ class Album(title: String, art_artist: String, art_country: String, year: LWWReg
 		 this.price.value >= 0 && this.price.value <= 10000
 	}
 
-	override def compatible(that: Album) = 
+	override def compatible(that: Alb) = 
 		this.title == that.title &&
 		this.art_artist == that.art_artist &&
 		this.art_country == that.art_country &&
@@ -47,14 +47,14 @@ class Album(title: String, art_artist: String, art_country: String, year: LWWReg
 
 	def updateYear(newYear: Int, stampYear: LamportClock) = { 
 		if( newYear >= 1900 && newYear <= 2022)
-			new Album(this.title, this.art_artist, this.art_country, this.year.assign(newYear, stampYear), this.price)
+			new Alb(this.title, this.art_artist, this.art_country, this.year.assign(newYear, stampYear), this.price)
 		else
 			this
 	}
 
 	def updatePrice(newPrice: Int, stampPrice: LamportClock) = { 
 		if( newPrice >= 0 && newPrice <= 10000)
-			new Album(this.title, this.art_artist, this.art_country, this.year, this.price.assign(newPrice, stampPrice))
+			new Alb(this.title, this.art_artist, this.art_country, this.year, this.price.assign(newPrice, stampPrice))
 		else
 			this
 	}
@@ -68,10 +68,10 @@ class Album(title: String, art_artist: String, art_country: String, year: LWWReg
 * Object to implement the proof functions for the updatable attributes
 */
 
-object Album extends CvRDTProof[Album] {
+object Alb extends CvRDTProof[Alb] {
 
-	proof Album_updateYear_works {
-		forall(elem: Album, year1: Int, year2: Int, c1: LamportClock, c2: LamportClock ) {
+	proof Alb_updateYear_works {
+		forall(elem: Alb, year1: Int, year2: Int, c1: LamportClock, c2: LamportClock ) {
 			( elem.reachable()  &&  c1.smaller(c2) &&
 			  year1 >= 1900 && year1 <= 2022 && year2 >= 1900 && year2 <= 2022
 			 ) =>: {
@@ -95,8 +95,8 @@ object Album extends CvRDTProof[Album] {
 		}
 	}
 
-	proof Album_updatePrice_works {
-		forall(elem: Album, price1: Int, price2: Int, c1: LamportClock, c2: LamportClock ) {
+	proof Alb_updatePrice_works {
+		forall(elem: Alb, price1: Int, price2: Int, c1: LamportClock, c2: LamportClock ) {
 			( elem.reachable()  &&  c1.smaller(c2) &&
 			  price1 >= 0 && price1 <= 10000 && price2 >= 0 && price2 <= 10000
 			 ) =>: {

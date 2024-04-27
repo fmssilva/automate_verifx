@@ -2,29 +2,29 @@ import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.lemmas.CvRDTProof
 
 /**
- * Class representing the element:   ARTIST 
+ * Class representing the element:   ART 
  * given by the Antidote SQL command:
- *		CREATE UPDATE-WINS TABLE ARTIST (
+ *		CREATE UPDATE-WINS TABLE ART (
  *		NAME VARCHAR
  *		COUNTRY VARCHAR
  *		PRIMARY KEY ( NAME , COUNTRY )
  *		)
  */
-class Artist(name: String, country: String) extends CvRDT[Artist] {
+class Art(name: String, country: String) extends CvRDT[Art] {
 
 
 	//Implementation of methods DECLARED in CvRDT trait
 
-	def merge(that: Artist) = 
-		new Artist(this.name, this.country)
+	def merge(that: Art) = 
+		new Art(this.name, this.country)
 
-	def compare(that: Artist) = 
+	def compare(that: Art) = 
 		true
 
 
 	//Override Methods IMPLEMENTED in CvRDT trait
 
-	override def compatible(that: Artist) = 
+	override def compatible(that: Art) = 
 		this.name == that.name &&
 		this.country == that.country
 

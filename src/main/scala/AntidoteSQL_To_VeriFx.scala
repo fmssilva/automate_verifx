@@ -1,3 +1,5 @@
+
+import createTable.Table
 import java.io.{FileOutputStream, ObjectOutputStream}
 import java.nio.file.{Files, Paths}
 import scala.collection.mutable

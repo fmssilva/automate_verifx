@@ -3,28 +3,28 @@ import antidote.crdts.LamportClock
 import antidote.crdts.VersionVector
 import antidote.crdts.lemmas.CvRDTProof1
 import generatedSysTables.songs.SongsTable
-import generatedSysTables.albums.AlbumsTable
+import generatedSysTables.albs.AlbsTable
 
-class Songs_FK_System[Time](songs: SongsTable[Time], albums: AlbumsTable[Time]) 
-			 extends CvRDT[Songs_FK_System[Time]] {
+class Songs_FK_References[Time](songs: SongsTable[Time], albs: AlbsTable[Time]) 
+			 extends CvRDT[Songs_FK_References[Time]] {
 
 	//override default implementation of methods in CvRDT trait
 
 	override def reachable(): Boolean =
-		this.songs.reachable() && this.albums.reachable()
+		this.songs.reachable() && this.albs.reachable()
 
-	override def compatible(that: Songs_FK_System[Time]): Boolean =
-		this.songs.compatible(that.songs) && this.albums.compatible(that.albums)
+	override def compatible(that: Songs_FK_References[Time]): Boolean =
+		this.songs.compatible(that.songs) && this.albs.compatible(that.albs)
 
-	override def equals(that: Songs_FK_System[Time]) =
+	override def equals(that: Songs_FK_References[Time]) =
 		this == that
 
 	//implement declared methods in CvRDT trait
 
-	def merge(that: Songs_FK_System[Time]) =
-		new Songs_FK_System(this.songs.merge(that.songs), this.albums.merge(that.albums))
+	def merge(that: Songs_FK_References[Time]) =
+		new Songs_FK_References(this.songs.merge(that.songs), this.albs.merge(that.albs))
 
-	def compare(that: Songs_FK_System[Time]) = //ignore
+	def compare(that: Songs_FK_References[Time]) = //ignore
 		true
 
 	//methods to use in the Ref Integrity Proof
@@ -33,14 +33,14 @@ class Songs_FK_System[Time](songs: SongsTable[Time], albums: AlbumsTable[Time])
 		(this.songs.isVisible(title) 
 		) =>: {
 			val song = this.songs.get(title)
-			this.albums.isVisible(song.fst.title)
+			this.albs.isVisible(song.fst.title)
 		}
 	}
 
 	//other methods??
 
 	def reachableWithAssociativityAssumptions(): Boolean = {
-		this.songs.reachable() && this.albums.reachable() &&
+		this.songs.reachable() && this.albs.reachable() &&
 			this.mergeValuesAssumptions()
 	}
 
@@ -48,17 +48,17 @@ class Songs_FK_System[Time](songs: SongsTable[Time], albums: AlbumsTable[Time])
 		forall(v1: SongsTable[Time], v2: SongsTable[Time], v3: SongsTable[Time]) {
 		  v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
 		} &&
-		forall(v1: AlbumsTable[Time], v2: AlbumsTable[Time], v3: AlbumsTable[Time]) {
+		forall(v1: AlbsTable[Time], v2: AlbsTable[Time], v3: AlbsTable[Time]) {
 		   v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
 		}
 	}}
 
 	//OBJECT FOR OTHER PROOFS
 
-object Songs_FK_System extends CvRDTProof1[Songs_FK_System] {
+object Songs_FK_References extends CvRDTProof1[Songs_FK_References] {
 
 	proof genericReferentialIntegrity[Time] {
-		forall(s1: Songs_FK_System[Time], s2: Songs_FK_System[Time], title: String) {
+		forall(s1: Songs_FK_References[Time], s2: Songs_FK_References[Time], title: String) {
 			( s1.reachable() && s2.reachable() && 
 			  s1.compatible(s2) &&
 			  s1.refIntegrityHolds(title) && s2.refIntegrityHolds(title) 
@@ -69,7 +69,7 @@ object Songs_FK_System extends CvRDTProof1[Songs_FK_System] {
 	}
 
 	proof mergeIsAssociative[Time] {
-		forall(s1: Songs_FK_System[Time], s2: Songs_FK_System[Time], s3: Songs_FK_System[Time]) {
+		forall(s1: Songs_FK_References[Time], s2: Songs_FK_References[Time], s3: Songs_FK_References[Time]) {
 			(s1.reachable() && s2.reachable() && s3.reachable() &&
 			  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)
 			) =>: {
