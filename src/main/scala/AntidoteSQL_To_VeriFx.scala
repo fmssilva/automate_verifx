@@ -6,21 +6,12 @@ import scala.io.Source
 /**
  * Convert Antidote SQL Commands to VeriFx
  *
- * @Pre:
- *    1. The correct syntax of the commands was checked previously,
- *       e.g. the correct open and closing of parenthesis
- *       We only check the words for each command
- *       2. Each instruction is in a different line,
- *       so the first word of the instruction is always the token(0)
- *       and e.g. the closing parenthesis of a CREATE TABLE command is in a new line after the last attribute
- *       3.  All user names are correct: don't use key words...
- *
- *       EXAMPLE OF ANTIDOTE SQL COMMAND TO PROCCESS:
- *       CREATE UPDATE-WINS TABLE Albums (
- *       title VARCHAR PRIMARY KEY,
- *       artist VARCHAR,
- *       year LWW INT
- *       )
+ * EXAMPLE OF ANTIDOTE SQL COMMAND TO PROCESS:
+ * CREATE UPDATE-WINS TABLE Albums (
+ * title VARCHAR PRIMARY KEY,
+ * artist VARCHAR,
+ * year LWW INT
+ * )
  */
 object AntidoteSQL_To_VeriFx {
   /**
@@ -29,7 +20,7 @@ object AntidoteSQL_To_VeriFx {
   private val ANTIDOTE_SQL_DATA_FOLDER = Paths.get("AntidoteSQL_Data")
   private val INPUT_COMMANDS_FILE_NAME = "input.txt"
   private val SYS_TABLES_MAP_FILE_NAME = "sysTablesMap.ser"
-  private val SYS_TABLES_FILE_PATH = Paths.get(s"${ANTIDOTE_SQL_DATA_FOLDER}/${SYS_TABLES_MAP_FILE_NAME}")
+  private val SYS_TABLES_FILE_PATH = Paths.get(s"$ANTIDOTE_SQL_DATA_FOLDER/$SYS_TABLES_MAP_FILE_NAME")
 
 
   /**
@@ -40,7 +31,7 @@ object AntidoteSQL_To_VeriFx {
   def main(args: Array[String]): Unit = {
     try {
       // get the AntidoteSQL commands, tokenized by lines and keeping the lines numbers for error report
-      val cmdTokens = getCommandsTokens() // List[(Line_Of_Code: Int, tokens: Array[String])]
+      val cmdTokens = getCommandsTokens // List[(Line_Of_Code: Int, tokens: Array[String])]
       //print for debug
       cmdTokens.foreach {
         case (lineNumber, tokens) =>
@@ -68,23 +59,23 @@ object AntidoteSQL_To_VeriFx {
     //print for debug
     println("Initial Map of Tables in the System:")
     for ((key, value) <- sysTablesMap)
-      println(s"k-${key}: ${value}")
+      println(s"k-$key: $value")
   }
 
   /**
    *
-   * @param cmdTokens
+   * @param cmdTokens - tokens of all the commands given in the input file
    */
   private def processCommands(cmdTokens: List[(Int, Array[String])], sysTablesMap: mutable.Map[String, Table]): Unit = {
     var line = 0
     while (line < cmdTokens.length) {
       println("\nNEXT COMMAND:")
-      val (l, tokens) = cmdTokens(line)
+      val (_, tokens) = cmdTokens(line)
       tokens.headOption match {
         case Some("CREATE") =>
           if (tokens.lift(2).contains("TABLE")) {
-            // se update policy No concurrency poder ser não se escrever nada temos que rever aqui e no create table
-            //todo: ver no tablesMap se ja existe
+            // if update policy No concurrency can it not be written? if so we need to check here and in the create table
+            //todo: check in tablesMap if already exists
             val newTable = new Table(cmdTokens, line, sysTablesMap)
             //update next line of tokens to read
             line = newTable.line
@@ -102,7 +93,7 @@ object AntidoteSQL_To_VeriFx {
     }
   }
 
-  private def getCommandsTokens(): List[(Int, Array[String])] = {
+  private def getCommandsTokens: List[(Int, Array[String])] = {
     // Input file
     val fileName = ANTIDOTE_SQL_DATA_FOLDER.resolve(INPUT_COMMANDS_FILE_NAME)
     val fileSource = Source.fromFile(fileName.toFile)
@@ -156,16 +147,17 @@ object AntidoteSQL_To_VeriFx {
     if (!Files.exists(SYS_TABLES_FILE_PATH)) {
       mutable.Map[String, Table]()
     } else {
-      //always delete the orignal (for testing)
+      //TODO: make this persistent when implementation is done
+      //always delete the original (for testing)
       Files.delete(SYS_TABLES_FILE_PATH)
       mutable.Map[String, Table]()
       //after testing uncomment this to load the original if exists
       //val inputStream = new ObjectInputStream(new FileInputStream(SYS_TABLES_FILE_PATH.toString))
-//      try {
-//        inputStream.readObject().asInstanceOf[mutable.Map[String, CreateTable]]
-//      } finally {
-//        inputStream.close()
-//      }
+      //      try {
+      //        inputStream.readObject().asInstanceOf[mutable.Map[String, CreateTable]]
+      //      } finally {
+      //        inputStream.close()
+      //      }
     }
   }
 

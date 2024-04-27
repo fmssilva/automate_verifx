@@ -5,6 +5,7 @@ import scala.collection.mutable
  */
 object FK_References_Class {
 
+  // Global variables
   private var classContent: StringBuilder = _
   private var table: Table = _
   private var tableName: String = _
@@ -12,7 +13,7 @@ object FK_References_Class {
   private var fk_attributes: mutable.Seq[TabAttribute] = _
 
 
-  def generate_FK_References_ClassCode(table: Table, systemTablesFolderName: String, fk_system_name: String) = {
+  def generate_FK_References_ClassCode(table: Table, systemTablesFolderName: String, fk_system_name: String): StringBuilder = {
 
     println("generating file code at generate_FK_References_ClassCode() at CreateTable class")
 
@@ -36,21 +37,21 @@ object FK_References_Class {
         s"\nimport antidote.crdts.LamportClock" +
         s"\nimport antidote.crdts.VersionVector" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
-        s"\nimport ${systemTablesFolderName}.${tableNameLowCase}s.${tableName}sTable" +
+        s"\nimport $systemTablesFolderName.${tableNameLowCase}s.${tableName}sTable" +
         referencedTableNames.map(t_Name =>
-          s"\nimport ${systemTablesFolderName}.${t_Name.toLowerCase()}s.${t_Name}sTable"
+          s"\nimport $systemTablesFolderName.${t_Name.toLowerCase()}s.${t_Name}sTable"
         ).mkString
     )
 
     // CLASS HEADER
     classContent.append(
-      s"\n\nclass ${fk_system_name}[Time](" +
+      s"\n\nclass $fk_system_name[Time](" +
         s"${tableNameLowCase}s: ${tableName}sTable[Time]," +
         referencedTableNames.map(
           t_Name =>
             s" ${t_Name.toLowerCase()}s: ${t_Name}sTable[Time]"
         ).mkString(", ")
-        + s") \n\t\t\t extends CvRDT[${fk_system_name}[Time]] {"
+        + s") \n\t\t\t extends CvRDT[$fk_system_name[Time]] {"
     )
 
 
@@ -65,14 +66,14 @@ object FK_References_Class {
 
     //COMPATIBLE
     classContent.append(
-      s"\n\n\toverride def compatible(that: ${fk_system_name}[Time]): Boolean =" +
+      s"\n\n\toverride def compatible(that: $fk_system_name[Time]): Boolean =" +
         s"\n\t\tthis.${tableNameLowCase}s.compatible(that.${tableNameLowCase}s) &&" +
         s" this.${fk_tab_name}s.compatible(that.${fk_tab_name}s)"
     )
 
     //EQUALS
     classContent.append(
-      s"\n\n\toverride def equals(that: ${fk_system_name}[Time]) =" +
+      s"\n\n\toverride def equals(that: $fk_system_name[Time]) =" +
         s"\n\t\tthis == that"
     )
 
@@ -82,14 +83,14 @@ object FK_References_Class {
 
     //MERGE
     classContent.append(
-      s"\n\n\tdef merge(that: ${fk_system_name}[Time]) =" +
-        s"\n\t\tnew ${fk_system_name}(this.${tableNameLowCase}s.merge(that.${tableNameLowCase}s), " +
+      s"\n\n\tdef merge(that: $fk_system_name[Time]) =" +
+        s"\n\t\tnew $fk_system_name(this.${tableNameLowCase}s.merge(that.${tableNameLowCase}s), " +
         s"this.${fk_tab_name}s.merge(that.${fk_tab_name}s))"
     )
 
     //COMPARE
     classContent.append(
-      s"\n\n\tdef compare(that: ${fk_system_name}[Time]) = //ignore" +
+      s"\n\n\tdef compare(that: $fk_system_name[Time]) = //ignore" +
         s"\n\t\ttrue"
     )
 
@@ -99,11 +100,11 @@ object FK_References_Class {
 
     //DEF REF_INTEGRITY_PROOF
     classContent.append(
-      s"\n\n\tdef refIntegrityHolds(${at_name}: ${table.fk_attributes.head.attribDataType}) = {" +
-        s"\n\t\t(this.${tableNameLowCase}s.isVisible(${at_name}) " +
+      s"\n\n\tdef refIntegrityHolds($at_name: ${table.fk_attributes.head.attribDataType}) = {" +
+        s"\n\t\t(this.${tableNameLowCase}s.isVisible($at_name) " +
         s"\n\t\t) =>: {" +
-        s"\n\t\t\tval ${tableNameLowCase} = this.${tableNameLowCase}s.get(${at_name})" +
-        s"\n\t\t\tthis.${fk_tab_name}s.isVisible(${tableNameLowCase}.fst.${at_name})" +
+        s"\n\t\t\tval $tableNameLowCase = this.${tableNameLowCase}s.get($at_name)" +
+        s"\n\t\t\tthis.${fk_tab_name}s.isVisible($tableNameLowCase.fst.$at_name)" +
         s"\n\t\t}" +
         s"\n\t}"
     )
@@ -142,7 +143,7 @@ object FK_References_Class {
 
   private def gen_ObjectExtraProofs(fk_system_name: String) = {
 
-    // TODO: correr todas as FK
+    // TODO: CHECK ALL FKs
     val at_name = table.attributesList.head.attribName
 
     //OBJECT
@@ -150,22 +151,22 @@ object FK_References_Class {
 
     //OBJECT HEADER
     classContent.append(
-      s"\n\nobject ${fk_system_name} extends CvRDTProof1[${fk_system_name}] {"
+      s"\n\nobject $fk_system_name extends CvRDTProof1[$fk_system_name] {"
     )
 
     //REF_INTEGRITY
     classContent.append(
       s"\n\n\tproof genericReferentialIntegrity[Time] {" +
         s"\n\t\tforall(" +
-        s"s1: ${fk_system_name}[Time], s2: ${fk_system_name}[Time], " +
-        //TODO: meter todas as FK??? ou PK???
-        s"${at_name}: ${fk_attributes.head.attribDataType}" +
+        s"s1: $fk_system_name[Time], s2: $fk_system_name[Time], " +
+        //TODO: CHECK ALL FK OR PK ??
+        s"$at_name: ${fk_attributes.head.attribDataType}" +
         s") {" +
         s"\n\t\t\t( s1.reachable() && s2.reachable() && " +
         s"\n\t\t\t  s1.compatible(s2) &&" +
-        s"\n\t\t\t  s1.refIntegrityHolds(${at_name}) && s2.refIntegrityHolds(${at_name}) " +
+        s"\n\t\t\t  s1.refIntegrityHolds($at_name) && s2.refIntegrityHolds($at_name) " +
         s"\n\t\t\t) =>: {" +
-        s"\n\t\t\t\ts1.merge(s2).refIntegrityHolds(${at_name})" +
+        s"\n\t\t\t\ts1.merge(s2).refIntegrityHolds($at_name)" +
         s"\n\t\t\t}" +
         s"\n\t\t}" +
         s"\n\t}"
@@ -174,7 +175,7 @@ object FK_References_Class {
     //MERGE_ASSOCIATIVE
     classContent.append(
       s"\n\n\tproof mergeIsAssociative[Time] {" +
-        s"\n\t\tforall(s1: ${fk_system_name}[Time], s2: ${fk_system_name}[Time], s3: ${fk_system_name}[Time]) {" +
+        s"\n\t\tforall(s1: $fk_system_name[Time], s2: $fk_system_name[Time], s3: $fk_system_name[Time]) {" +
         s"\n\t\t\t(s1.reachable() && s2.reachable() && s3.reachable() &&" +
         s"\n\t\t\t  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)" +
         s"\n\t\t\t) =>: {" +

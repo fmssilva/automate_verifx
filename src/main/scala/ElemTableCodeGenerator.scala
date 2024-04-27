@@ -14,20 +14,20 @@ object ElemTableCodeGenerator {
 
     // IMPORTS
     classContent.append(
-      s"import ${systemTablesFolderName}.${tableName.toLowerCase()}s.${tableName}" +
+      s"import $systemTablesFolderName.${tableName.toLowerCase()}s.$tableName" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
         (update_policy match {
           case "UPDATE-WINS" => s"\nimport antidote.crdts.tables.UWTable"
-          //TODO: outros casos
+          //TODO: other cases
         })
     )
 
     //CLASS HEADER
     classContent.append(
       s"\n\nclass ${tableName}sTable[Time] (before: (Time, Time) => Boolean, " +
-        s"\n\t\t\t\telements: Map[String, Tuple[${tableName}, MVRegister[Int,Time]]])" +
+        s"\n\t\t\t\telements: Map[String, Tuple[$tableName, MVRegister[Int,Time]]])" +
         (update_policy match {
-          case "UPDATE-WINS" => s"\n\t\t\t\textends UWTable[${tableName}, Time, ${tableName}sTable[Time]]{ "
+          case "UPDATE-WINS" => s"\n\t\t\t\textends UWTable[$tableName, Time, ${tableName}sTable[Time]]{ "
           case "DELETE-WINS" => throw new Exception("check args of DWTable trait")
           case "NO_CONCURRENCY" => throw new Exception("What to do with table NO_CONCURRENCY")
         })
@@ -36,7 +36,7 @@ object ElemTableCodeGenerator {
     classContent.append("\n\n\n\t//Implement Methods DECLARED in UWTable trait")
     //COPY
     classContent.append(
-      s"\n\n\tdef copy(newElements: Map[String, Tuple[${tableName}, MVRegister[Int, Time]]]) =" +
+      s"\n\n\tdef copy(newElements: Map[String, Tuple[$tableName, MVRegister[Int, Time]]]) =" +
         s"\n\t\t    new ${tableName}sTable(this.before, newElements)"
     )
 

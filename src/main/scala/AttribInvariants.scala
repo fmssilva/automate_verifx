@@ -6,12 +6,13 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
    * Class Constants
    */
   private val FK_UPDATE_POLICIES = Array("UPDATE-WINS", "DELETE-WINS", "NO CONCURRENCY")
-  private val BINARY_OPERATORS = Array("=", "<>", "!=", "<", ">", "<=", ">=", "AND", "OR", "+", "-", "*", "/", "%")
-  private val UNARY_OPERATORS = Array("NOT", "IN", "BETWEEN", "LIKE")
+  //TODO: other CHECK
+  //private val BINARY_OPERATORS = Array("=", "<>", "!=", "<", ">", "<=", ">=", "AND", "OR", "+", "-", "*", "/", "%")
+  //private val UNARY_OPERATORS = Array("NOT", "IN", "BETWEEN", "LIKE")
   // IN (Checks if a value matches any value in a list or subquery.)
   // BETWEEN value1 AND value2
   // LIKE (Matches a pattern in a string. It often uses wildcard characters % and _.)
-  private val NO_ARG_OPERATORS = Array("IS NULL", "IS NOT NULL")
+  //private val NO_ARG_OPERATORS = Array("IS NULL", "IS NOT NULL")
 
   /**
    * Check Attribute invariants
@@ -45,15 +46,15 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
         val fk_TableOption = sysTablesMap.get(referencedTable.toLowerCase().capitalize)
         fk_TableOption match {
           case None =>
-            throw new IllegalArgumentException(s"At Line: $line - The table ${referencedTable} should be created before being used as FK ")
+            throw new IllegalArgumentException(s"At Line: $line - The table $referencedTable should be created before being used as FK ")
           case Some(fk_Table) =>
             fk_Table.attributesList.find(_.attribName.equals(referencedColumn.toLowerCase())) match {
               case None =>
-                throw new IllegalArgumentException(s"At Line: $line - The column ${referencedColumn} must exist as PK in referenced table ${referencedTable} ")
+                throw new IllegalArgumentException(s"At Line: $line - The column $referencedColumn must exist as PK in referenced table $referencedTable ")
               case Some(at) if !at.attribInvariant.isPrimaryKey =>
-                throw new IllegalArgumentException(s"At Line: $line - The column ${referencedColumn} must exist as PK in referenced table ${referencedTable} ")
+                throw new IllegalArgumentException(s"At Line: $line - The column $referencedColumn must exist as PK in referenced table $referencedTable ")
               case Some(at) if !at.attribDataType.equals(thisAttrib.attribDataType) =>
-                throw new IllegalArgumentException(s"At Line: $line - The attribute ${thisAttrib.attribName} must have the same data type as in the PK ${referencedColumn} in referenced table ${referencedTable} ")
+                throw new IllegalArgumentException(s"At Line: $line - The attribute ${thisAttrib.attribName} must have the same data type as in the PK $referencedColumn in referenced table $referencedTable ")
               case Some(at) =>
                 Some(FK_Options(policy, fk_Table, at, hasOnDeleteCascade))
             }
@@ -76,12 +77,12 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
   }
 
 
-  def getReferencedTable(): Table = fk_options match {
+  def getReferencedTable: Table = fk_options match {
     case Some(options) => options.referencedTable
     case None => throw new NoSuchElementException("No FK Referenced Table available")
   }
 
-  def getReferencedPK(): TabAttribute = fk_options match {
+  def getReferencedPK: TabAttribute = fk_options match {
     case Some(options) => options.referencedColumn
     case None => throw new NoSuchElementException("No FK Referenced PK available")
   }
@@ -91,7 +92,7 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
    */
   override def toString: String = {
     val pkString = if (isPrimaryKey) "PrimaryKey" else "NotPrimaryKey"
-    val fkString = fk_options.map(options => s"ForeignKey(${options.update_policy}, ${options.referencedTable.tableName}, ${options.referencedColumn.attribName}, ON DEL CASC = ${if (options.hasOnDeleteCascade) "true" else "false"})").getOrElse("NotForeignKey")
+    val fkString = fk_options.map(options => s"ForeignKey(${options.update_policy}, ${options.referencedTable.tableName}, ${options.referencedColumn.attribName}, ON DEL CASCADE = ${if (options.hasOnDeleteCascade) "true" else "false"})").getOrElse("NotForeignKey")
     val checkString = check_options.map(tokens => s"CheckOptions(${tokens.mkString("[", ", ", "]")})").getOrElse("NoCheckOptions")
     s"($pkString, $fkString, $checkString)"
   }
