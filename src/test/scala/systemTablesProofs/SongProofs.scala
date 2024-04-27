@@ -6,7 +6,7 @@ import org.scalatest.FlatSpec
 class SongProofs extends FlatSpec with Prover { 
 
 	////////////////////////////////////////////////////////////
-	// GENERAL PROOFS OF ELEMENT:  Song  - specified in CvRDTProof trait 
+	// SONG GENERAL PROOFS OF ELEMENT:  Song  - specified in CvRDTProof trait
 	////////////////////////////////////////////////////////////
 
 	"Song" should "be a CvRDT" in {
