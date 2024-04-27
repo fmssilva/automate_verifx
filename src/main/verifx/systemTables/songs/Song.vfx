@@ -1,0 +1,81 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof
+import antidote.crdts.registers.LWWRegister
+import antidote.crdts.LamportClock
+
+/**
+ * Class representing the element:   SONG 
+ * given by the Antidote SQL command:
+ *		CREATE UPDATE-WINS TABLE SONG (
+ *		TITLE VARCHAR PRIMARY KEY ,
+ *		ALB_TITLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ALBUM ( TITLE ) ,
+ *		DURATION LWW INT CHECK ( DURATION >= 0 AND DURATION <= 1000 ) ,
+ *		)
+ */
+class Song(title: String, alb_title: String, duration: LWWRegister[Int]) extends CvRDT[Song] {
+
+
+	//Implementation of methods DECLARED in CvRDT trait
+
+	def merge(that: Song) = 
+		new Song(this.title, this.alb_title, this.duration.merge(that.duration))
+
+	def compare(that: Song) = 
+		this.duration.compare(that.duration)
+
+
+	//Override Methods IMPLEMENTED in CvRDT trait
+
+	override def reachable() = { 
+		 this.duration.value >= 0 && this.duration.value <= 1000
+	}
+
+	override def compatible(that: Song) = 
+		this.title == that.title &&
+		this.alb_title == that.alb_title &&
+		this.duration.compatible(that.duration)
+
+
+	//Implement methods for concurrently updatable attributes to be used by the prover,
+	//useful in CmRDT - Operations
+
+	def updateDuration(newDuration: Int, stampDuration: LamportClock) = { 
+		if( newDuration >= 0 && newDuration <= 1000)
+			new Song(this.title, this.alb_title, this.duration.assign(newDuration, stampDuration))
+		else
+			this
+	}
+
+}
+
+
+
+
+/*
+* Object to implement the proof functions for the updatable attributes
+*/
+
+object Song extends CvRDTProof[Song] {
+
+	proof Song_updateDuration_works {
+		forall(elem: Song, duration1: Int, duration2: Int, c1: LamportClock, c2: LamportClock ) {
+			( elem.reachable()  &&  c1.smaller(c2) &&
+			  duration1 >= 0 && duration1 <= 1000 && duration2 >= 0 && duration2 <= 1000
+			 ) =>: {
+				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
+				 val elem1 = elem.updateDuration(duration1, c1)
+				 val elem2 = elem.updateDuration(duration2, c2)
+				 val elem12 = elem1.merge(elem2)
+				 //check if the update in elem 1 and 2 kept the correct values
+				 elem1.title == elem.title && elem2.title == elem.title &&
+				 elem1.alb_title == elem.alb_title && elem2.alb_title == elem.alb_title &&
+				 elem1.duration.value == duration1 && elem2.duration.value == duration2 &&
+				 //check if the merged values are correct and according to the chosen update-policy 
+				 elem12.title == elem.title &&
+				 elem12.alb_title == elem.alb_title &&
+				 elem12.duration.value == duration2
+			}
+		}
+	}
+
+}
