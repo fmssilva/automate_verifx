@@ -59,7 +59,7 @@ object AntidoteSQL_To_VeriFx {
 
   private def printSysTablesMap(sysTablesMap: mutable.Map[String, Table]): Unit = {
     //print for debug
-    println("Initial Map of Tables in the System:")
+    println("\nInitial Map of Tables in the System:")
     for ((key, value) <- sysTablesMap)
       println(s"k-$key: $value")
   }
@@ -74,6 +74,11 @@ object AntidoteSQL_To_VeriFx {
       println("\nNEXT COMMAND:")
       val (_, tokens) = cmdTokens(line)
       tokens.headOption match {
+        case Some("//") => line += 1
+        case Some("/*") =>
+          while (line < cmdTokens.length && cmdTokens(line)._2(0) != "*/")
+            line += 1
+          line += 1
         case Some("CREATE") =>
           if (tokens.lift(2).contains("TABLE")) {
             // if update policy No concurrency can it not be written? if so we need to check here and in the create table

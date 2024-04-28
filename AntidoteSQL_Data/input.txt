@@ -1,3 +1,4 @@
+
 CREATE UPDATE-WINS TABLE Art (
     name VARCHAR
     country VARCHAR
@@ -13,6 +14,11 @@ CREATE UPDATE-WINS TABLE Art (
 
  )
 
+/*
+f
+f
+f
+*/
  CREATE UPDATE-WINS TABLE Song(
      title VARCHAR PRIMARY KEY,
      alb_title VARCHAR foreign key update-wins references Alb(title),

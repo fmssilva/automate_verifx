@@ -106,7 +106,6 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
         val formatedName = name.replaceAll("\\s", "_").toLowerCase.capitalize
         if (sysTablesMap.contains(formatedName))
           throw new IllegalArgumentException(s"At Line: $line - The table name $name is already used in another table")
-        println("\n\n\n  " + formatedName)
         formatedName
     }
   }
