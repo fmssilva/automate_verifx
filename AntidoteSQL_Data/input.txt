@@ -1,27 +1,35 @@
 
+// don't use Artist and Album to not confuse with the albumSystem with a specific example
+
+
+// @Pre: Only 1 PK implemented for now on verifx, and of type String
+
 CREATE UPDATE-WINS TABLE Art (
-    name VARCHAR
-    country VARCHAR
-    PRIMARY KEY (name, country )
+    name VARCHAR PRIMARY KEY
+    age LWW INT check(age >= 0 AND age <= 100),
+    ranking LWW INT check(ranking >= 0 AND ranking <= 100),
  )
 
  CREATE UPDATE-WINS TABLE Alb (
      title VARCHAR PRIMARY KEY,
      art_artist VARCHAR foreign key update-wins references Art(name),
-     art_country VARCHAR foreign key update-wins references Art(country),
      year LWW INT check(year >= 1900 AND year <= 2022),
      price LWW INT check(price >= 0 AND price <= 10000),
 
  )
 
-/*
-f
-f
-f
-*/
+ CREATE UPDATE-WINS TABLE Genre(
+     style VARCHAR PRIMARY KEY,
+     description LWW varchar
+ )
+
+
  CREATE UPDATE-WINS TABLE Song(
-     title VARCHAR PRIMARY KEY,
+     s_title VARCHAR PRIMARY KEY,
+
      alb_title VARCHAR foreign key update-wins references Alb(title),
+     style varchar foreign key update-wins references Genre(style),
+
      duration LWW INT check(duration >= 0 AND duration <= 1000),
  )
 

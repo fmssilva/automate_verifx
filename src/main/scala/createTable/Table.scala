@@ -1,6 +1,6 @@
 package createTable
 
-import createTable.codeGenerators.{ElemCodeGenerator, ElemTableCodeGenerator, FK_References_Class, Proofs_Class}
+import createTable.codeGenerators.{ElemCodeGenerator, ElemTableCodeGenerator, FK_System_Class, Proofs_Class}
 
 import java.io._
 import java.nio.file.{Files, Paths}
@@ -27,57 +27,56 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
 
   private val TABLE_UPDATE_POLICIES = Array("UPDATE-WINS", "DELETE-WINS", "NO_CONCURRENCY")
 
-  private val tokens_init_cmd_line = line
-
   /**
-   * Get createTable.Table - update-policy, name, and attributes
+   * Get Table - update-policy, name, and attributes
    */
+  private val tokens_init_cmd_line = line
   private val lineTokens = cmdTokens(line)._2
-  println("Line " + line + ": " + lineTokens.mkString(", ") + " \t\t» creating table at CreateTable class ")
+  println("Line " + line + ": " + lineTokens.mkString(", ") + " \t\t» creating table at Table class ")
   val update_policy: String = getTableUpdatePolicy
-  val tableName: String = getTableName
+
+  // (Element, ElementsTable, Elements_FK_System)
+  val tableNames: (String, String, String) = getTableName
   val attributesList: mutable.Seq[TabAttribute] = getTableAttributes
   val fk_attributes: mutable.Seq[TabAttribute] = attributesList.filter(_.attribInvariant.fk_options.isDefined)
-  checkIfFKsReferenceAllPKOfReferencedTable(fk_attributes)
-
+  checkIf_FKs_ReferenceAllPK_Of_ReferencedTable()
   /**
    * Generate FOLDERS AND CLASSES
    */
   // folder systemTables
-  private var systemTablesFolderName = "generatedSysTables"
+  var systemTablesFolderName = "generatedSysTables"
   private var folderPath = s"./src/main/verifx/$systemTablesFolderName"
-  createDirectory(folderPath)
+  createDirectory()
 
   // folder "createTable.Table"
-  folderPath = s"$folderPath/${tableName.toLowerCase()}s"
-  createDirectory(folderPath)
+  folderPath = s"$folderPath/${tableNames._1.toLowerCase()}s"
+  createDirectory()
 
   // file Element Class
-  private var filePath = s"$folderPath/$tableName.vfx"
+  private var filePath = s"$folderPath/${tableNames._1}.vfx"
   private var classContent = ElemCodeGenerator.generate_Elem_ClassCode(this, cmdTokens.slice(tokens_init_cmd_line, line))
   createClassFile()
 
   // file Elem TABLE Class
-  filePath = s"$folderPath/${tableName}sTable.vfx"
-  classContent = ElemTableCodeGenerator.generate_ElemTable_ClassCode(this, systemTablesFolderName)
+  filePath = s"$folderPath/${tableNames._2}.vfx"
+  classContent = ElemTableCodeGenerator.generate_ElemTable_ClassCode(this)
   createClassFile()
 
-  // file Table_FK_References Class
-  val fk_system_name = s"${tableName}s_FK_References"
+  // file Table_FK_System Class
   if (fk_attributes.nonEmpty) {
-    filePath = s"$folderPath/$fk_system_name.vfx"
-    classContent = FK_References_Class.generate_FK_References_ClassCode(this, systemTablesFolderName, fk_system_name)
+    filePath = s"$folderPath/${tableNames._3}.vfx"
+    classContent = FK_System_Class.generate_FK_System_ClassCode(this)
     createClassFile()
   }
 
   // folder PROOFS directory
   systemTablesFolderName = s"${systemTablesFolderName}Proofs"
   folderPath = s"./src/test/scala/$systemTablesFolderName"
-  createDirectory(folderPath)
+  createDirectory()
 
   // file PROOFS Elem class
-  filePath = s"$folderPath/${tableName}Proofs.scala"
-  classContent = Proofs_Class.generate_Proofs_ClassCode(this, systemTablesFolderName, fk_system_name)
+  filePath = s"$folderPath/${tableNames._1}Proofs.scala"
+  classContent = Proofs_Class.generate_Proofs_ClassCode(this)
   createClassFile()
 
 
@@ -99,14 +98,14 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
   /**
    * Get createTable.Table Name
    */
-  private def getTableName: String = {
+  private def getTableName: (String, String, String) = {
     lineTokens.lift(3) match { //3 = idx of table name in the create table statement
       case Some("(") | None => throw new IllegalArgumentException(s"At Create createTable.Table - At Line: $line - createTable.Table needs to be given a name")
       case Some(name) =>
-        val formatedName = name.replaceAll("\\s", "_").toLowerCase.capitalize
-        if (sysTablesMap.contains(formatedName))
+        val elemName = name.replaceAll("\\s", "_").toLowerCase.capitalize
+        if (sysTablesMap.contains(elemName))
           throw new IllegalArgumentException(s"At Line: $line - The table name $name is already used in another table")
-        formatedName
+        (elemName, elemName + "sTable", elemName + "_FK_System")
     }
   }
 
@@ -144,12 +143,12 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     listOfAttributes
   }
 
-  private def checkIfFKsReferenceAllPKOfReferencedTable(fk_attributes: mutable.Seq[TabAttribute]): Unit = {
+  private def checkIf_FKs_ReferenceAllPK_Of_ReferencedTable(): Unit = {
     fk_attributes.foreach { at =>
       val referencedTable = at.attribInvariant.getReferencedTable
       val refTab_PKs = referencedTable.attributesList.filter(_.attribInvariant.isPrimaryKey)
       if (!refTab_PKs.forall(pk => fk_attributes.exists(att_in => att_in.attribInvariant.getReferencedPK.attribName.equals(pk.attribName))))
-        throw new IllegalArgumentException(s"createTable.Table $tableName should reference all PK's of the referenced table " + referencedTable.tableName)
+        throw new IllegalArgumentException(s"Table ${tableNames._1} should reference all PK's of the referenced table ${referencedTable.tableNames._1}")
     }
   }
 
@@ -157,7 +156,7 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
   /**
    * Create Directories
    */
-  private def createDirectory(folderPath: String): Unit = {
+  private def createDirectory(): Unit = {
     println("creating directory     $folderPath      at createDirectory() at CreateTable class")
     //TODO: do the delete table to clean the packages and table system map...
     if (!Files.exists(Paths.get(folderPath)))
@@ -187,7 +186,7 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
 
 
   override def toString: String = {
-    s"createTable.Table: $tableName - $update_policy: ${attributesList.map("\n\t\t\t\t" + _.toString).mkString("; ")}"
+    s"Table: ${tableNames._1} - $update_policy: ${attributesList.map("\n\t\t\t\t" + _.toString).mkString("; ")}"
   }
 
 }

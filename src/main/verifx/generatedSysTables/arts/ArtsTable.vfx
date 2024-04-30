@@ -1,14 +1,28 @@
+
 import generatedSysTables.arts.Art
 import antidote.crdts.lemmas.CvRDTProof1
+import antidote.crdts.tables.DataType
 import antidote.crdts.tables.UWTable
 
-class ArtsTable[Time] (before: (Time, Time) => Boolean, 
-				elements: Map[String, Tuple[Art, MVRegister[Int,Time]]])
-				extends UWTable[Art, Time, ArtsTable[Time]]{ 
+/**
+ * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
+ *		- ART -
+ *
+ * @param before - function to compare two Time values
+ * @param elements - Map of elements/rows in the table,
+ *                   where Key is a String == the PK of the Table (TODO: To be generalized for more types and number of PKs)
+ *                   and Value is a Tuple with the Element itself,
+ *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
+ *                                                    - and a Time
+ */
+class ArtsTable[Time] ( before: (Time, Time) => Boolean,								//function
+						elements: Map[String, Tuple[Art, MVRegister[Int,Time]]]		//row
+						 ) extends UWTable[Art, Time, ArtsTable[Time]]{ 
 
 
-	//Implement Methods DECLARED in UWTable trait
-
+	/*
+	* Implement Methods DECLARED in UWTable trait
+	*/
 	def copy(newElements: Map[String, Tuple[Art, MVRegister[Int, Time]]]) =
 		    new ArtsTable(this.before, newElements)
 

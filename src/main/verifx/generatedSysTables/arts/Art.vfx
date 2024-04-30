@@ -1,31 +1,129 @@
+
 import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.lemmas.CvRDTProof
+import antidote.crdts.registers.LWWRegister
+import antidote.crdts.LamportClock
 
 /**
- * Class representing the element:   ART 
+ * Class representing the element(row):::  ART 
+ *
  * given by the Antidote SQL command:
+ *
  *		CREATE UPDATE-WINS TABLE ART (
- *		NAME VARCHAR
- *		COUNTRY VARCHAR
- *		PRIMARY KEY ( NAME , COUNTRY )
+ *		NAME VARCHAR PRIMARY KEY
+ *		AGE LWW INT CHECK ( AGE >= 0 AND AGE <= 100 ) ,
+ *		RANKING LWW INT CHECK ( RANKING >= 0 AND RANKING <= 100 ) ,
  *		)
  */
-class Art(name: String, country: String) extends CvRDT[Art] {
+class Art(name: String, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
 
 
-	//Implementation of methods DECLARED in CvRDT trait
 
+  /*
+   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
+   */
+
+	//merge this Art with that Art
 	def merge(that: Art) = 
-		new Art(this.name, this.country)
+		//args: name (PK); age (attrib); ranking (attrib)
+		new Art(this.name, this.age.merge(that.age), this.ranking.merge(that.ranking))
 
+	//compare this Art with that Art
 	def compare(that: Art) = 
-		true
+		this.age.compare(that.age) &&
+		this.ranking.compare(that.ranking)
 
 
-	//Override Methods IMPLEMENTED in CvRDT trait
 
+  /*
+   * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
+   */
+
+	//this Art is compatible with that Art?
 	override def compatible(that: Art) = 
+		//args: name (PK); age (attrib); ranking (attrib)
 		this.name == that.name &&
-		this.country == that.country
+		this.age.compatible(that.age) &&
+		this.ranking.compatible(that.ranking)
+
+	//Art is reachable given the CHECK conditions of its attributes?
+	override def reachable() = { 
+		 this.age.value >= 0 && this.age.value <= 100 && 
+		 this.ranking.value >= 0 && this.ranking.value <= 100
+	}
+
+
+
+  /*
+   * IMPLEMENT METHODS FOR CONCURRENTLY UPDATABLE ATTRIBUTES,
+   * to be used by the prover, useful in CmRDT - Operations
+   */
+
+	def updateAge(newAge: Int, stampAge: LamportClock) = { 
+		if( newAge >= 0 && newAge <= 100)
+			new Art(this.name, this.age.assign(newAge, stampAge), this.ranking)
+		else
+			this
+	}
+
+	def updateRanking(newRanking: Int, stampRanking: LamportClock) = { 
+		if( newRanking >= 0 && newRanking <= 100)
+			new Art(this.name, this.age, this.ranking.assign(newRanking, stampRanking))
+		else
+			this
+	}
+
+}
+
+
+
+
+/*
+* Object to implement the proof functions for the updatable attributes
+*/
+
+object Art extends CvRDTProof[Art] {
+
+	proof Art_updateAge_works {
+		forall(elem: Art, age1: Int, age2: Int, c1: LamportClock, c2: LamportClock ) {
+			( elem.reachable()  &&  c1.smaller(c2) &&
+			  age1 >= 0 && age1 <= 100 && age2 >= 0 && age2 <= 100
+			 ) =>: {
+				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
+				 val elem1 = elem.updateAge(age1, c1)
+				 val elem2 = elem.updateAge(age2, c2)
+				 val elem12 = elem1.merge(elem2)
+				 //check if the update in elem 1 and 2 kept the correct values
+				 elem1.name == elem.name && elem2.name == elem.name &&
+				 elem1.age.value == age1 && elem2.age.value == age2 &&
+				 elem1.ranking == elem.ranking && elem2.ranking == elem.ranking &&
+				 //check if the merged values are correct and according to the chosen update-policy 
+				 elem12.name == elem.name &&
+				 elem12.age.value == age2 &&
+				 elem12.ranking == elem.ranking
+			}
+		}
+	}
+
+	proof Art_updateRanking_works {
+		forall(elem: Art, ranking1: Int, ranking2: Int, c1: LamportClock, c2: LamportClock ) {
+			( elem.reachable()  &&  c1.smaller(c2) &&
+			  ranking1 >= 0 && ranking1 <= 100 && ranking2 >= 0 && ranking2 <= 100
+			 ) =>: {
+				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
+				 val elem1 = elem.updateRanking(ranking1, c1)
+				 val elem2 = elem.updateRanking(ranking2, c2)
+				 val elem12 = elem1.merge(elem2)
+				 //check if the update in elem 1 and 2 kept the correct values
+				 elem1.name == elem.name && elem2.name == elem.name &&
+				 elem1.age == elem.age && elem2.age == elem.age &&
+				 elem1.ranking.value == ranking1 && elem2.ranking.value == ranking2 &&
+				 //check if the merged values are correct and according to the chosen update-policy 
+				 elem12.name == elem.name &&
+				 elem12.age == elem.age &&
+				 elem12.ranking.value == ranking2
+			}
+		}
+	}
 
 }

@@ -3,29 +3,29 @@ package generatedSysTablesProofs
 import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec
 
-class ArtProofs extends FlatSpec with Prover { 
+class GenreProofs extends FlatSpec with Prover { 
 
 	////////////////////////////////////////////////////////////
 	// ELEMENT - GENERAL PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
 	// WORKS
-	"Art" should "be a CvRDT" in {
-		val p = ("Art", "is_a_CvRDT") 
+	"Genre" should "be a CvRDT" in {
+		val p = ("Genre", "is_a_CvRDT") 
 		prove(p)
 		p
 	}
 
 	// WORKS
-	"Art" should "compatible commutes" in {
-		val p = ("Art", "compatibleCommutes") 
+	"Genre" should "compatible commutes" in {
+		val p = ("Genre", "compatibleCommutes") 
 		prove(p)
 		p
 	}
 
 	// WORKS
-	"Art" should "compare correct" in {
-		val p = ("Art", "compareCorrect") 
+	"Genre" should "compare correct" in {
+		val p = ("Genre", "compareCorrect") 
 		prove(p)
 		p
 	}
@@ -35,15 +35,8 @@ class ArtProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS
-	"Art" should "updateAge works" in {
-		val p = ("Art", "Art_updateAge_works") 
-		prove(p)
-		p
-	}
-
-	// WORKS
-	"Art" should "updateRanking works" in {
-		val p = ("Art", "Art_updateRanking_works") 
+	"Genre" should "updateDescription works" in {
+		val p = ("Genre", "Genre_updateDescription_works") 
 		prove(p)
 		p
 	}
@@ -53,36 +46,36 @@ class ArtProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS
-	"ArtsTable" should "be commutative" in {
-		val p = ("ArtsTable", "mergeCommutative") 
+	"GenresTable" should "be commutative" in {
+		val p = ("GenresTable", "mergeCommutative") 
 		prove(p)
 		p
 	}
 
 	//  !!!   ABORTED  !!!
-	"ArtsTable" should "be idempotent" in {
-		val p = ("ArtsTable", "mergeIdempotent") 
+	"GenresTable" should "be idempotent" in {
+		val p = ("GenresTable", "mergeIdempotent") 
 		prove(p)
 		p
 	}
 
 	//  !!!   ABORTED  !!!
-	"ArtsTable" should "be associative" in {
-		val p = ("ArtsTable", "mergeAssociative") 
+	"GenresTable" should "be associative" in {
+		val p = ("GenresTable", "mergeAssociative") 
 		prove(p)
 		p
 	}
 
 	// WORKS
-	"ArtsTable" should "be associative2" in {
-		val p = ("ArtsTable", "mergeAssociative2") 
+	"GenresTable" should "be associative2" in {
+		val p = ("GenresTable", "mergeAssociative2") 
 		prove(p)
 		p
 	}
 
 	// WORKS
-	"ArtsTable" should "compatible commutes" in {
-		val p = ("ArtsTable", "compatibleCommutes") 
+	"GenresTable" should "compatible commutes" in {
+		val p = ("GenresTable", "compatibleCommutes") 
 		prove(p)
 		p
 	}

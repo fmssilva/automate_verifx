@@ -1,0 +1,24 @@
+
+
+    //trait to represent different data types so we can combine them in a List like List[Any] in scala
+
+    //generate explicit constructores and getters for each class
+
+    trait DataType {}
+
+    class StringType(value: String) extends DataType {}
+
+    class IntType(value: Int) extends DataType {}
+
+    //TODO: is there a point to make other types like Boolean or Counter_Int?
+    // they will never be used as PK...
+
+    /*
+    val list: List[DataType] = List(StringType("Hello"), IntType(123), DoubleType(45.6), BooleanType(true))
+    list.foreach {
+      case StringType(s) => println(s"String: $s")
+      case IntType(i) => println(s"Int: $i")
+      case DoubleType(d) => println(s"Double: $d")
+      case BooleanType(b) => println(s"Boolean: $b")
+    }
+    */

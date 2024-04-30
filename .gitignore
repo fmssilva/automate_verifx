@@ -2,3 +2,5 @@ target/
 *.log
 .project
 .idea/
+null/
+project/

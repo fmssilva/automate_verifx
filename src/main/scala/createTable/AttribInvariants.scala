@@ -94,7 +94,7 @@ case class AttribInvariants(lineTokens: Array[String], var line: Int, sysTablesM
    */
   override def toString: String = {
     val pkString = if (isPrimaryKey) "PrimaryKey" else "NotPrimaryKey"
-    val fkString = fk_options.map(options => s"ForeignKey(${options.update_policy}, ${options.referencedTable.tableName}, ${options.referencedColumn.attribName}, ON DEL CASCADE = ${if (options.hasOnDeleteCascade) "true" else "false"})").getOrElse("NotForeignKey")
+    val fkString = fk_options.map(options => s"ForeignKey(${options.update_policy}, ${options.referencedTable.tableNames}, ${options.referencedColumn.attribName}, ON DEL CASCADE = ${if (options.hasOnDeleteCascade) "true" else "false"})").getOrElse("NotForeignKey")
     val checkString = check_options.map(tokens => s"CheckOptions(${tokens.mkString("[", ", ", "]")})").getOrElse("NoCheckOptions")
     s"($pkString, $fkString, $checkString)"
   }

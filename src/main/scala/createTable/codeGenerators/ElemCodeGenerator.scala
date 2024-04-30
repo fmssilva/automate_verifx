@@ -12,7 +12,8 @@ object ElemCodeGenerator {
   // Global Variables
   private val CRDT_CLOCK = "LamportClock" //clock to be used for CRDTs
   private var classContent: StringBuilder = _
-  private var tableName: String = _
+  // (Element, ElementsTable, Elements_FK_System)
+  private var tableNames: (String, String, String) = _
   private var attributesList: mutable.Seq[TabAttribute] = _
   private var updatableAttributes: mutable.Seq[TabAttribute] = _
 
@@ -20,10 +21,10 @@ object ElemCodeGenerator {
     println("generating file code at generate_Elem_ClassCode() at CreateTable class")
 
     // Global Variables
-    classContent = new StringBuilder
-    tableName = table.tableName
-    attributesList = table.attributesList
-    updatableAttributes = attributesList.filter(at => at.allowConcurrentUpdates)
+    this.classContent = new StringBuilder
+    this.tableNames = table.tableNames
+    this.attributesList = table.attributesList
+    this.updatableAttributes = attributesList.filter(at => at.allowConcurrentUpdates)
 
     // Generate Imports, Comments and Class Header
     gen_imports()
@@ -31,29 +32,31 @@ object ElemCodeGenerator {
     gen_ClassHeader
 
     //Implement Methods DECLARED in CvRDT trait
-    classContent.append("\n\n\n\t//Implementation of methods DECLARED in CvRDT trait")
+    classContent.append("\n\n\n\n  /*\n   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT\n   */")
     gen_Merge
     gen_Compare
 
     //Override Methods IMPLEMENTED in CvRDT trait
-    classContent.append("\n\n\n\t//Override Methods IMPLEMENTED in CvRDT trait")
-
+    classContent.append("\n\n\n\n  /*\n   * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT\n   */")
+    gen_Compatible()
     val attributesWithChecks = attributesList.filter(at => at.attribInvariant.check_options.isDefined)
     if (attributesWithChecks.nonEmpty)
-      gen_Reachable(attributesWithChecks)
-
-    gen_Compatible()
+    gen_Reachable(attributesWithChecks)
 
     // Generate update method for updatable attributes
-    if (updatableAttributes.nonEmpty)
+    if (updatableAttributes.nonEmpty) {
+      classContent.append("\n\n\n\n  /*\n   * IMPLEMENT METHODS FOR CONCURRENTLY UPDATABLE ATTRIBUTES,\n   * to be used by the prover, useful in CmRDT - Operations\n   */")
       gen_UpdateAttributes()
+    }
 
     // class closing
     classContent.append("\n\n}")
 
     // Generate extra proofs for the update of updatable attributes
-    if (updatableAttributes.nonEmpty)
+    if (updatableAttributes.nonEmpty) {
+      classContent.append("\n\n\n\n\n/*\n* Object to implement the proof functions for the updatable attributes\n*/")
       gen_ObjectWithExtraProofs()
+    }
 
     classContent
   }
@@ -67,7 +70,7 @@ object ElemCodeGenerator {
    */
   private def gen_imports(): Unit = {
     classContent.append(
-      "import antidote.crdts.lemmas.CvRDT" +
+      s"\nimport antidote.crdts.lemmas.CvRDT" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof" +
         //TODO: confirm more imports for other data types besides "LWWRegister"??
         (if (attributesList.exists(a => a.attribDataType_CRDT.contains("LWWRegister")))
@@ -85,8 +88,8 @@ object ElemCodeGenerator {
    */
   private def gen_ClassComments(cmdTokens: List[(Int, Array[String])]): Unit = {
     classContent.append(
-      s"\n\n/**\n * Class representing the element:   ${tableName.toUpperCase()} " +
-        s"\n * given by the Antidote SQL command:" +
+      s"\n\n/**\n * Class representing the element(row):::  ${tableNames._1.toUpperCase()} " +
+        s"\n *\n * given by the Antidote SQL command:\n *" +
         cmdTokens.map(
           cmdToken => s"\n *\t\t${cmdToken._2.mkString(" ")}"
         ).mkString +
@@ -100,11 +103,11 @@ object ElemCodeGenerator {
    */
   private def gen_ClassHeader = {
     classContent.append(
-      s"\nclass $tableName(" +
+      s"\nclass ${tableNames._1}(" +
         attributesList.map(
           at => s"${at.attribName}: ${if (at.allowConcurrentUpdates) at.attribDataType_CRDT else at.attribDataType}"
         ).mkString(", ") +
-        s") extends CvRDT[$tableName] {"
+        s") extends CvRDT[${tableNames._1}] {"
     )
   }
 
@@ -113,8 +116,11 @@ object ElemCodeGenerator {
    */
   private def gen_Merge = {
     classContent.append(
-      s"\n\n\tdef merge(that: $tableName) = " +
-        s"\n\t\tnew $tableName(" +
+      s"\n\n\t//merge this ${tableNames._1} with that ${tableNames._1}" +
+        s"\n\tdef merge(that: ${tableNames._1}) = " +
+        gen_comment_to_explain_args() +
+        //code to merge
+        s"\n\t\tnew ${tableNames._1}(" +
         attributesList.map(
           at =>
             if (at.allowConcurrentUpdates) s"this.${at.attribName}.merge(that.${at.attribName})"
@@ -124,12 +130,14 @@ object ElemCodeGenerator {
     )
   }
 
+
   /**
    * Generate COMPARE
    */
   private def gen_Compare = {
     classContent.append(
-      s"\n\n\tdef compare(that: $tableName) = " +
+      s"\n\n\t//compare this ${tableNames._1} with that ${tableNames._1}" +
+        s"\n\tdef compare(that: ${tableNames._1}) = " +
         (if (updatableAttributes.isEmpty)
           s"\n\t\ttrue"
         else
@@ -147,7 +155,8 @@ object ElemCodeGenerator {
    */
   private def gen_Reachable(attributesWithChecks: mutable.Seq[TabAttribute]): Unit = {
     classContent.append(
-      s"\n\n\toverride def reachable() = { " +
+      s"\n\n\t//${tableNames._1} is reachable given the CHECK conditions of its attributes?" +
+        s"\n\toverride def reachable() = { " +
         attributesWithChecks.map { at =>
           "\n\t\t" + at.attribInvariant.check_options.get.map {
             case attrib if attributesList.exists(_.attribName.toUpperCase().equals(attrib)) => s" this.${attrib.toLowerCase()}.value"
@@ -166,7 +175,9 @@ object ElemCodeGenerator {
    */
   private def gen_Compatible(): Unit = {
     classContent.append(
-      s"\n\n\toverride def compatible(that: $tableName) = \n\t\t" +
+      s"\n\n\t//this ${tableNames._1} is compatible with that ${tableNames._1}?" +
+        s"\n\toverride def compatible(that: ${tableNames._1}) = " +
+        gen_comment_to_explain_args() + "\n\t\t" +
         attributesList.map(
           at =>
             if (at.allowConcurrentUpdates)
@@ -181,12 +192,9 @@ object ElemCodeGenerator {
    * Implement Update methods for concurrently updatable attributes to be used by the prover, useful in CmRDT - Operations
    */
   private def gen_UpdateAttributes(): Unit = {
-    //generate comment
-    classContent.append("\n\n\n\t//Implement methods for concurrently updatable attributes to be used by the prover,\n\t//useful in CmRDT - Operations")
-
     //helper method
     def code_for_newElement(atName: String) = {
-      s"\n\t\t\tnew $tableName(" +
+      s"\n\t\t\tnew ${tableNames._1}(" +
         attributesList.map(
           at =>
             if (at.attribName.equals(atName))
@@ -220,25 +228,33 @@ object ElemCodeGenerator {
     }
   }
 
+  //generate comment to explain each arg of a method
+  private def gen_comment_to_explain_args(): String = {
+    s"\n\t\t//args: " +
+      attributesList.map(
+        at =>
+          if (at.attribInvariant.isPrimaryKey) s"${at.attribName} (PK)"
+          else if (at.attribInvariant.fk_options.isDefined) s"${at.attribName} (FK)"
+          else s"${at.attribName} (attrib)"
+      ).mkString("; ")
+  }
+
   /**
    * Generate extra proofs for the attributes that are updatable
    */
   private def gen_ObjectWithExtraProofs(): Unit = {
-    //OBJECT COMMENTS
-    classContent.append("\n\n\n\n\n/*\n* Object to implement the proof functions for the updatable attributes\n*/")
-
     //OBJECT HEADER
     classContent.append(
-      s"\n\nobject $tableName extends CvRDTProof[$tableName] {")
+      s"\n\nobject ${tableNames._1} extends CvRDTProof[${tableNames._1}] {")
 
     // UPDATE PROOFS
     attributesList.filter(at => at.allowConcurrentUpdates).map {
       at =>
         val atName = at.attribName
         classContent.append(
-          s"\n\n\tproof ${tableName}_update${atName.capitalize}_works {" +
+          s"\n\n\tproof ${tableNames._1}_update${atName.capitalize}_works {" +
             //forall (...)
-            s"\n\t\tforall(elem: $tableName, ${atName}1: ${at.attribDataType}, ${atName}2: ${at.attribDataType}, c1: $CRDT_CLOCK, c2: $CRDT_CLOCK ) {" +
+            s"\n\t\tforall(elem: ${tableNames._1}, ${atName}1: ${at.attribDataType}, ${atName}2: ${at.attribDataType}, c1: $CRDT_CLOCK, c2: $CRDT_CLOCK ) {" +
             // assumptions to start
             s"\n\t\t\t( elem.reachable()  &&  c1.smaller(c2)" +
             (if (at.attribInvariant.check_options.isDefined) {

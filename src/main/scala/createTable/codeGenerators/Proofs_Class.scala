@@ -11,73 +11,88 @@ object Proofs_Class {
 
   // Global Variables
   private var classContent: StringBuilder = _
+  //(Element, ElementsTable, Elements_FK_System)
+  private var tableNames: (String, String, String) = _
 
-  def generate_Proofs_ClassCode(table: Table, systemTablesFolderName: String, fk_system_name: String): StringBuilder = {
+  /**
+   * Generate the code of the Class with the Proofs for each Element, Table, and FK_System (if there are FKs)
+   *
+   * @param table                  - table to generate the code for
+   * @return -  the code for the class
+   */
+  def generate_Proofs_ClassCode(table: Table): StringBuilder = {
 
     println("generating file code at generate_Proofs_ClassCode() at CreateTable class")
 
     // Global Variables
-    classContent = new StringBuilder
+    this.classContent = new StringBuilder
+    this.tableNames = table.tableNames
 
-    val tableName = table.tableName
-    val attributesList = table.attributesList
-    val fk_attributes = table.fk_attributes
 
     // PACKAGE
-    classContent.append(s"package $systemTablesFolderName")
+    classContent.append(
+      s"package ${table.systemTablesFolderName}"
+    )
 
     // IMPORTS
-    classContent.append(s"\n\nimport be.vub.kdeporre.crdtproofs.Prover" +
-      s"\nimport org.scalatest.FlatSpec")
+    classContent.append(
+      s"\n\nimport be.vub.kdeporre.crdtproofs.Prover" +
+        s"\nimport org.scalatest.FlatSpec"
+    )
 
     // CLASS HEADER
-    classContent.append(s"\n\nclass ${tableName}Proofs extends FlatSpec with Prover { ")
+    classContent.append(
+      s"\n\nclass ${tableNames._1}Proofs extends FlatSpec with Prover { "
+    )
 
-    // GENERAL PROOFS OF ELEMENT
-    generateProofFunctionsComments(s"GENERAL PROOFS OF ELEMENT:  $tableName  - specified in CvRDTProof trait")
+    // ELEMENT - GENERAL PROOFS
     var proofs = mutable.LinkedHashMap(
-      "be a CvRDT" -> "is_a_CvRDT", // WORKS
-      "compatible commutes" -> "compatibleCommutes", // WORKS
-      "compare correct" -> "compareCorrect") // WORKS
-    generateProofFunction(proofs, tableName)
+      "be a CvRDT" -> ("is_a_CvRDT", "WORKS"),
+      "compatible commutes" -> ("compatibleCommutes", "WORKS"),
+      "compare correct" -> ("compareCorrect", "WORKS")
+    )
+    generateProofFunctionsComments(s"ELEMENT - GENERAL PROOFS  - specified in CvRDTProof trait")
+    generateProofFunction(proofs, tableNames._1)
 
-    // PROOFS OF ELEMENT FOR UPDATABLE ATTRIBUTES
-    generateProofFunctionsComments(s"PROOFS OF ELEMENT FOR UPDATABLE ATTRIBUTES - specified in object TableName extends CvRDTProof")
+    // ELEMENT - UPDATABLE ATTRIBUTES PROOFS
     proofs = mutable.LinkedHashMap()
-    attributesList.foreach(
-      at => if (at.allowConcurrentUpdates) //        WORKS
-        proofs += s"update${at.attribName.capitalize} works" -> s"${tableName}_update${at.attribName.capitalize}_works"
+    table.attributesList.foreach(
+      at => if (at.allowConcurrentUpdates)
+        proofs += s"update${at.attribName.capitalize} works" -> (s"${tableNames._1}_update${at.attribName.capitalize}_works", "WORKS")
     )
-    generateProofFunction(proofs, tableName)
+    generateProofFunctionsComments(s"ELEMENT - UPDATABLE ATTRIBUTES PROOFS  - specified in object TableName extends CvRDTProof")
+    generateProofFunction(proofs, tableNames._1)
 
-    // GENERAL PROOFS OF TABLE
-    generateProofFunctionsComments(s"GENERAL PROOFS OF TABLE:  ${tableName}sTable - specified in CvRDTProof1 trait")
+    // TABLE - GENERAL PROOFS
     proofs = mutable.LinkedHashMap(
-      "be commutative" -> "mergeCommutative", //WORKS
-      "be idempotent" -> "mergeIdempotent", // JVM TERMINATION???
-      "be associative" -> "mergeAssociative", //JVM TERMINATION???
-      "be associative2" -> "mergeAssociative2",
-      "compatible commutes" -> "compatibleCommutes"
+      "be commutative" -> ("mergeCommutative", "WORKS"),
+      "be idempotent" -> ("mergeIdempotent", " !!!   ABORTED  !!!"),
+      "be associative" -> ("mergeAssociative", " !!!   ABORTED  !!!"),
+      "be associative2" -> ("mergeAssociative2", "WORKS"),
+      "compatible commutes" -> ("compatibleCommutes", "WORKS")
     )
-    generateProofFunction(proofs, s"${tableName}sTable")
+    generateProofFunctionsComments(s"TABLE - GENERAL PROOFS  - specified in CvRDTProof1 trait")
+    generateProofFunction(proofs, s"${tableNames._2}")
 
     // FK REFERENTIAL PROOFS
-    if (fk_attributes.nonEmpty) {
-      generateProofFunctionsComments(s"FK REFERENTIAL PROOFS    ")
+    if (table.fk_attributes.nonEmpty) {
       proofs = mutable.LinkedHashMap(
-        "maintain referential integrity generic proof" -> "genericReferentialIntegrity", //JVM TERMINATION
-        "be commutative" -> "mergeCommutative", // WORKS
-        "be idempotent" -> "mergeIdempotent", // JVM TERMINATION
-        "be associative" -> "mergeAssociative", // JVM TERMINATION
-        "be associative (with assumptions)" -> "mergeIsAssociative", // JVM TERMINATION
-        "be associative2" -> "mergeAssociative2", // JVM TERMINATION
-        "compatible commutes" -> "compatibleCommutes" // WORKS
+        "maintain referential integrity generic proof" -> ("genericReferentialIntegrity", "   !!!   ABORTED   !!!"),
+        "be commutative" -> ("mergeCommutative", "WORKS"),
+        "be idempotent" -> ("mergeIdempotent", "   !!!   ABORTED   !!!"),
+        "be associative" -> ("mergeAssociative", "   !!!   ABORTED   !!!"),
+        "be associative (with assumptions)" -> ("mergeIsAssociative", "WORKS"),
+        "be associative2" -> ("mergeAssociative2", "WORKS"),
+        "compatible commutes" -> ("compatibleCommutes", "WORKS")
       )
-      generateProofFunction(proofs, fk_system_name)
+      generateProofFunctionsComments(s"FK REFERENTIAL PROOFS    ")
+      generateProofFunction(proofs, tableNames._3)
     }
 
     //CLASS CLOSE
     classContent.append(s"\n\n}")
+
+    classContent
 
   }
 
@@ -101,10 +116,11 @@ object Proofs_Class {
    * @param proofs          - map of proofs description and title
    * @param elemNameToProve - name of the element or table to prove upon
    */
-  private def generateProofFunction(proofs: mutable.LinkedHashMap[String, String], elemNameToProve: String): Unit = {
-    proofs.foreach { case (key, value) =>
+  private def generateProofFunction(proofs: mutable.LinkedHashMap[String, (String, String)], elemNameToProve: String): Unit = {
+    proofs.foreach { case (key, (value, state)) =>
       classContent.append(
-        s"""\n\n\t\"$elemNameToProve\" should \"$key\" in {""" +
+        s"\n\n\t// $state" +
+          s"""\n\t\"$elemNameToProve\" should \"$key\" in {""" +
           s"""\n\t\tval p = (\"$elemNameToProve\", \"$value\") """ +
           s"""\n\t\tprove(p)""" +
           s"""\n\t\tp""" +

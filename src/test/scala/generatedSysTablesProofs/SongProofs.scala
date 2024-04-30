@@ -6,21 +6,24 @@ import org.scalatest.FlatSpec
 class SongProofs extends FlatSpec with Prover { 
 
 	////////////////////////////////////////////////////////////
-	// GENERAL PROOFS OF ELEMENT:  Song  - specified in CvRDTProof trait 
+	// ELEMENT - GENERAL PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
+	// WORKS
 	"Song" should "be a CvRDT" in {
 		val p = ("Song", "is_a_CvRDT") 
 		prove(p)
 		p
 	}
 
+	// WORKS
 	"Song" should "compatible commutes" in {
 		val p = ("Song", "compatibleCommutes") 
 		prove(p)
 		p
 	}
 
+	// WORKS
 	"Song" should "compare correct" in {
 		val p = ("Song", "compareCorrect") 
 		prove(p)
@@ -28,9 +31,10 @@ class SongProofs extends FlatSpec with Prover {
 	}
 
 	////////////////////////////////////////////////////////////
-	// PROOFS OF ELEMENT FOR UPDATABLE ATTRIBUTES - specified in object TableName extends CvRDTProof 
+	// ELEMENT - UPDATABLE ATTRIBUTES PROOFS  - specified in object TableName extends CvRDTProof 
 	////////////////////////////////////////////////////////////
 
+	// WORKS
 	"Song" should "updateDuration works" in {
 		val p = ("Song", "Song_updateDuration_works") 
 		prove(p)
@@ -38,33 +42,38 @@ class SongProofs extends FlatSpec with Prover {
 	}
 
 	////////////////////////////////////////////////////////////
-	// GENERAL PROOFS OF TABLE:  SongsTable - specified in CvRDTProof1 trait 
+	// TABLE - GENERAL PROOFS  - specified in CvRDTProof1 trait 
 	////////////////////////////////////////////////////////////
 
+	// WORKS
 	"SongsTable" should "be commutative" in {
 		val p = ("SongsTable", "mergeCommutative") 
 		prove(p)
 		p
 	}
 
+	//  !!!   ABORTED  !!!
 	"SongsTable" should "be idempotent" in {
 		val p = ("SongsTable", "mergeIdempotent") 
 		prove(p)
 		p
 	}
 
+	//  !!!   ABORTED  !!!
 	"SongsTable" should "be associative" in {
 		val p = ("SongsTable", "mergeAssociative") 
 		prove(p)
 		p
 	}
 
+	// WORKS
 	"SongsTable" should "be associative2" in {
 		val p = ("SongsTable", "mergeAssociative2") 
 		prove(p)
 		p
 	}
 
+	// WORKS
 	"SongsTable" should "compatible commutes" in {
 		val p = ("SongsTable", "compatibleCommutes") 
 		prove(p)
@@ -75,44 +84,51 @@ class SongProofs extends FlatSpec with Prover {
 	// FK REFERENTIAL PROOFS     
 	////////////////////////////////////////////////////////////
 
-	"Songs_FK_References" should "maintain referential integrity generic proof" in {
-		val p = ("Songs_FK_References", "genericReferentialIntegrity") 
+	//    !!!   ABORTED   !!!
+	"Song_FK_System" should "maintain referential integrity generic proof" in {
+		val p = ("Song_FK_System", "genericReferentialIntegrity") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_References" should "be commutative" in {
-		val p = ("Songs_FK_References", "mergeCommutative") 
+	// WORKS
+	"Song_FK_System" should "be commutative" in {
+		val p = ("Song_FK_System", "mergeCommutative") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_References" should "be idempotent" in {
-		val p = ("Songs_FK_References", "mergeIdempotent") 
+	//    !!!   ABORTED   !!!
+	"Song_FK_System" should "be idempotent" in {
+		val p = ("Song_FK_System", "mergeIdempotent") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_References" should "be associative" in {
-		val p = ("Songs_FK_References", "mergeAssociative") 
+	//    !!!   ABORTED   !!!
+	"Song_FK_System" should "be associative" in {
+		val p = ("Song_FK_System", "mergeAssociative") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_References" should "be associative (with assumptions)" in {
-		val p = ("Songs_FK_References", "mergeIsAssociative") 
+	// WORKS
+	"Song_FK_System" should "be associative (with assumptions)" in {
+		val p = ("Song_FK_System", "mergeIsAssociative") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_References" should "be associative2" in {
-		val p = ("Songs_FK_References", "mergeAssociative2") 
+	// WORKS
+	"Song_FK_System" should "be associative2" in {
+		val p = ("Song_FK_System", "mergeAssociative2") 
 		prove(p)
 		p
 	}
 
-	"Songs_FK_References" should "compatible commutes" in {
-		val p = ("Songs_FK_References", "compatibleCommutes") 
+	// WORKS
+	"Song_FK_System" should "compatible commutes" in {
+		val p = ("Song_FK_System", "compatibleCommutes") 
 		prove(p)
 		p
 	}

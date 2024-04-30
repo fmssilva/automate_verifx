@@ -87,7 +87,7 @@ object AntidoteSQL_To_VeriFx {
             //update next line of tokens to read
             line = newTable.line
             //add table to system tables map
-            sysTablesMap.put(newTable.tableName, newTable)
+            sysTablesMap.put(newTable.tableNames._1, newTable)
           } else if (tokens.lift(2).contains("INDEX"))
             println("INDEX")
         case Some("UPDATE") =>

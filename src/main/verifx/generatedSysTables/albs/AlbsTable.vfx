@@ -1,14 +1,28 @@
+
 import generatedSysTables.albs.Alb
 import antidote.crdts.lemmas.CvRDTProof1
+import antidote.crdts.tables.DataType
 import antidote.crdts.tables.UWTable
 
-class AlbsTable[Time] (before: (Time, Time) => Boolean, 
-				elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]])
-				extends UWTable[Alb, Time, AlbsTable[Time]]{ 
+/**
+ * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
+ *		- ALB -
+ *
+ * @param before - function to compare two Time values
+ * @param elements - Map of elements/rows in the table,
+ *                   where Key is a String == the PK of the Table (TODO: To be generalized for more types and number of PKs)
+ *                   and Value is a Tuple with the Element itself,
+ *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
+ *                                                    - and a Time
+ */
+class AlbsTable[Time] ( before: (Time, Time) => Boolean,								//function
+						elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]]		//row
+						 ) extends UWTable[Alb, Time, AlbsTable[Time]]{ 
 
 
-	//Implement Methods DECLARED in UWTable trait
-
+	/*
+	* Implement Methods DECLARED in UWTable trait
+	*/
 	def copy(newElements: Map[String, Tuple[Alb, MVRegister[Int, Time]]]) =
 		    new AlbsTable(this.before, newElements)
 
