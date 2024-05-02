@@ -7,10 +7,7 @@
 2. [Download Project](#download-project)
 3. [Z3 Solver](#z3-solver)
 4. [Intellij - RUN PROGRAM](#intellij---run-program)
-   - [Confirm the AntidoteSQL Commands](#confirm-the-antidotesql-commands)
-   - [Generate the VeriFx code](#generate-the-verifx-code)
-   - [Run the Proofs](#run-the-proofs)
-   - [Configure Intellij to recognize veriFx and Antidote SQL files](#configure-intellij-to-recognize-verifx-and-antidote-sql-files)
+5. [Intellij - Configure veriFx and AntidoteSQL files](#intellij---configure-verifx-and-antidotesql-files)
 
 **Antidote SQL Commands rules**
 1. [Conditions for commands (currently implemented)](#conditions-for-commands-currently-implemented)
@@ -86,6 +83,10 @@ This repository with automated table systems:
 
 
 ## Intellij - RUN PROGRAM
+
+<br><br><img src="readme_images%2Frun_program_steps.png" alt="Run Program Steps" width="700">
+
+<br>**detailed steps:**
 - open project
   - if in WSL: close current project to go to initial pannel; click Remote dev » WSL; open project from the folder in WSL
 
@@ -114,8 +115,10 @@ This repository with automated table systems:
     - if errors because of the version of jdk, so select the version 11:
           - file » proj strucute » sdk » choose jdk 11 
             - (if working remotely on WSL so chose the jdk 11 installed there)
-  
+<br><br>  
 
+
+## Intellij - Configure veriFx and AntidoteSQL files
 
 - **Configure Intellij to recognize veriFx and Antidote SQL files**
   - Go to settigns » Editor » File Types
@@ -354,7 +357,7 @@ This repository with automated table systems:
     //      - single line comments
     /* */   - multi line comments
 
-# Create createTable.Table: 
+# Create Table: 
 ## Attributes: 
 ###### Minimum 2 attributes in the table 
      CREATE UPDATE-WINS TABLE Art (
