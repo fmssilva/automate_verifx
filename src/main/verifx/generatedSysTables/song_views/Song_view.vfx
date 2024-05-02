@@ -1,0 +1,123 @@
+
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof
+import antidote.crdts.registers.LWWRegister
+import antidote.crdts.LamportClock
+
+/**
+ * Class representing the composite primary key of the element(row):::  SONG_VIEW
+ * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
+ * so no need to extend CvRDT
+ */
+class Song_view_PKs(sv_id: Int, sv_name: String) { }
+
+
+
+/**
+ * Class representing the element(row):::  SONG_VIEW 
+ *
+ * given by the Antidote SQL command:
+ *
+ *		CREATE UPDATE-WINS TABLE SONG_VIEW (
+ *		SV_ID INT ,
+ *		SV_NAME VARCHAR ,
+ *		PRIMARY KEY ( SV_ID , SV_NAME ) ,
+ *		ART_NAME VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( NAME ) ,
+ *		ART_COUNTRY VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( COUNTRY ) ,
+ *		S_TITLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES SONG ( S_TITLE ) ,
+ *		ALB_TITLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ALB ( TITLE ) ,
+ *		GENR_STYLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES GENRE ( STYLE ) ,
+ *		DURATION LWW INT CHECK ( DURATION >= 0 AND DURATION <= 1000 ) ,
+ *		)
+ */
+class Song_view(song_view_PKs: Song_view_PKs, art_name: String, art_country: String, s_title: String, alb_title: String, genr_style: String, duration: LWWRegister[Int]) extends CvRDT[Song_view] {
+
+
+  /*
+   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
+   */
+
+	//merge this Song_view with that Song_view (only concurrently updatable attributes are merged as a CRDT)
+	def merge(that: Song_view) = 
+		new Song_view(this.song_view_PKs, this.art_name, this.art_country, this.s_title, this.alb_title, this.genr_style, this.duration.merge(that.duration))
+
+	//compare this Song_view with that Song_view (only concurrently updatable attributes matter)
+	def compare(that: Song_view) = 
+		this.duration.compare(that.duration)
+
+
+
+  /*
+   * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
+   */
+
+	//this Song_view is compatible with that Song_view?
+	override def compatible(that: Song_view) = 
+		this.song_view_PKs == that.song_view_PKs && 
+		this.art_name == that.art_name &&
+		this.art_country == that.art_country &&
+		this.s_title == that.s_title &&
+		this.alb_title == that.alb_title &&
+		this.genr_style == that.genr_style &&
+		this.duration.compatible(that.duration)
+
+	//Song_view is reachable given the CHECK conditions of its attributes?
+	override def reachable() = { 
+		 this.duration.value >= 0 && this.duration.value <= 1000
+	}
+
+
+
+  /*
+   * IMPLEMENT METHODS FOR CONCURRENTLY UPDATABLE ATTRIBUTES,
+   * to be used by the prover, useful in CmRDT - Operations
+   */
+
+	def updateDuration(newDuration: Int, stampDuration: LamportClock) = { 
+		if( newDuration >= 0 && newDuration <= 1000)
+			new Song_view(this.song_view_PKs, this.art_name, this.art_country, this.s_title, this.alb_title, this.genr_style, this.duration.assign(newDuration, stampDuration))
+		else
+			this
+	}
+
+}
+
+
+
+
+/*
+* Object to implement the proof functions for the updatable attributes
+*/
+
+object Song_view extends CvRDTProof[Song_view] {
+
+	proof Song_view_updateDuration_works {
+		forall(elem: Song_view, duration1: Int, duration2: Int, c1: LamportClock, c2: LamportClock ) {
+			( elem.reachable()  &&  c1.smaller(c2) &&
+			  duration1 >= 0 && duration1 <= 1000 && duration2 >= 0 && duration2 <= 1000
+			 ) =>: {
+				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
+				 val elem1 = elem.updateDuration(duration1, c1)
+				 val elem2 = elem.updateDuration(duration2, c2)
+				 val elem12 = elem1.merge(elem2)
+				 //check if the update in elem 1 and 2 kept the correct values
+				 elem1.song_view_PKs == elem.song_view_PKs && elem2.song_view_PKs == elem.song_view_PKs &&
+				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
+				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
+				 elem1.s_title == elem.s_title && elem2.s_title == elem.s_title &&
+				 elem1.alb_title == elem.alb_title && elem2.alb_title == elem.alb_title &&
+				 elem1.genr_style == elem.genr_style && elem2.genr_style == elem.genr_style &&
+				 elem1.duration.value == duration1 && elem2.duration.value == duration2 &&
+				 //check if the merged values are correct and according to the chosen update-policy 
+				 elem12.song_view_PKs == elem.song_view_PKs &&
+				 elem12.art_name == elem.art_name &&
+				 elem12.art_country == elem.art_country &&
+				 elem12.s_title == elem.s_title &&
+				 elem12.alb_title == elem.alb_title &&
+				 elem12.genr_style == elem.genr_style &&
+				 elem12.duration.value == duration2
+			}
+		}
+	}
+
+}

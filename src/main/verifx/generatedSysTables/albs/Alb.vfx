@@ -4,6 +4,8 @@ import antidote.crdts.lemmas.CvRDTProof
 import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
+
+
 /**
  * Class representing the element(row):::  ALB 
  *
@@ -11,25 +13,24 @@ import antidote.crdts.LamportClock
  *
  *		CREATE UPDATE-WINS TABLE ALB (
  *		TITLE VARCHAR PRIMARY KEY ,
- *		ART_ARTIST VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( NAME ) ,
+ *		ART_NAME VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( NAME ) ,
+ *		ART_COUNTRY VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( COUNTRY ) ,
  *		YEAR LWW INT CHECK ( YEAR >= 1900 AND YEAR <= 2022 ) ,
  *		PRICE LWW INT CHECK ( PRICE >= 0 AND PRICE <= 10000 ) ,
  *		)
  */
-class Alb(title: String, art_artist: String, year: LWWRegister[Int], price: LWWRegister[Int]) extends CvRDT[Alb] {
-
+class Alb(title: String, art_name: String, art_country: String, year: LWWRegister[Int], price: LWWRegister[Int]) extends CvRDT[Alb] {
 
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Alb with that Alb
+	//merge this Alb with that Alb (only concurrently updatable attributes are merged as a CRDT)
 	def merge(that: Alb) = 
-		//args: title (PK); art_artist (FK); year (attrib); price (attrib)
-		new Alb(this.title, this.art_artist, this.year.merge(that.year), this.price.merge(that.price))
+		new Alb(this.title, this.art_name, this.art_country, this.year.merge(that.year), this.price.merge(that.price))
 
-	//compare this Alb with that Alb
+	//compare this Alb with that Alb (only concurrently updatable attributes matter)
 	def compare(that: Alb) = 
 		this.year.compare(that.year) &&
 		this.price.compare(that.price)
@@ -42,9 +43,9 @@ class Alb(title: String, art_artist: String, year: LWWRegister[Int], price: LWWR
 
 	//this Alb is compatible with that Alb?
 	override def compatible(that: Alb) = 
-		//args: title (PK); art_artist (FK); year (attrib); price (attrib)
-		this.title == that.title &&
-		this.art_artist == that.art_artist &&
+		this.title == that.title && 
+		this.art_name == that.art_name &&
+		this.art_country == that.art_country &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
 
@@ -63,14 +64,14 @@ class Alb(title: String, art_artist: String, year: LWWRegister[Int], price: LWWR
 
 	def updateYear(newYear: Int, stampYear: LamportClock) = { 
 		if( newYear >= 1900 && newYear <= 2022)
-			new Alb(this.title, this.art_artist, this.year.assign(newYear, stampYear), this.price)
+			new Alb(this.title, this.art_name, this.art_country, this.year.assign(newYear, stampYear), this.price)
 		else
 			this
 	}
 
 	def updatePrice(newPrice: Int, stampPrice: LamportClock) = { 
 		if( newPrice >= 0 && newPrice <= 10000)
-			new Alb(this.title, this.art_artist, this.year, this.price.assign(newPrice, stampPrice))
+			new Alb(this.title, this.art_name, this.art_country, this.year, this.price.assign(newPrice, stampPrice))
 		else
 			this
 	}
@@ -97,12 +98,14 @@ object Alb extends CvRDTProof[Alb] {
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.title == elem.title && elem2.title == elem.title &&
-				 elem1.art_artist == elem.art_artist && elem2.art_artist == elem.art_artist &&
+				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
+				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
 				 elem1.year.value == year1 && elem2.year.value == year2 &&
 				 elem1.price == elem.price && elem2.price == elem.price &&
 				 //check if the merged values are correct and according to the chosen update-policy 
 				 elem12.title == elem.title &&
-				 elem12.art_artist == elem.art_artist &&
+				 elem12.art_name == elem.art_name &&
+				 elem12.art_country == elem.art_country &&
 				 elem12.year.value == year2 &&
 				 elem12.price == elem.price
 			}
@@ -120,12 +123,14 @@ object Alb extends CvRDTProof[Alb] {
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.title == elem.title && elem2.title == elem.title &&
-				 elem1.art_artist == elem.art_artist && elem2.art_artist == elem.art_artist &&
+				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
+				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
 				 elem1.year == elem.year && elem2.year == elem.year &&
 				 elem1.price.value == price1 && elem2.price.value == price2 &&
 				 //check if the merged values are correct and according to the chosen update-policy 
 				 elem12.title == elem.title &&
-				 elem12.art_artist == elem.art_artist &&
+				 elem12.art_name == elem.art_name &&
+				 elem12.art_country == elem.art_country &&
 				 elem12.year == elem.year &&
 				 elem12.price.value == price2
 			}

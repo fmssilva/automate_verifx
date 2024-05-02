@@ -1,7 +1,6 @@
 
 import generatedSysTables.songs.Song
 import antidote.crdts.lemmas.CvRDTProof1
-import antidote.crdts.tables.DataType
 import antidote.crdts.tables.UWTable
 
 /**
@@ -15,9 +14,9 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class SongsTable[Time] ( before: (Time, Time) => Boolean,								//function
-						elements: Map[String, Tuple[Song, MVRegister[Int,Time]]]		//row
-						 ) extends UWTable[Song, Time, SongsTable[Time]]{ 
+class SongsTable[Time] (before: (Time, Time) => Boolean,							//function
+					   elements: Map[String, Tuple[Song, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[ String ,Song, Time, SongsTable[Time]]{ 
 
 
 	/*

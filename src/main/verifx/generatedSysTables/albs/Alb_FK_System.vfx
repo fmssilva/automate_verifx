@@ -5,6 +5,7 @@ import antidote.crdts.VersionVector
 import antidote.crdts.lemmas.CvRDTProof1
 import generatedSysTables.albs.AlbsTable
 import generatedSysTables.arts.ArtsTable
+import generatedSysTables.arts.Art
 
 /*
  * class implementing the FK - Referential Integrity - Invariant
@@ -57,12 +58,13 @@ class Alb_FK_System[Time](
    * EXTRA METHODS FOR PROOFS
    */
 
-	//REFERENTIAL INTEGRITY - check if for every elem of AlbsTable, there is the corresponding FK element in the referenced table
+	//REFERENTIAL INTEGRITY
+	//Checks if for every elem of AlbsTable, there is the corresponding element in the referenced tables
 	def refIntegrityHolds(pk: String) = {
 		(this.albsTable.isVisible(pk) 
 		 ) =>: {
 				val alb = this.albsTable.get(pk).fst
-				this.artsTable.isVisible(alb.art_artist)
+				this.artsTable.isVisible( new Art_PKs(alb.art_name, alb.art_country))
 				}
 	}
 

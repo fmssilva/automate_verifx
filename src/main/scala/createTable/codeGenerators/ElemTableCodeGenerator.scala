@@ -39,7 +39,7 @@ object ElemTableCodeGenerator {
     classContent.append("\n\n\n\t/*\n\t* Implement Methods DECLARED in UWTable trait\n\t*/")
     //COPY
     classContent.append(
-      s"\n\tdef copy(newElements: Map[String, Tuple[${tableNames._1}, MVRegister[Int, Time]]]) =" +
+      s"\n\tdef copy(newElements: Map[${table.pk_data_type}, Tuple[${tableNames._1}, MVRegister[Int, Time]]]) =" +
         s"\n\t\t    new ${tableNames._2}(this.before, newElements)"
     )
     //MAINTAIN STATE
@@ -64,9 +64,8 @@ object ElemTableCodeGenerator {
    */
   private def gen_Class_Imports(): Unit = {
     classContent.append(
-      s"\nimport ${table.systemTablesFolderName}.${tableNames._1.toLowerCase()}s.${tableNames._1}" +
+      s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${tableNames._1.toLowerCase()}s.${tableNames._1}" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
-        s"\nimport antidote.crdts.tables.DataType" +
         (update_policy match {
           case "UPDATE-WINS" => s"\nimport antidote.crdts.tables.UWTable"
           //TODO: other cases
@@ -98,11 +97,11 @@ object ElemTableCodeGenerator {
    */
   private def gen_Class_Header(): Unit = {
     classContent.append(
-      s"\nclass ${tableNames._2}[Time] ( before: (Time, Time) => Boolean,\t\t\t\t\t\t\t\t//function" +
-        s"\n\t\t\t\t\t\telements: Map[String, Tuple[${tableNames._1}, MVRegister[Int,Time]]]\t\t//row" +
-        s"\n\t\t\t\t\t\t ) extends " +
+      s"\nclass ${tableNames._2}[Time] (before: (Time, Time) => Boolean,\t\t\t\t\t\t\t//function" +
+        s"\n\t\t\t\t\t   elements: Map[${table.pk_data_type}, Tuple[${tableNames._1}, MVRegister[Int,Time]]]\t//row" +
+        s"\n\t\t\t\t\t  ) extends " +
         (update_policy match {
-          case "UPDATE-WINS" => s"UWTable[${tableNames._1}, Time, ${tableNames._2}[Time]]{ "
+          case "UPDATE-WINS" => s"UWTable[ ${table.pk_data_type} ,${tableNames._1}, Time, ${tableNames._2}[Time]]{ "
           case "DELETE-WINS" => throw new Exception("check args of DWTable trait")
           case "NO_CONCURRENCY" => throw new Exception("What to do with table NO_CONCURRENCY")
         })

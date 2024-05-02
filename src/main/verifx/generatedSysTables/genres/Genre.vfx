@@ -4,6 +4,8 @@ import antidote.crdts.lemmas.CvRDTProof
 import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
+
+
 /**
  * Class representing the element(row):::  GENRE 
  *
@@ -17,17 +19,15 @@ import antidote.crdts.LamportClock
 class Genre(style: String, description: LWWRegister[String]) extends CvRDT[Genre] {
 
 
-
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Genre with that Genre
+	//merge this Genre with that Genre (only concurrently updatable attributes are merged as a CRDT)
 	def merge(that: Genre) = 
-		//args: style (PK); description (attrib)
 		new Genre(this.style, this.description.merge(that.description))
 
-	//compare this Genre with that Genre
+	//compare this Genre with that Genre (only concurrently updatable attributes matter)
 	def compare(that: Genre) = 
 		this.description.compare(that.description)
 
@@ -39,8 +39,7 @@ class Genre(style: String, description: LWWRegister[String]) extends CvRDT[Genre
 
 	//this Genre is compatible with that Genre?
 	override def compatible(that: Genre) = 
-		//args: style (PK); description (attrib)
-		this.style == that.style &&
+		this.style == that.style && 
 		this.description.compatible(that.description)
 
 

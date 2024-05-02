@@ -12,13 +12,14 @@ object FK_System_Class {
   private var table: Table = _
   // (Element, ElementsTable, elementsTable , Elements_FK_System)
   private var pk_table_names: (String, String, String, String) = _
+  private var fk_Tables: Seq[Table] = _
   // (Element, ElementsTable, + elementsTable)
   private var fk_Tables_names: Seq[(String, String, String)] = _
 
   /**
    * Generate the code for a Class to manage the FK System (Referential Integrity)
    *
-   * @param table                  - table to generate the code for
+   * @param table - table to generate the code for
    * @return - the code for the class
    */
   def generate_FK_System_ClassCode(table: Table): StringBuilder = {
@@ -29,12 +30,12 @@ object FK_System_Class {
     this.classContent = new StringBuilder
     this.table = table
     this.pk_table_names = (table.tableNames._1, table.tableNames._2, table.tableNames._1.toLowerCase() + "sTable", table.tableNames._3)
-    val referenced_Elem_names = table.fk_attributes.map(_.attribInvariant.fk_options.map(_.referencedTable.tableNames).get).toSet.toList
-    this.fk_Tables_names = referenced_Elem_names.map(t_names => (t_names._1, t_names._2, t_names._1.toLowerCase() + "sTable"))
+    this.fk_Tables = table.fk_attributes.map(_.attribInvariant.fk_options.map(_.referencedTable).get).toSet.toList
+    this.fk_Tables_names = fk_Tables.map(tab => (tab.tableNames._1, tab.tableNames._2, tab.tableNames._1.toLowerCase() + "sTable"))
 
 
     // IMPORTS & CLASS HEADER
-    gen_imports(table.systemTablesFolderName)
+    gen_imports()
     gen_Class_Header()
 
 
@@ -73,15 +74,18 @@ object FK_System_Class {
   /**
    * IMPORTS
    */
-  private def gen_imports(systemTablesFolderName: String): Unit = {
+  private def gen_imports(): Unit = {
     classContent.append(
       s"\nimport antidote.crdts.lemmas.CvRDT" +
         s"\nimport antidote.crdts.LamportClock" +
         s"\nimport antidote.crdts.VersionVector" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
-        s"\nimport $systemTablesFolderName.${pk_table_names._1.toLowerCase()}s.${pk_table_names._2}" +
+        s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${pk_table_names._1.toLowerCase()}s.${pk_table_names._2}" +
         fk_Tables_names.map(
-          t_Names => s"\nimport $systemTablesFolderName.${t_Names._1.toLowerCase()}s.${t_Names._2}"
+          t_Names => s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${t_Names._1.toLowerCase()}s.${t_Names._2}"
+        ).mkString +
+        fk_Tables.filter(_.pk_attributes.size > 1).map(
+          tab => s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${tab.tableNames._1.toLowerCase()}s.${tab.tableNames._1}"
         ).mkString
     )
   }
@@ -172,24 +176,35 @@ object FK_System_Class {
    * REFERENTIAL INTEGRITY
    */
   private def gen_Referential_Integrity(): Unit = {
-    val pk_attrib = table.attributesList.head
+    val this_tab_elem_name = pk_table_names._1.toLowerCase()
     classContent.append(
-      s"\n\n\t//REFERENTIAL INTEGRITY - check if for every elem of ${pk_table_names._2}, there is the corresponding FK element in the referenced table" +
-        s"\n\tdef refIntegrityHolds(pk: ${pk_attrib.attribDataType}) = {" +
+      //comment
+      s"\n\n\t//REFERENTIAL INTEGRITY" +
+        s"\n\t//Checks if for every elem of ${pk_table_names._2}, there is the corresponding element in the referenced tables" +
+        //method
+        s"\n\tdef refIntegrityHolds(pk: ${table.pk_data_type}) = {" +
         s"\n\t\t(this.${pk_table_names._3}.isVisible(pk) " +
         s"\n\t\t ) =>: {" +
-        s"\n\t\t\t\tval ${pk_table_names._1.toLowerCase()} = this.${pk_table_names._3}.get(pk).fst" +
-        table.fk_attributes.map(
-          fk_attrib => {
-            var fk_tab_name = fk_attrib.attribInvariant.fk_options.map(_.referencedTable.tableNames).get._1
-            fk_tab_name = fk_tab_name.toLowerCase() + "sTable"
-            s"\n\t\t\t\tthis.$fk_tab_name.isVisible(${pk_table_names._1.toLowerCase()}.${fk_attrib.attribName})"
+        s"\n\t\t\t\tval $this_tab_elem_name = this.${pk_table_names._3}.get(pk).fst" +
+        // for each referenced table...
+        fk_Tables.map { ref_table =>
+          val ref_tab_name = ref_table.tableNames._1.toLowerCase() + "sTable"
+          //get the names of the attributes in this table that reference the PK in the referenced table
+          val this_tab_fks = table.fk_attributes.filter(_.attribInvariant.fk_options.map(_.referencedTable.tableNames).get.equals(ref_table.tableNames))
+          if (this_tab_fks.size == 1) { // Single PK » just get that value in this table
+            s"\n\t\t\t\tthis.$ref_tab_name.isVisible($this_tab_elem_name.${this_tab_fks.head.attribName})"
+          } else { // Composite PKs » build a PK object with the values in this table
+            s"\n\t\t\t\tthis.$ref_tab_name.isVisible( new ${ref_table.tableNames._1}_PKs(" +
+              ref_table.pk_attributes.map(ref_pk => {
+                s"$this_tab_elem_name.${this_tab_fks.find(_.attribInvariant.getReferenced_PK.attribName.equals(ref_pk.attribName)).get.attribName}"
+              }).mkString(", ") + "))"
           }
-        ).mkString(" &&") +
+        }.mkString +
         s"\n\t\t\t\t}" +
         s"\n\t}"
     )
   }
+
 
   /**
    * REACHABLE WITH ASSUMPTIONS - ASSOCIATIVITY
@@ -238,7 +253,7 @@ object FK_System_Class {
         s"\n\tproof genericReferentialIntegrity[Time] {" +
         s"\n\t\tforall(" +
         s"s1: ${pk_table_names._4}[Time], s2: ${pk_table_names._4}[Time], " +
-        s"pk: ${table.attributesList.head.attribDataType}" +
+        s"pk: ${table.pk_data_type}" +
         s") {" +
         s"\n\t\t\t( s1.reachable() && s2.reachable() && " +
         s"\n\t\t\t  s1.compatible(s2) &&" +

@@ -5,30 +5,38 @@ import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
 /**
+ * Class representing the composite primary key of the element(row):::  ART
+ * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
+ * so no need to extend CvRDT
+ */
+class Art_PKs(name: String, country: String) { }
+
+
+
+/**
  * Class representing the element(row):::  ART 
  *
  * given by the Antidote SQL command:
  *
  *		CREATE UPDATE-WINS TABLE ART (
  *		NAME VARCHAR PRIMARY KEY
+ *		COUNTRY VARCHAR PRIMARY KEY ,
  *		AGE LWW INT CHECK ( AGE >= 0 AND AGE <= 100 ) ,
  *		RANKING LWW INT CHECK ( RANKING >= 0 AND RANKING <= 100 ) ,
  *		)
  */
-class Art(name: String, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
-
+class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
 
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Art with that Art
+	//merge this Art with that Art (only concurrently updatable attributes are merged as a CRDT)
 	def merge(that: Art) = 
-		//args: name (PK); age (attrib); ranking (attrib)
-		new Art(this.name, this.age.merge(that.age), this.ranking.merge(that.ranking))
+		new Art(this.art_PKs, this.age.merge(that.age), this.ranking.merge(that.ranking))
 
-	//compare this Art with that Art
+	//compare this Art with that Art (only concurrently updatable attributes matter)
 	def compare(that: Art) = 
 		this.age.compare(that.age) &&
 		this.ranking.compare(that.ranking)
@@ -41,8 +49,7 @@ class Art(name: String, age: LWWRegister[Int], ranking: LWWRegister[Int]) extend
 
 	//this Art is compatible with that Art?
 	override def compatible(that: Art) = 
-		//args: name (PK); age (attrib); ranking (attrib)
-		this.name == that.name &&
+		this.art_PKs == that.art_PKs && 
 		this.age.compatible(that.age) &&
 		this.ranking.compatible(that.ranking)
 
@@ -61,14 +68,14 @@ class Art(name: String, age: LWWRegister[Int], ranking: LWWRegister[Int]) extend
 
 	def updateAge(newAge: Int, stampAge: LamportClock) = { 
 		if( newAge >= 0 && newAge <= 100)
-			new Art(this.name, this.age.assign(newAge, stampAge), this.ranking)
+			new Art(this.art_PKs, this.age.assign(newAge, stampAge), this.ranking)
 		else
 			this
 	}
 
 	def updateRanking(newRanking: Int, stampRanking: LamportClock) = { 
 		if( newRanking >= 0 && newRanking <= 100)
-			new Art(this.name, this.age, this.ranking.assign(newRanking, stampRanking))
+			new Art(this.art_PKs, this.age, this.ranking.assign(newRanking, stampRanking))
 		else
 			this
 	}
@@ -94,11 +101,11 @@ object Art extends CvRDTProof[Art] {
 				 val elem2 = elem.updateAge(age2, c2)
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.name == elem.name && elem2.name == elem.name &&
+				 elem1.art_PKs == elem.art_PKs && elem2.art_PKs == elem.art_PKs &&
 				 elem1.age.value == age1 && elem2.age.value == age2 &&
 				 elem1.ranking == elem.ranking && elem2.ranking == elem.ranking &&
 				 //check if the merged values are correct and according to the chosen update-policy 
-				 elem12.name == elem.name &&
+				 elem12.art_PKs == elem.art_PKs &&
 				 elem12.age.value == age2 &&
 				 elem12.ranking == elem.ranking
 			}
@@ -115,11 +122,11 @@ object Art extends CvRDTProof[Art] {
 				 val elem2 = elem.updateRanking(ranking2, c2)
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.name == elem.name && elem2.name == elem.name &&
+				 elem1.art_PKs == elem.art_PKs && elem2.art_PKs == elem.art_PKs &&
 				 elem1.age == elem.age && elem2.age == elem.age &&
 				 elem1.ranking.value == ranking1 && elem2.ranking.value == ranking2 &&
 				 //check if the merged values are correct and according to the chosen update-policy 
-				 elem12.name == elem.name &&
+				 elem12.art_PKs == elem.art_PKs &&
 				 elem12.age == elem.age &&
 				 elem12.ranking.value == ranking2
 			}

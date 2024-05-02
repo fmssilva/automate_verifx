@@ -62,13 +62,14 @@ class Song_FK_System[Time](
    * EXTRA METHODS FOR PROOFS
    */
 
-	//REFERENTIAL INTEGRITY - check if for every elem of SongsTable, there is the corresponding FK element in the referenced table
+	//REFERENTIAL INTEGRITY
+	//Checks if for every elem of SongsTable, there is the corresponding element in the referenced tables
 	def refIntegrityHolds(pk: String) = {
 		(this.songsTable.isVisible(pk) 
 		 ) =>: {
 				val song = this.songsTable.get(pk).fst
-				this.albsTable.isVisible(song.alb_title) &&
-				this.genresTable.isVisible(song.style)
+				this.albsTable.isVisible(song.alb_title)
+				this.genresTable.isVisible(song.genr_style)
 				}
 	}
 

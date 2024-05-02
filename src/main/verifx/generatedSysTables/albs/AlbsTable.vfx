@@ -1,7 +1,6 @@
 
 import generatedSysTables.albs.Alb
 import antidote.crdts.lemmas.CvRDTProof1
-import antidote.crdts.tables.DataType
 import antidote.crdts.tables.UWTable
 
 /**
@@ -15,9 +14,9 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class AlbsTable[Time] ( before: (Time, Time) => Boolean,								//function
-						elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]]		//row
-						 ) extends UWTable[Alb, Time, AlbsTable[Time]]{ 
+class AlbsTable[Time] (before: (Time, Time) => Boolean,							//function
+					   elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[ String ,Alb, Time, AlbsTable[Time]]{ 
 
 
 	/*

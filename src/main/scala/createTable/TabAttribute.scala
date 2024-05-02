@@ -2,42 +2,52 @@ package createTable
 
 import scala.collection.mutable
 
+/**
+ * Class to process the tokens for declaring a new attribute of a table
+ *
+ * @param lineTokens - line of the antidote SQL command for creating an attribute
+ * @param fileLine       - current line of the tokens in the file
+ */
 @SerialVersionUID(1594622921505253437L)
-class TabAttribute(lineTokens: Array[String], var line : Int, sysTablesMap : mutable.Map[String, Table]) extends Serializable {
+class TabAttribute(lineTokens: Array[String], fileLine: Int, sysTablesMap: mutable.Map[String, Table]) extends Serializable {
 
-  println("Line " +  line + ": "+ lineTokens.mkString(", ") + " \t\t» creating attribute at CreateAttribute class ")
+  println("Line " + fileLine + ": " + lineTokens.mkString(", ") + " \t\t» creating attribute at CreateAttribute class ")
   /**
    * Class constants
    */
   private val ATTRIBUTE_UPDATE_POLICIES = Array("LWW", "MULTI-VALUE", "ADDITIVE", "' ' == NO_CONCURRENCY")
-  private val ATTRIBUTE_DATA_TYPE_ANTIDOTE = Array("VARCHAR", "BOOLEAN", "INT","COUNTER_INT")
-  private val ATTRIBUTE_DATA_TYPE_VERIFX = Array("String", "Boolean", "Int","Counter_Int")
+  private val ATTRIBUTE_DATA_TYPE_ANTIDOTE = Array("VARCHAR", "BOOLEAN", "INT", "COUNTER_INT")
+  private val ATTRIBUTE_DATA_TYPE_VERIFX = Array("String", "Boolean", "Int", "Counter_Int")
 
 
-  /**
-   *   Attribute fields
-   */
+  // ATTRIBUTE NAME
   private var idx_of_token = 0
   val attribName: String = lineTokens(idx_of_token).toLowerCase()
 
-  // error msg to be used in the next methods
-  private val ATTRIB_MUST_HAVE_NAME_POLICY_DATA = s"Line: $line - Attribute $attribName must have a NAME, UPDATE POLICY (${ATTRIBUTE_UPDATE_POLICIES.mkString(" | ")} ) and DATA TYPE (${ATTRIBUTE_DATA_TYPE_ANTIDOTE.mkString(" | ")} ) "
-
+  //UPDATE POLICY
   idx_of_token += 1
+  private val ATTRIB_MUST_HAVE_NAME_POLICY_DATA = s"Line: $fileLine - Attribute $attribName must have a NAME, UPDATE POLICY (${ATTRIBUTE_UPDATE_POLICIES.mkString(" | ")} ) and DATA TYPE (${ATTRIBUTE_DATA_TYPE_ANTIDOTE.mkString(" | ")} ) "
   val attribPolicy: String = getAttribUpdatePolicy
   val allowConcurrentUpdates: Boolean = attribPolicy != "NO_CONCURRENCY"
 
+  //DATA TYPE
   idx_of_token += 1
-  val (attribDataType,attribDataType_CRDT): (String, String) = getAttribDataType
+  val (attribDataType, attribDataType_CRDT): (String, String) = getAttribDataType
 
-  val attribInvariant: AttribInvariants = AttribInvariants(lineTokens, line, sysTablesMap, this)
+  //INVARIANTS
+  val attribInvariant: AttribInvariants = AttribInvariants(lineTokens, fileLine, sysTablesMap, this)
 
   println("Created: " + this.toString)
 
-  /**
-   *  CONSTRUCTOR AUXILIARY METHODS
-   */
 
+
+  ////////////////////////////////////////////////////////////////////
+  ////////////---------- HELPER METHODS ---------- /////////////////
+  ////////////////////////////////////////////////////////////////////
+
+  /**
+   * UPDATE POLICY
+   */
   private def getAttribUpdatePolicy: String = {
     lineTokens.lift(idx_of_token) match {
       case Some(policy) if ATTRIBUTE_UPDATE_POLICIES.contains(policy) => policy
@@ -49,28 +59,29 @@ class TabAttribute(lineTokens: Array[String], var line : Int, sysTablesMap : mut
     }
   }
 
+  /**
+   * DATA TYPE
+   */
   private def getAttribDataType: (String, String) = {
     val dataType = lineTokens.lift(idx_of_token) match {
       case Some(dt) if ATTRIBUTE_DATA_TYPE_ANTIDOTE.contains(dt) =>
-        ATTRIBUTE_DATA_TYPE_VERIFX (ATTRIBUTE_DATA_TYPE_ANTIDOTE.indexOf(dt))
+        ATTRIBUTE_DATA_TYPE_VERIFX(ATTRIBUTE_DATA_TYPE_ANTIDOTE.indexOf(dt))
       case _ => throw new IllegalArgumentException("at getAttribDataType " + ATTRIB_MUST_HAVE_NAME_POLICY_DATA)
     }
     //TODO: do match with all cases
     attribPolicy match {
-      case "NO_CONCURRENCY" =>     (dataType, "")
+      case "NO_CONCURRENCY" => (dataType, "")
       case "LWW" => (dataType, s"LWWRegister[$dataType]")
-      case _ => throw new Exception ("TODO: Implement getAttribDataType() at CreateAttribute.scala")
+      case _ => throw new Exception("TODO: Implement getAttribDataType() at CreateAttribute.scala")
     }
   }
 
-  def setAttribPK(): Unit = attribInvariant.setAttribPK()
 
   /**
-   *  Other Methods
+   * toString
    */
-
   override def toString: String = {
-    s"ATTRIBUTE: ${attribName.toUpperCase()}, $attribPolicy, $attribDataType, Invariants: ${attribInvariant.toString}"
+    s"attrib: $attribName, $attribPolicy, $attribDataType, Invariants: ${attribInvariant.toString}"
   }
 
 

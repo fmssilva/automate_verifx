@@ -1,7 +1,6 @@
 package createTable.codeGenerators
 
 import createTable.{TabAttribute, Table}
-
 import scala.collection.mutable
 
 /**
@@ -12,11 +11,21 @@ object ElemCodeGenerator {
   // Global Variables
   private val CRDT_CLOCK = "LamportClock" //clock to be used for CRDTs
   private var classContent: StringBuilder = _
-  // (Element, ElementsTable, Elements_FK_System)
+  // tableNames: (Element, ElementsTable, Elements_FK_System)
   private var tableNames: (String, String, String) = _
   private var attributesList: mutable.Seq[TabAttribute] = _
   private var updatableAttributes: mutable.Seq[TabAttribute] = _
+  private var non_PK_attributes: mutable.Seq[TabAttribute] = _
+  private var pk_name: String = _
+  private var pk_data_type: String = _
 
+  /**
+   * Generate the code for the Element Class
+   *
+   * @param table     - the table to generate the code for
+   * @param cmdTokens - tokens of this CREATE TABLE command
+   * @return the code for the Element Class
+   */
   def generate_Elem_ClassCode(table: Table, cmdTokens: List[(Int, Array[String])]): StringBuilder = {
     println("generating file code at generate_Elem_ClassCode() at CreateTable class")
 
@@ -25,23 +34,28 @@ object ElemCodeGenerator {
     this.tableNames = table.tableNames
     this.attributesList = table.attributesList
     this.updatableAttributes = attributesList.filter(at => at.allowConcurrentUpdates)
+    this.non_PK_attributes = attributesList.filter(!_.attribInvariant.isPrimaryKey)
+    this.pk_name = table.pk_name
+    this.pk_data_type = table.pk_data_type
 
-    // Generate Imports, Comments and Class Header
+    // Generate Imports, [composite PKs class], Comments and Class Header
     gen_imports()
+    if (table.pk_attributes.size > 1)
+      gen_composite_PK_Class(table)
     gen_ClassComments(cmdTokens)
-    gen_ClassHeader
+    gen_ClassHeader()
 
     //Implement Methods DECLARED in CvRDT trait
-    classContent.append("\n\n\n\n  /*\n   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT\n   */")
-    gen_Merge
-    gen_Compare
+    classContent.append("\n\n\n  /*\n   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT\n   */")
+    gen_Merge()
+    gen_Compare()
 
     //Override Methods IMPLEMENTED in CvRDT trait
     classContent.append("\n\n\n\n  /*\n   * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT\n   */")
     gen_Compatible()
     val attributesWithChecks = attributesList.filter(at => at.attribInvariant.check_options.isDefined)
     if (attributesWithChecks.nonEmpty)
-    gen_Reachable(attributesWithChecks)
+      gen_Reachable(attributesWithChecks)
 
     // Generate update method for updatable attributes
     if (updatableAttributes.nonEmpty) {
@@ -60,6 +74,7 @@ object ElemCodeGenerator {
 
     classContent
   }
+
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////  HELPER METHODS /////////////////////////////////////////////
@@ -82,13 +97,35 @@ object ElemCodeGenerator {
   }
 
   /**
+   * Composite PK Class
+   */
+  private def gen_composite_PK_Class(table: Table): Unit = {
+    //class comments
+    classContent.append(
+      s"\n\n/**\n * Class representing the composite primary key of the element(row):::  ${tableNames._1.toUpperCase()}" +
+        s"\n * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs," +
+        s"\n * so no need to extend CvRDT" +
+        s"\n */"
+    )
+    //class header
+    classContent.append(
+      s"\nclass ${tableNames._1}_PKs(" +
+        table.pk_attributes.map(
+          pk_at => s"${pk_at.attribName}: ${pk_at.attribDataType}"
+        ).mkString(", ") +
+        s") { }"
+    )
+  }
+
+
+  /**
    * Generate CLASS COMMENTS
    *
    * @param cmdTokens - tokens of this CREATE TABLE command
    */
   private def gen_ClassComments(cmdTokens: List[(Int, Array[String])]): Unit = {
     classContent.append(
-      s"\n\n/**\n * Class representing the element(row):::  ${tableNames._1.toUpperCase()} " +
+      s"\n\n\n\n/**\n * Class representing the element(row):::  ${tableNames._1.toUpperCase()} " +
         s"\n *\n * given by the Antidote SQL command:\n *" +
         cmdTokens.map(
           cmdToken => s"\n *\t\t${cmdToken._2.mkString(" ")}"
@@ -101,10 +138,11 @@ object ElemCodeGenerator {
   /**
    * Generate CLASS HEADER
    */
-  private def gen_ClassHeader = {
+  private def gen_ClassHeader(): Unit = {
     classContent.append(
       s"\nclass ${tableNames._1}(" +
-        attributesList.map(
+        s"$pk_name: $pk_data_type, " +
+        non_PK_attributes.map(
           at => s"${at.attribName}: ${if (at.allowConcurrentUpdates) at.attribDataType_CRDT else at.attribDataType}"
         ).mkString(", ") +
         s") extends CvRDT[${tableNames._1}] {"
@@ -114,17 +152,16 @@ object ElemCodeGenerator {
   /**
    * Generate MERGE
    */
-  private def gen_Merge = {
+  private def gen_Merge(): Unit = {
     classContent.append(
-      s"\n\n\t//merge this ${tableNames._1} with that ${tableNames._1}" +
+      //comment
+      s"\n\n\t//merge this ${tableNames._1} with that ${tableNames._1} (only concurrently updatable attributes are merged as a CRDT)" +
+        //method
         s"\n\tdef merge(that: ${tableNames._1}) = " +
-        gen_comment_to_explain_args() +
-        //code to merge
-        s"\n\t\tnew ${tableNames._1}(" +
-        attributesList.map(
-          at =>
-            if (at.allowConcurrentUpdates) s"this.${at.attribName}.merge(that.${at.attribName})"
-            else s"this.${at.attribName}"
+        s"\n\t\tnew ${tableNames._1}(this.$pk_name, " +
+        non_PK_attributes.map(at =>
+          if (at.allowConcurrentUpdates) s"this.${at.attribName}.merge(that.${at.attribName})"
+          else s"this.${at.attribName}"
         ).mkString(", ") +
         ")"
     )
@@ -134,9 +171,11 @@ object ElemCodeGenerator {
   /**
    * Generate COMPARE
    */
-  private def gen_Compare = {
+  private def gen_Compare(): Unit = {
     classContent.append(
-      s"\n\n\t//compare this ${tableNames._1} with that ${tableNames._1}" +
+      //comment
+      s"\n\n\t//compare this ${tableNames._1} with that ${tableNames._1} (only concurrently updatable attributes matter)" +
+        //method
         s"\n\tdef compare(that: ${tableNames._1}) = " +
         (if (updatableAttributes.isEmpty)
           s"\n\t\ttrue"
@@ -144,6 +183,24 @@ object ElemCodeGenerator {
           updatableAttributes.map(
             at => s"\n\t\tthis.${at.attribName}.compare(that.${at.attribName})").mkString(" &&")
           )
+    )
+  }
+
+
+  /**
+   * Generate COMPATIBLE
+   */
+  private def gen_Compatible(): Unit = {
+    classContent.append(
+      //comment
+      s"\n\n\t//this ${tableNames._1} is compatible with that ${tableNames._1}?" +
+        //method
+        s"\n\toverride def compatible(that: ${tableNames._1}) = " +
+        s"\n\t\tthis.$pk_name == that.$pk_name && \n\t\t" +
+        non_PK_attributes.map(at =>
+          if (at.allowConcurrentUpdates) s"this.${at.attribName}.compatible(that.${at.attribName})"
+          else s"this.${at.attribName} == that.${at.attribName}"
+        ).mkString(" &&\n\t\t")
     )
   }
 
@@ -155,36 +212,21 @@ object ElemCodeGenerator {
    */
   private def gen_Reachable(attributesWithChecks: mutable.Seq[TabAttribute]): Unit = {
     classContent.append(
+      //comment
       s"\n\n\t//${tableNames._1} is reachable given the CHECK conditions of its attributes?" +
+        //method
         s"\n\toverride def reachable() = { " +
         attributesWithChecks.map { at =>
           "\n\t\t" + at.attribInvariant.check_options.get.map {
+            //for each token in the check condition:
             case attrib if attributesList.exists(_.attribName.toUpperCase().equals(attrib)) => s" this.${attrib.toLowerCase()}.value"
             case "AND" => " &&"
             case "OR" => " ||"
-            case other => s" $other"
+            case other => s" $other" //what's the same in SQL and veriFX: numbers, <=, >= ...
             //TODO: do other cases: IN, BETWEEN ... e parenthesis tree...
           }.mkString
         }.mkString(" && ") +
         "\n\t}"
-    )
-  }
-
-  /**
-   * Generate COMPATIBLE
-   */
-  private def gen_Compatible(): Unit = {
-    classContent.append(
-      s"\n\n\t//this ${tableNames._1} is compatible with that ${tableNames._1}?" +
-        s"\n\toverride def compatible(that: ${tableNames._1}) = " +
-        gen_comment_to_explain_args() + "\n\t\t" +
-        attributesList.map(
-          at =>
-            if (at.allowConcurrentUpdates)
-              s"this.${at.attribName}.compatible(that.${at.attribName})"
-            else
-              s"this.${at.attribName} == that.${at.attribName}"
-        ).mkString(" &&\n\t\t")
     )
   }
 
@@ -194,50 +236,38 @@ object ElemCodeGenerator {
   private def gen_UpdateAttributes(): Unit = {
     //helper method
     def code_for_newElement(atName: String) = {
-      s"\n\t\t\tnew ${tableNames._1}(" +
-        attributesList.map(
-          at =>
-            if (at.attribName.equals(atName))
-              s"this.${at.attribName}.assign(new${atName.capitalize}, stamp${atName.capitalize})"
-            else
-              s"this.${at.attribName}"
+      s"\n\t\t\tnew ${tableNames._1}(this.$pk_name, " +
+        non_PK_attributes.map(at =>
+          if (at.attribName.equals(atName))
+            s"this.${at.attribName}.assign(new${atName.capitalize}, stamp${atName.capitalize})"
+          else
+            s"this.${at.attribName}"
         ).mkString(", ") + ")"
     }
 
     // updateAttribute() generation code
-    updatableAttributes.map {
-      at =>
-        val atName = at.attribName.capitalize
-        classContent.append(
-          s"\n\n\tdef update$atName(new$atName: ${at.attribDataType.capitalize}, stamp$atName: $CRDT_CLOCK) = { " +
-            (if (at.attribInvariant.check_options.isDefined) {
-              s"\n\t\tif(" + at.attribInvariant.check_options.get.map {
-                case word if word.equals(at.attribName.toUpperCase()) => s" new$atName"
-                case "AND" => " &&"
-                case "OR" => " ||"
-                case other => s" $other"
-              }.mkString + ")" +
-                code_for_newElement(at.attribName) +
-                "\n\t\telse" +
-                "\n\t\t\tthis"
-            } else
-              code_for_newElement(at.attribName)
-              ) +
-            "\n\t}"
-        )
+    updatableAttributes.map { at =>
+      val atName = at.attribName.capitalize
+      classContent.append(
+        s"\n\n\tdef update$atName(new$atName: ${at.attribDataType.capitalize}, stamp$atName: $CRDT_CLOCK) = { " +
+          (if (at.attribInvariant.check_options.isDefined) {
+            s"\n\t\tif(" + at.attribInvariant.check_options.get.map {
+              case word if word.equals(at.attribName.toUpperCase()) => s" new$atName"
+              case "AND" => " &&"
+              case "OR" => " ||"
+              case other => s" $other"
+            }.mkString + ")" +
+              code_for_newElement(at.attribName) +
+              "\n\t\telse" +
+              "\n\t\t\tthis"
+          } else
+            code_for_newElement(at.attribName)
+            ) +
+          "\n\t}"
+      )
     }
   }
 
-  //generate comment to explain each arg of a method
-  private def gen_comment_to_explain_args(): String = {
-    s"\n\t\t//args: " +
-      attributesList.map(
-        at =>
-          if (at.attribInvariant.isPrimaryKey) s"${at.attribName} (PK)"
-          else if (at.attribInvariant.fk_options.isDefined) s"${at.attribName} (FK)"
-          else s"${at.attribName} (attrib)"
-      ).mkString("; ")
-  }
 
   /**
    * Generate extra proofs for the attributes that are updatable
@@ -245,7 +275,8 @@ object ElemCodeGenerator {
   private def gen_ObjectWithExtraProofs(): Unit = {
     //OBJECT HEADER
     classContent.append(
-      s"\n\nobject ${tableNames._1} extends CvRDTProof[${tableNames._1}] {")
+      s"\n\nobject ${tableNames._1} extends CvRDTProof[${tableNames._1}] {"
+    )
 
     // UPDATE PROOFS
     attributesList.filter(at => at.allowConcurrentUpdates).map {
@@ -271,20 +302,24 @@ object ElemCodeGenerator {
                 }).mkString(" && ")
             } else ""
               ) + "\n\t\t\t ) =>: {" +
-            // imply => {
+            //simulate the update of the element in 2 replicas...
             s"\n\t\t\t\t //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12" +
             s"\n\t\t\t\t val elem1 = elem.update${atName.capitalize}(${atName}1, c1)" +
             s"\n\t\t\t\t val elem2 = elem.update${atName.capitalize}(${atName}2, c2)" +
             s"\n\t\t\t\t val elem12 = elem1.merge(elem2)" +
+            //check if the update in elem 1 and 2 kept the correct values
             s"\n\t\t\t\t //check if the update in elem 1 and 2 kept the correct values" +
-            attributesList.map(at_in =>
+            s"\n\t\t\t\t elem1.$pk_name == elem.$pk_name && elem2.$pk_name == elem.$pk_name &&" +
+            non_PK_attributes.map(at_in =>
               if (at_in.attribName.equals(atName))
                 s"\n\t\t\t\t elem1.$atName.value == ${atName}1 && elem2.$atName.value == ${atName}2"
               else
                 s"\n\t\t\t\t elem1.${at_in.attribName} == elem.${at_in.attribName} && elem2.${at_in.attribName} == elem.${at_in.attribName}"
             ).mkString(" &&") + " &&" +
+            //check if the merged values are correct and according to the chosen update-policy
             s"\n\t\t\t\t //check if the merged values are correct and according to the chosen update-policy " +
-            attributesList.map(at_in =>
+            s"\n\t\t\t\t elem12.$pk_name == elem.$pk_name &&" +
+            non_PK_attributes.map(at_in =>
               if (at_in.attribName.equals(atName)) {
                 if (at_in.attribPolicy.equals("LWW") || at_in.attribPolicy.equals("NO_CONCURRENCY"))
                   s"\n\t\t\t\t elem12.$atName.value == ${atName}2"

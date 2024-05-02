@@ -1,0 +1,59 @@
+
+// don't use Artist and Album to not confuse with the albumSystem with a specific example
+
+// TODO: implement CHECK of other types (BETWEEN, IN, LIKE, IS NULL, IS NOT NULL, etc)
+
+
+// GENRE - simple PK
+ CREATE UPDATE-WINS TABLE Genre(
+     style VARCHAR PRIMARY KEY,
+     description LWW varchar
+ )
+
+// ART - composite PKs
+CREATE UPDATE-WINS TABLE Art (
+    name VARCHAR PRIMARY KEY
+    country VARCHAR PRIMARY KEY,
+    age LWW INT check(age >= 0 AND age <= 100),
+    ranking LWW INT check(ranking >= 0 AND ranking <= 100),
+ )
+
+
+// ALB - ref composite PKs
+ CREATE UPDATE-WINS TABLE Alb (
+     title VARCHAR PRIMARY KEY,
+     art_name VARCHAR foreign key update-wins references Art(name),
+     art_country VARCHAR foreign key update-wins references Art(country),
+     year LWW INT check(year >= 1900 AND year <= 2022),
+     price LWW INT check(price >= 0 AND price <= 10000),
+ )
+
+
+// SONG - ref 2 Tables
+ CREATE UPDATE-WINS TABLE Song(
+     s_title VARCHAR PRIMARY KEY,
+     alb_title VARCHAR foreign key update-wins references Alb(title),
+     genr_style varchar foreign key update-wins references Genre(style),
+     duration LWW INT check(duration >= 0 AND duration <= 1000),
+ )
+
+
+// SONG-VIEW - ref 4 Tables && composite PKs
+ CREATE UPDATE-WINS TABLE Song_View(
+    // composite PK of this table
+    sv_id int,
+    sv_name VARCHAR,
+    PRIMARY KEY (sv_id, sv_name),
+
+    // ref tab with composite PK
+    art_name VARCHAR foreign key update-wins references Art(name),
+    art_country VARCHAR foreign key update-wins references Art(country),
+    // ref 3 tables with single PK
+    s_title VARCHAR foreign key update-wins references Song(s_title),
+    alb_title VARCHAR foreign key update-wins references Alb(title),
+    genr_style varchar foreign key update-wins references Genre(style),
+
+    // more attributes
+    duration LWW INT check(duration >= 0 AND duration <= 1000),
+ )
+

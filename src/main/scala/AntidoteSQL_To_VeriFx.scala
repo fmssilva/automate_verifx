@@ -1,9 +1,12 @@
 
 import createTable.Table
+
+
 import java.io.{FileOutputStream, ObjectOutputStream}
 import java.nio.file.{Files, Paths}
 import scala.collection.mutable
 import scala.io.Source
+
 
 /**
  * Convert Antidote SQL Commands to VeriFx
@@ -16,11 +19,12 @@ import scala.io.Source
  * )
  */
 object AntidoteSQL_To_VeriFx {
+
   /**
    * Files and Paths Constants
    */
   private val ANTIDOTE_SQL_DATA_FOLDER = Paths.get("AntidoteSQL_Data")
-  private val INPUT_COMMANDS_FILE_NAME = "input.txt"
+  private val INPUT_COMMANDS_FILE_NAME = "input.aql"
   private val SYS_TABLES_MAP_FILE_NAME = "sysTablesMap.ser"
   private val SYS_TABLES_FILE_PATH = Paths.get(s"$ANTIDOTE_SQL_DATA_FOLDER/$SYS_TABLES_MAP_FILE_NAME")
 
@@ -32,23 +36,19 @@ object AntidoteSQL_To_VeriFx {
    */
   def main(args: Array[String]): Unit = {
     try {
-      // get the AntidoteSQL commands, tokenized by lines and keeping the lines numbers for error report
-      val cmdTokens = getCommandsTokens // List[(Line_Of_Code: Int, tokens: Array[String])]
-      //print for debug
-      cmdTokens.foreach {
-        case (lineNumber, tokens) =>
-          println(s"Line $lineNumber: ${tokens.mkString("[", ", ", "]")}")
-      }
+      // GET COMMANDS - AntidoteSQL command' tokens, by lines
+      val cmdTokens: List[(Int, Array[String])] = getFilteredCommandsTokens
+      print_cmdTokens(cmdTokens)
 
-      // Load existing map of tables in the system
+      // LOAD SYSTEM CURRENT TABLES
       val sysTablesMap: mutable.Map[String, Table] = loadSysTablesMap()
-      printSysTablesMap(sysTablesMap)
+      printSysTablesMap(sysTablesMap) //current tables in the system
 
-      // process commands
-      processCommands(cmdTokens, sysTablesMap)
-      printSysTablesMap(sysTablesMap)
+      // PROCESS COMMANDS
+      processAllCommands(cmdTokens, sysTablesMap)
+      printSysTablesMap(sysTablesMap) //final tables in the system
 
-      // Save the updated map of tables in the system
+      // SAVE SYSTEM CURRENT TABLES
       saveSysTablesMap(sysTablesMap)
     } catch {
       case e: IllegalArgumentException =>
@@ -56,62 +56,71 @@ object AntidoteSQL_To_VeriFx {
     }
   }
 
-
-  private def printSysTablesMap(sysTablesMap: mutable.Map[String, Table]): Unit = {
-    //print for debug
-    println("\nInitial Map of Tables in the System:")
-    for ((key, value) <- sysTablesMap)
-      println(s"k-$key: $value")
-  }
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////  HELPER METHODS /////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   /**
+   * Process all the AntidoteSQL commands given in the input file
    *
    * @param cmdTokens - tokens of all the commands given in the input file
    */
-  private def processCommands(cmdTokens: List[(Int, Array[String])], sysTablesMap: mutable.Map[String, Table]): Unit = {
+  private def processAllCommands(cmdTokens: List[(Int, Array[String])], sysTablesMap: mutable.Map[String, Table]): Unit = {
     var line = 0
     while (line < cmdTokens.length) {
-      println("\nNEXT COMMAND:")
-      val (_, tokens) = cmdTokens(line)
+      println("\nPROCESSING NEXT COMMAND:")
+      val (fileLine, tokens) = cmdTokens(line)
       tokens.headOption match {
-        case Some("//") => line += 1
-        case Some("/*") =>
-          while (line < cmdTokens.length && cmdTokens(line)._2(0) != "*/")
-            line += 1
-          line += 1
         case Some("CREATE") =>
           if (tokens.lift(2).contains("TABLE")) {
             // if update policy No concurrency can it not be written? if so we need to check here and in the create table
             //todo: check in tablesMap if already exists
             val newTable = new Table(cmdTokens, line, sysTablesMap)
-            //update next line of tokens to read
-            line = newTable.line
-            //add table to system tables map
-            sysTablesMap.put(newTable.tableNames._1, newTable)
+            line = newTable.line //update next line after processing the create table command
+            sysTablesMap.put(newTable.tableNames._1, newTable) //add table to system tables map
           } else if (tokens.lift(2).contains("INDEX"))
-            println("INDEX")
+            throw new IllegalArgumentException(s"Error: CREATE INDEX command not supported at line $fileLine")
         case Some("UPDATE") =>
-          println("Processing UPDATE command")
+          throw new IllegalArgumentException(s"Error: UPDATE command not supported at line $fileLine")
         case Some("DELETE") =>
-          println("Processing DELETE command")
+          throw new IllegalArgumentException(s"Error: DELETE command not supported at line $fileLine")
         case _ =>
-          println(s"Error: Unrecognized command at line $line")
+          throw new IllegalArgumentException(s"Error: Invalid command at line $fileLine")
       }
     }
   }
 
-  private def getCommandsTokens: List[(Int, Array[String])] = {
+  /**
+   * Get the tokens of all the commands given in the input file
+   *
+   * @return a list with number of line and its tokens
+   */
+  private def getFilteredCommandsTokens: List[(Int, Array[String])] = {
     // Input file
     val fileName = ANTIDOTE_SQL_DATA_FOLDER.resolve(INPUT_COMMANDS_FILE_NAME)
     val fileSource = Source.fromFile(fileName.toFile)
     try {
-      fileSource.getLines().toList.zipWithIndex
-        .map {
-          case (line, lineNumber) =>
-            val tokens = tokenizeLine(line)
-            (lineNumber, tokens)
-        }.filter { //delete the empty lines
-          case (_, tokens) => tokens.nonEmpty
+      var is_a_multiLine_comment = false
+      fileSource.getLines().toList //List[String]
+        .zipWithIndex //List[String,Int] - add line number to each line for easy reference
+        .map { //List[(Int, Array[String])] - tokenize each line
+          case (inputLine, lineNumber) => (lineNumber + 1, tokenizeLine(inputLine))
+        }.filter {
+          case (_, tokens) =>
+            if (tokens.isEmpty) // remove empty lines
+              false
+            else if (tokens.headOption.contains("//")) // remove single line comments
+              false
+            else if (is_a_multiLine_comment) // remove multi-line comments
+              false
+            else if (tokens.headOption.contains("/*")) { // initiate multi-line comment
+              is_a_multiLine_comment = true
+              false
+            } else if (tokens.headOption.contains("*/")) { // end multi-line comment
+              is_a_multiLine_comment = false
+              false
+            } else
+              true
         }
     } finally {
       fileSource.close()
@@ -128,15 +137,15 @@ object AntidoteSQL_To_VeriFx {
   private def tokenizeLine(line: String): Array[String] = {
     // Add spaces before and after punctuation symbols
     val symbols = List("(", ")", ",", ";")
-    val demarcatedSymbols = symbols.foldLeft(line) { (result, symbol) =>
-      result.replaceAll(s"""\\Q$symbol\\E""", s" $symbol ")
+    val demarcatedSymbols = symbols.foldLeft(line) {
+      (result, symbol) => result.replaceAll(s"""\\Q$symbol\\E""", s" $symbol ")
     }
 
-    // Use simple or multiple spaces or tabs to divide the line into tokens
+    // Use spaces (simple or multiple) or tabs, to divide the line into tokens
     val regex = """('[^']*'|"[^"]*"|\S+)""".r
     val init_tokens = regex.findAllIn(demarcatedSymbols)
 
-    // Consider words between " " or ' ' as a simple token
+    // Consider words between   " "   or   ' '   as a simple token
     val quoted_tokens = init_tokens.map(_.stripPrefix("'").stripSuffix("'").stripPrefix("\"").stripSuffix("\""))
 
     // Convert the result to an array and make all letters uppercase.
@@ -158,7 +167,7 @@ object AntidoteSQL_To_VeriFx {
       //always delete the original (for testing)
       Files.delete(SYS_TABLES_FILE_PATH)
       mutable.Map[String, Table]()
-      //after testing uncomment this to load the original if exists
+      //TODO: after testing uncomment this to load the original if exists
       //val inputStream = new ObjectInputStream(new FileInputStream(SYS_TABLES_FILE_PATH.toString))
       //      try {
       //        inputStream.readObject().asInstanceOf[mutable.Map[String, CreateTable]]
@@ -181,4 +190,31 @@ object AntidoteSQL_To_VeriFx {
       outputStream.close()
     }
   }
+
+
+  /**
+   * Print the tokens of all the commands given in the input file
+   *
+   * @param cmdTokens - tokens of all the commands given in the input file
+   */
+  private def print_cmdTokens(cmdTokens: List[(Int, Array[String])]): Unit = {
+    cmdTokens.foreach {
+      case (lineNumber, tokens) =>
+        println(s"Line $lineNumber: ${tokens.mkString("[", ", ", "]")}")
+    }
+  }
+
+  /**
+   * Print the map of tables in the system
+   *
+   * @param sysTablesMap - map of tables in the system
+   */
+  private def printSysTablesMap(sysTablesMap: mutable.Map[String, Table]): Unit = {
+    //print for debug
+    println("\nInitial Map of Tables in the System:")
+    for ((_, value) <- sysTablesMap)
+      println(s"$value")
+  }
+
+
 }

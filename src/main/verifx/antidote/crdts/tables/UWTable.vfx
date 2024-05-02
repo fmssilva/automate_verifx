@@ -1,6 +1,5 @@
 import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.registers.MVRegister
-import antidote.crdts.tables.DataType
 
 //0: I, 1: T, 2: D
 //object Flags {
@@ -9,14 +8,13 @@ import antidote.crdts.tables.DataType
 //  }
 //}
 
-trait UWTable[V <: CvRDT[V], Time, T <: UWTable[V, Time, T]] extends CvRDT {
+trait UWTable[  PK  , V <: CvRDT[V], Time, T <: UWTable[PK, V, Time, T]] extends CvRDT {
 
+  val elements: Map[PK, Tuple[V, MVRegister[Int, Time]]]
 
-  // Tuple: V is the value, and the MVRegister maintains the flags
-  val elements: Map[String, Tuple[V, MVRegister[Int, Time]]]
   val before: (Time, Time) => Boolean
 
-  def copy(newElements: Map[String, Tuple[V, MVRegister[Int, Time]]]): T
+  def copy(newElements: Map[PK, Tuple[V, MVRegister[Int, Time]]]): T
 
   def maintainState(): T
 
@@ -55,14 +53,14 @@ trait UWTable[V <: CvRDT[V], Time, T <: UWTable[V, Time, T]] extends CvRDT {
     this.copy(this.elements.add(id, row))
   }*/
 
-  def isVisible(PKs: String): Boolean =
-    this.elements.contains(PKs) && this.flagsVisibility(PKs)
+  def isVisible(pk: PK): Boolean =
+    this.elements.contains(pk) && this.flagsVisibility(pk)
 
-  def flagsVisibility(PKs: String): Boolean =
-    this.get(PKs).snd.contains(1) || this.get(PKs).snd.contains(0)
+  def flagsVisibility(pk: PK): Boolean =
+    this.get(pk).snd.contains(1) || this.get(pk).snd.contains(0)
 
-  def get(PKs: String): Tuple[V, MVRegister[Int, Time]] =
-    this.elements.get(PKs)
+  def get(pk: PK): Tuple[V, MVRegister[Int, Time]] =
+    this.elements.get(pk)
 
   //def isEmpty(): Boolean =
   //  this.elements.keys().isEmpty()
