@@ -1,7 +1,6 @@
 # Index: 
 **Git repositories**
-1. [Main repository with all CRDTs](#main_repository)
-2. [Automated table systems repository](#automated_table_systems)
+1. [Git repositories](#git-repositories)
 
 **Installation**
 1. [Install building tools](#install-building-tools)
