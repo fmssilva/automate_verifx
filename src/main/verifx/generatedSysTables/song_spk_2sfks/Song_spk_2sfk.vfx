@@ -7,30 +7,30 @@ import antidote.crdts.LamportClock
 
 
 /**
- * Class representing the element(row):::  SONG 
+ * Class representing the element(row):::  SONG_SPK_2SFK 
  *
  * given by the Antidote SQL command:
  *
- *		CREATE UPDATE-WINS TABLE SONG (
+ *		CREATE UPDATE-WINS TABLE SONG_SPK_2SFK (
  *		S_TITLE VARCHAR PRIMARY KEY ,
- *		ALB_TITLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ALB ( TITLE ) ,
- *		GENR_STYLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES GENRE ( STYLE ) ,
+ *		GENR_STYLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES GENRE_SPK ( STYLE ) ,
+ *		ALB_TITLE VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ALB_SPK_1CFK ( TITLE ) ,
  *		DURATION LWW INT CHECK ( DURATION >= 0 AND DURATION <= 1000 ) ,
  *		)
  */
-class Song(s_title: String, alb_title: String, genr_style: String, duration: LWWRegister[Int]) extends CvRDT[Song] {
+class Song_spk_2sfk(s_title: String, genr_style: String, alb_title: String, duration: LWWRegister[Int]) extends CvRDT[Song_spk_2sfk] {
 
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Song with that Song (only concurrently updatable attributes are merged as a CRDT)
-	def merge(that: Song) = 
-		new Song(this.s_title, this.alb_title, this.genr_style, this.duration.merge(that.duration))
+	//merge this Song_spk_2sfk with that Song_spk_2sfk (only concurrently updatable attributes are merged as a CRDT)
+	def merge(that: Song_spk_2sfk) = 
+		new Song_spk_2sfk(this.s_title, this.genr_style, this.alb_title, this.duration.merge(that.duration))
 
-	//compare this Song with that Song (only concurrently updatable attributes matter)
-	def compare(that: Song) = 
+	//compare this Song_spk_2sfk with that Song_spk_2sfk (only concurrently updatable attributes matter)
+	def compare(that: Song_spk_2sfk) = 
 		this.duration.compare(that.duration)
 
 
@@ -39,14 +39,14 @@ class Song(s_title: String, alb_title: String, genr_style: String, duration: LWW
    * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
    */
 
-	//this Song is compatible with that Song?
-	override def compatible(that: Song) = 
+	//this Song_spk_2sfk is compatible with that Song_spk_2sfk?
+	override def compatible(that: Song_spk_2sfk) = 
 		this.s_title == that.s_title && 
-		this.alb_title == that.alb_title &&
 		this.genr_style == that.genr_style &&
+		this.alb_title == that.alb_title &&
 		this.duration.compatible(that.duration)
 
-	//Song is reachable given the CHECK conditions of its attributes?
+	//Song_spk_2sfk is reachable given the CHECK conditions of its attributes?
 	override def reachable() = { 
 		 this.duration.value >= 0 && this.duration.value <= 1000
 	}
@@ -60,7 +60,7 @@ class Song(s_title: String, alb_title: String, genr_style: String, duration: LWW
 
 	def updateDuration(newDuration: Int, stampDuration: LamportClock) = { 
 		if( newDuration >= 0 && newDuration <= 1000)
-			new Song(this.s_title, this.alb_title, this.genr_style, this.duration.assign(newDuration, stampDuration))
+			new Song_spk_2sfk(this.s_title, this.genr_style, this.alb_title, this.duration.assign(newDuration, stampDuration))
 		else
 			this
 	}
@@ -74,10 +74,10 @@ class Song(s_title: String, alb_title: String, genr_style: String, duration: LWW
 * Object to implement the proof functions for the updatable attributes
 */
 
-object Song extends CvRDTProof[Song] {
+object Song_spk_2sfk extends CvRDTProof[Song_spk_2sfk] {
 
-	proof Song_updateDuration_works {
-		forall(elem: Song, duration1: Int, duration2: Int, c1: LamportClock, c2: LamportClock ) {
+	proof Song_spk_2sfk_updateDuration_works {
+		forall(elem: Song_spk_2sfk, duration1: Int, duration2: Int, c1: LamportClock, c2: LamportClock ) {
 			( elem.reachable()  &&  c1.smaller(c2) &&
 			  duration1 >= 0 && duration1 <= 1000 && duration2 >= 0 && duration2 <= 1000
 			 ) =>: {
@@ -87,13 +87,13 @@ object Song extends CvRDTProof[Song] {
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.s_title == elem.s_title && elem2.s_title == elem.s_title &&
-				 elem1.alb_title == elem.alb_title && elem2.alb_title == elem.alb_title &&
 				 elem1.genr_style == elem.genr_style && elem2.genr_style == elem.genr_style &&
+				 elem1.alb_title == elem.alb_title && elem2.alb_title == elem.alb_title &&
 				 elem1.duration.value == duration1 && elem2.duration.value == duration2 &&
 				 //check if the merged values are correct and according to the chosen update-policy 
 				 elem12.s_title == elem.s_title &&
-				 elem12.alb_title == elem.alb_title &&
 				 elem12.genr_style == elem.genr_style &&
+				 elem12.alb_title == elem.alb_title &&
 				 elem12.duration.value == duration2
 			}
 		}

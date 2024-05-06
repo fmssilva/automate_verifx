@@ -1,9 +1,13 @@
+package antidoteSQL_to_veriFx
 
+
+import antidoteSQL_to_veriFx.System_Constants._
+import antidoteSQL_to_veriFx.System_Utils.createClassFile
 import createTable.Table
-
+import createTable.codeGenerators.Hard_Proofs
 
 import java.io.{FileOutputStream, ObjectOutputStream}
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
 import scala.collection.mutable
 import scala.io.Source
 
@@ -19,15 +23,6 @@ import scala.io.Source
  * )
  */
 object AntidoteSQL_To_VeriFx {
-
-  /**
-   * Files and Paths Constants
-   */
-  private val ANTIDOTE_SQL_DATA_FOLDER = Paths.get("AntidoteSQL_Data")
-  private val INPUT_COMMANDS_FILE_NAME = "input.aql"
-  private val SYS_TABLES_MAP_FILE_NAME = "sysTablesMap.ser"
-  private val SYS_TABLES_FILE_PATH = Paths.get(s"$ANTIDOTE_SQL_DATA_FOLDER/$SYS_TABLES_MAP_FILE_NAME")
-
 
   /**
    * main method
@@ -48,6 +43,11 @@ object AntidoteSQL_To_VeriFx {
       processAllCommands(cmdTokens, sysTablesMap)
       printSysTablesMap(sysTablesMap) //final tables in the system
 
+      // GENERATE HARDER PROOFS OF DIFFERENT TABLES IN 1 DOCUMENT
+      val filePath = s"$SYSTEM_PROOFS_FOLDER_PATH/Hard_Proofs.scala"
+      val classContent = Hard_Proofs.gen_hard_proofs(sysTablesMap)
+      createClassFile(classContent, filePath)
+
       // SAVE SYSTEM CURRENT TABLES
       saveSysTablesMap(sysTablesMap)
     } catch {
@@ -55,6 +55,7 @@ object AntidoteSQL_To_VeriFx {
         println(s"\nError: ${e.getMessage}")
     }
   }
+
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////  HELPER METHODS /////////////////////////////////////////////

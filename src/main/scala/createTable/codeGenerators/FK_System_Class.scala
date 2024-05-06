@@ -1,6 +1,7 @@
 package createTable.codeGenerators
 
 import createTable.Table
+import antidoteSQL_to_veriFx.System_Constants._
 
 /**
  * object to generate the code for a Class to manage the FKs
@@ -80,12 +81,12 @@ object FK_System_Class {
         s"\nimport antidote.crdts.LamportClock" +
         s"\nimport antidote.crdts.VersionVector" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
-        s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${pk_table_names._1.toLowerCase()}s.${pk_table_names._2}" +
+        s"\nimport ${SYSTEM_TABLES_FOLDER_NAME}.${pk_table_names._1.toLowerCase()}s.${pk_table_names._2}" +
         fk_Tables_names.map(
-          t_Names => s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${t_Names._1.toLowerCase()}s.${t_Names._2}"
+          t_Names => s"\nimport ${SYSTEM_TABLES_FOLDER_NAME}.${t_Names._1.toLowerCase()}s.${t_Names._2}"
         ).mkString +
         fk_Tables.filter(_.pk_attributes.size > 1).map(
-          tab => s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${tab.tableNames._1.toLowerCase()}s.${tab.tableNames._1}"
+          tab => s"\nimport ${SYSTEM_TABLES_FOLDER_NAME}.${tab.tableNames._1.toLowerCase()}s.${tab.tableNames._1}"
         ).mkString
     )
   }

@@ -1,5 +1,6 @@
 package createTable
 
+import antidoteSQL_to_veriFx.System_Constants._
 import scala.collection.mutable
 
 /**
@@ -12,13 +13,6 @@ import scala.collection.mutable
 class TabAttribute(lineTokens: Array[String], fileLine: Int, sysTablesMap: mutable.Map[String, Table]) extends Serializable {
 
   println("Line " + fileLine + ": " + lineTokens.mkString(", ") + " \t\t» creating attribute at CreateAttribute class ")
-  /**
-   * Class constants
-   */
-  private val ATTRIBUTE_UPDATE_POLICIES = Array("LWW", "MULTI-VALUE", "ADDITIVE", "' ' == NO_CONCURRENCY")
-  private val ATTRIBUTE_DATA_TYPE_ANTIDOTE = Array("VARCHAR", "BOOLEAN", "INT", "COUNTER_INT")
-  private val ATTRIBUTE_DATA_TYPE_VERIFX = Array("String", "Boolean", "Int", "Counter_Int")
-
 
   // ATTRIBUTE NAME
   private var idx_of_token = 0
@@ -28,7 +22,7 @@ class TabAttribute(lineTokens: Array[String], fileLine: Int, sysTablesMap: mutab
   idx_of_token += 1
   private val ATTRIB_MUST_HAVE_NAME_POLICY_DATA = s"Line: $fileLine - Attribute $attribName must have a NAME, UPDATE POLICY (${ATTRIBUTE_UPDATE_POLICIES.mkString(" | ")} ) and DATA TYPE (${ATTRIBUTE_DATA_TYPE_ANTIDOTE.mkString(" | ")} ) "
   val attribPolicy: String = getAttribUpdatePolicy
-  val allowConcurrentUpdates: Boolean = attribPolicy != "NO_CONCURRENCY"
+  val allowConcurrentUpdates: Boolean = attribPolicy != NO_CONCURRENCY
 
   //DATA TYPE
   idx_of_token += 1
@@ -53,7 +47,7 @@ class TabAttribute(lineTokens: Array[String], fileLine: Int, sysTablesMap: mutab
       case Some(policy) if ATTRIBUTE_UPDATE_POLICIES.contains(policy) => policy
       case Some(dataType) if ATTRIBUTE_DATA_TYPE_ANTIDOTE.contains(dataType) =>
         idx_of_token -= 1 //adjust idx because there was no token for "No Concurrency"
-        "NO_CONCURRENCY"
+        NO_CONCURRENCY
       case _ =>
         throw new IllegalArgumentException("at getAttribUpdatePolicy " + ATTRIB_MUST_HAVE_NAME_POLICY_DATA)
     }
@@ -70,8 +64,8 @@ class TabAttribute(lineTokens: Array[String], fileLine: Int, sysTablesMap: mutab
     }
     //TODO: do match with all cases
     attribPolicy match {
-      case "NO_CONCURRENCY" => (dataType, "")
-      case "LWW" => (dataType, s"LWWRegister[$dataType]")
+      case NO_CONCURRENCY => (dataType, "")
+      case LWW => (dataType, s"$LWWRegister[$dataType]")
       case _ => throw new Exception("TODO: Implement getAttribDataType() at CreateAttribute.scala")
     }
   }

@@ -1,11 +1,11 @@
 
-import generatedSysTables.songs.Song
+import generatedSysTables.art_cpks.Art_cpk
 import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 
 /**
  * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
- *		- SONG -
+ *		- ART_CPK -
  *
  * @param before - function to compare two Time values
  * @param elements - Map of elements/rows in the table,
@@ -14,19 +14,19 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class SongsTable[Time] (before: (Time, Time) => Boolean,							//function
-					   elements: Map[String, Tuple[Song, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[ String ,Song, Time, SongsTable[Time]]{ 
+class Art_cpksTable[Time] (before: (Time, Time) => Boolean,							//function
+					   elements: Map[Art_cpk_PKs, Tuple[Art_cpk, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[ Art_cpk_PKs ,Art_cpk, Time, Art_cpksTable[Time]]{ 
 
 
 	/*
 	* Implement Methods DECLARED in UWTable trait
 	*/
-	def copy(newElements: Map[String, Tuple[Song, MVRegister[Int, Time]]]) =
-		    new SongsTable(this.before, newElements)
+	def copy(newElements: Map[Art_cpk_PKs, Tuple[Art_cpk, MVRegister[Int, Time]]]) =
+		    new Art_cpksTable(this.before, newElements)
 
 	def maintainState() = this
 
 }
 
-object SongsTable extends CvRDTProof1[SongsTable]
+object Art_cpksTable extends CvRDTProof1[Art_cpksTable]

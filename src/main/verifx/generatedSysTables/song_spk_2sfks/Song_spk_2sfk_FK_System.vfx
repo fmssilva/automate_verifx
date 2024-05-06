@@ -1,0 +1,128 @@
+
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.LamportClock
+import antidote.crdts.VersionVector
+import antidote.crdts.lemmas.CvRDTProof1
+import generatedSysTables.song_spk_2sfks.Song_spk_2sfksTable
+import generatedSysTables.genre_spks.Genre_spksTable
+import generatedSysTables.alb_spk_1cfks.Alb_spk_1cfksTable
+
+/*
+ * class implementing the FK - Referential Integrity - Invariant
+ */
+class Song_spk_2sfk_FK_System[Time](
+					song_spk_2sfksTable: Song_spk_2sfksTable[Time],
+					genre_spksTable: Genre_spksTable[Time], 
+					alb_spk_1cfksTable: Alb_spk_1cfksTable[Time] )
+					extends CvRDT[Song_spk_2sfk_FK_System[Time]] {
+
+
+  /*
+   * OVERRIDE DEFAULT IMPLEMENTATION OF METHODS IN CvRDT TRAIT
+   */ 
+
+	//REACHABLE - check if this table and the referenced tables are reachable
+	override def reachable(): Boolean =
+				this.song_spk_2sfksTable.reachable() && 
+				this.genre_spksTable.reachable() && 
+				this.alb_spk_1cfksTable.reachable()
+
+
+	//COMPATIBLE - check if this Song_spk_2sfk_FK_System is compatible with that song_spk_2sfksTable
+	override def compatible(that: Song_spk_2sfk_FK_System[Time]): Boolean =
+				this.song_spk_2sfksTable.compatible(that.song_spk_2sfksTable) &&
+				this.genre_spksTable.compatible(that.genre_spksTable) &&
+				this.alb_spk_1cfksTable.compatible(that.alb_spk_1cfksTable)
+
+
+	//EQUALS - check if this Song_spk_2sfk_FK_System is equal to that Song_spk_2sfk_FK_System
+	override def equals(that: Song_spk_2sfk_FK_System[Time]) =
+				this == that
+
+
+  /*
+   * IMPLEMENT DECLARED METHODS IN CvRDT TRAIT
+   */
+
+	//MERGE this Song_spk_2sfk_FK_System with that Song_spk_2sfk_FK_System
+	def merge(that: Song_spk_2sfk_FK_System[Time]) =
+		new Song_spk_2sfk_FK_System(
+				this.song_spk_2sfksTable.merge(that.song_spk_2sfksTable), 
+				this.genre_spksTable.merge(that.genre_spksTable),
+				this.alb_spk_1cfksTable.merge(that.alb_spk_1cfksTable) )
+
+	//COMPARE this Song_spk_2sfk_FK_System with that Song_spk_2sfk_FK_System
+	//ignore
+	def compare(that: Song_spk_2sfk_FK_System[Time]) = 
+				true
+
+
+
+  /*
+   * EXTRA METHODS FOR PROOFS
+   */
+
+	//REFERENTIAL INTEGRITY
+	//Checks if for every elem of Song_spk_2sfksTable, there is the corresponding element in the referenced tables
+	def refIntegrityHolds(pk: String) = {
+		(this.song_spk_2sfksTable.isVisible(pk) 
+		 ) =>: {
+				val song_spk_2sfk = this.song_spk_2sfksTable.get(pk).fst
+				this.genre_spksTable.isVisible(song_spk_2sfk.genr_style)
+				this.alb_spk_1cfksTable.isVisible(song_spk_2sfk.alb_title)
+				}
+	}
+
+	// REACHABLE WITH ASSUMPTIONS - ASSOCIATIVITY
+	def reachableWithAssociativityAssumptions(): Boolean = {
+				this.song_spk_2sfksTable.reachable() && 
+				this.genre_spksTable.reachable() &&
+				this.alb_spk_1cfksTable.reachable() && 
+				this.mergeValuesAssumptions()
+	}
+		//HELPER METHOD - ASSUMPTIONS FOR MERGE ASSOCIATIVITY - for the tables of this Song_spk_2sfk_FK_System
+		private def mergeValuesAssumptions(): Boolean = {
+			forall(v1: Song_spk_2sfksTable[Time], v2: Song_spk_2sfksTable[Time], v3: Song_spk_2sfksTable[Time])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  } &&
+			forall(v1: Genre_spksTable[Time], v2: Genre_spksTable[Time], v3: Genre_spksTable[Time])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  } &&
+			forall(v1: Alb_spk_1cfksTable[Time], v2: Alb_spk_1cfksTable[Time], v3: Alb_spk_1cfksTable[Time])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  }
+		}
+
+}
+
+
+
+/*
+ * OBJECT FOR EXTRA PROOFS
+ */
+object Song_spk_2sfk_FK_System extends CvRDTProof1[Song_spk_2sfk_FK_System] {
+
+	//REFERENTIAL INTEGRITY
+	proof genericReferentialIntegrity[Time] {
+		forall(s1: Song_spk_2sfk_FK_System[Time], s2: Song_spk_2sfk_FK_System[Time], pk: String) {
+			( s1.reachable() && s2.reachable() && 
+			  s1.compatible(s2) &&
+			  s1.refIntegrityHolds(pk) && s2.refIntegrityHolds(pk) 
+			) =>: {
+				s1.merge(s2).refIntegrityHolds(pk)
+			}
+		}
+	}
+
+	//MERGE ASSOCIATIVE
+	proof mergeIsAssociative[Time] {
+		forall(s1: Song_spk_2sfk_FK_System[Time], s2: Song_spk_2sfk_FK_System[Time], s3: Song_spk_2sfk_FK_System[Time]) {
+			(s1.reachable() && s2.reachable() && s3.reachable() &&
+			  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)
+			) =>: {
+				val aux = s1.merge(s2).merge(s3)
+				aux.equals(s1.merge( s2.merge(s3) ))
+				aux.reachable()
+				}
+		}
+	}}

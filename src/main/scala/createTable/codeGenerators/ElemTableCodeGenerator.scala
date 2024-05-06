@@ -1,5 +1,6 @@
 package createTable.codeGenerators
 
+import antidoteSQL_to_veriFx.System_Constants._
 import createTable.Table
 
 /**
@@ -64,7 +65,7 @@ object ElemTableCodeGenerator {
    */
   private def gen_Class_Imports(): Unit = {
     classContent.append(
-      s"\nimport ${Table.SYSTEM_TABLES_FOLDER_NAME}.${tableNames._1.toLowerCase()}s.${tableNames._1}" +
+      s"\nimport ${SYSTEM_TABLES_FOLDER_NAME}.${tableNames._1.toLowerCase()}s.${tableNames._1}" +
         s"\nimport antidote.crdts.lemmas.CvRDTProof1" +
         (update_policy match {
           case "UPDATE-WINS" => s"\nimport antidote.crdts.tables.UWTable"

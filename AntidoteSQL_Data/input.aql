@@ -1,59 +1,59 @@
 
-// don't use Artist and Album to not confuse with the albumSystem with a specific example
+// don't use Art_cPKist and Alb_sPK_1cFKum to not confuse with the Alb_sPK_1cFKumSystem with a specific example
 
 // TODO: implement CHECK of other types (BETWEEN, IN, LIKE, IS NULL, IS NOT NULL, etc)
 
 
-// GENRE - simple PK
- CREATE UPDATE-WINS TABLE Genre(
+// Genre_sPK - simple PK
+ CREATE UPDATE-WINS TABLE Genre_sPK (
      style VARCHAR PRIMARY KEY,
      description LWW varchar
  )
 
-// ART - composite PKs
-CREATE UPDATE-WINS TABLE Art (
+// Art_cPK - composite PKs
+CREATE UPDATE-WINS TABLE Art_cPK (
     name VARCHAR PRIMARY KEY
     country VARCHAR PRIMARY KEY,
-    age LWW INT check(age >= 0 AND age <= 100),
-    ranking LWW INT check(ranking >= 0 AND ranking <= 100),
+    age LWW INT CHECK(age >= 0 AND age <= 100),
+    ranking LWW INT CHECK(ranking >= 0 AND ranking <= 100),
  )
 
 
-// ALB - ref composite PKs
- CREATE UPDATE-WINS TABLE Alb (
+// Alb_sPK_1cFK - ref composite PKs
+ CREATE UPDATE-WINS TABLE Alb_sPK_1cFK (
      title VARCHAR PRIMARY KEY,
-     art_name VARCHAR foreign key update-wins references Art(name),
-     art_country VARCHAR foreign key update-wins references Art(country),
-     year LWW INT check(year >= 1900 AND year <= 2022),
-     price LWW INT check(price >= 0 AND price <= 10000),
+     art_name VARCHAR FOREIGN KEY update-wins REFERENCES Art_cPK(name),
+     art_country VARCHAR FOREIGN KEY update-wins REFERENCES Art_cPK(country),
+     year LWW INT CHECK(year >= 1900 AND year <= 2022),
+     price LWW INT CHECK(price >= 0 AND price <= 10000),
  )
 
 
-// SONG - ref 2 Tables
- CREATE UPDATE-WINS TABLE Song(
+// Song_sPK_2sFK- ref 2 Tables
+ CREATE UPDATE-WINS TABLE Song_sPK_2sFK(
      s_title VARCHAR PRIMARY KEY,
-     alb_title VARCHAR foreign key update-wins references Alb(title),
-     genr_style varchar foreign key update-wins references Genre(style),
-     duration LWW INT check(duration >= 0 AND duration <= 1000),
+     genr_style varchar FOREIGN KEY update-wins REFERENCES Genre_sPK(style),
+     alb_title VARCHAR FOREIGN KEY update-wins REFERENCES Alb_sPK_1cFK(title),
+     duration LWW INT CHECK(duration >= 0 AND duration <= 1000),
  )
 
 
-// SONG-VIEW - ref 4 Tables && composite PKs
- CREATE UPDATE-WINS TABLE Song_View(
+// Song_View_cPK_1cFK_2sFKVIEW - ref 4 Tables && composite PKs
+ CREATE UPDATE-WINS TABLE Song_View_cPK_1cFK_2sFK(
     // composite PK of this table
     sv_id int,
     sv_name VARCHAR,
     PRIMARY KEY (sv_id, sv_name),
 
     // ref tab with composite PK
-    art_name VARCHAR foreign key update-wins references Art(name),
-    art_country VARCHAR foreign key update-wins references Art(country),
+    art_name VARCHAR FOREIGN KEY update-wins REFERENCES Art_cPK(name),
+    art_country VARCHAR FOREIGN KEY update-wins REFERENCES Art_cPK(country),
     // ref 3 tables with single PK
-    s_title VARCHAR foreign key update-wins references Song(s_title),
-    alb_title VARCHAR foreign key update-wins references Alb(title),
-    genr_style varchar foreign key update-wins references Genre(style),
+    s_title VARCHAR FOREIGN KEY update-wins REFERENCES Song_sPK_2sFK(s_title),
+    alb_title VARCHAR FOREIGN KEY update-wins REFERENCES Alb_sPK_1cFK(title),
+    genr_style varchar FOREIGN KEY update-wins REFERENCES Genre_sPK(style),
 
     // more attributes
-    duration LWW INT check(duration >= 0 AND duration <= 1000),
+    duration LWW INT CHECK(duration >= 0 AND duration <= 1000),
  )
 

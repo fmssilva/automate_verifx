@@ -1,5 +1,6 @@
 package createTable
 
+import antidoteSQL_to_veriFx.System_Constants._
 import scala.collection.mutable
 
 /**
@@ -38,8 +39,8 @@ case class AttribInvariants(lineTokens: Array[String], fileLine: Int, sysTablesM
    * Check if the attribute is a Primary Key
    */
   private def check_if_isPrimaryKey: Boolean = {
-    lineTokens.indexOf("PRIMARY") < lineTokens.length - 1 &&
-      lineTokens(lineTokens.indexOf("PRIMARY") + 1) == "KEY"
+    lineTokens.indexOf(PRIMARY) < lineTokens.length - 1 &&
+      lineTokens(lineTokens.indexOf(PRIMARY) + 1) == KEY
   }
 
   /**
@@ -53,13 +54,13 @@ case class AttribInvariants(lineTokens: Array[String], fileLine: Int, sysTablesM
    * Check if the attribute is a Foreign Key
    */
   private def check_if_isForeignKey(): Option[FK_Options] = {
-    val fk_idx = lineTokens.indexOf("FOREIGN") // will return -1 if there is no "Foreign"
+    val fk_idx = lineTokens.indexOf(FOREIGN) // will return -1 if there is no FOREIGN
     if (fk_idx < 0)
       return None // it's not a FK
     lineTokens.slice(fk_idx, fk_idx + 8) match {
-      case Array("FOREIGN", "KEY", policy, "REFERENCES", referencedTable, "(", referencedColumn, ")") if Table.TABLE_UPDATE_POLICIES.contains(policy) =>
+      case Array(FOREIGN, KEY, policy, REFERENCES, referencedTable, "(", referencedColumn, ")") if TABLE_UPDATE_POLICIES.contains(policy) =>
         //check if has "ON DELETE CASCADE"
-        val hasOnDeleteCascade = fk_idx + 10 < lineTokens.length && (lineTokens.slice(fk_idx + 8, fk_idx + 11) sameElements Array("ON", "DELETE", "CASCADE"))
+        val hasOnDeleteCascade = fk_idx + 10 < lineTokens.length && (lineTokens.slice(fk_idx + 8, fk_idx + 11) sameElements Array(ON, DELETE, CASCADE))
 
         //check if that table and column exist in the system,
         val fk_TableOption = sysTablesMap.get(referencedTable.toLowerCase().capitalize)
@@ -78,7 +79,7 @@ case class AttribInvariants(lineTokens: Array[String], fileLine: Int, sysTablesM
                 Some(FK_Options(policy, fk_Table, at, hasOnDeleteCascade))
             }
         }
-      case _ => throw new IllegalArgumentException(s"At Line: $fileLine - If an Attribute is a Foreign Key, it must have a valid update policy: (${Table.TABLE_UPDATE_POLICIES.mkString(" | ")}) ")
+      case _ => throw new IllegalArgumentException(s"At Line: $fileLine - If an Attribute is a Foreign Key, it must have a valid update policy: (${TABLE_UPDATE_POLICIES.mkString(" | ")}) ")
     }
   }
 
@@ -86,7 +87,7 @@ case class AttribInvariants(lineTokens: Array[String], fileLine: Int, sysTablesM
    * Check if the attribute has a CHECK constraint
    */
   private def check_if_hasCheck(): Option[Array[String]] = {
-    val check_start = lineTokens.indexOf("CHECK")
+    val check_start = lineTokens.indexOf(CHECK)
     if (check_start < 0)
       None
     else {

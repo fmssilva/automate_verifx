@@ -1,11 +1,11 @@
 
-import generatedSysTables.albs.Alb
+import generatedSysTables.genre_spks.Genre_spk
 import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 
 /**
  * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
- *		- ALB -
+ *		- GENRE_SPK -
  *
  * @param before - function to compare two Time values
  * @param elements - Map of elements/rows in the table,
@@ -14,19 +14,19 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class AlbsTable[Time] (before: (Time, Time) => Boolean,							//function
-					   elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[ String ,Alb, Time, AlbsTable[Time]]{ 
+class Genre_spksTable[Time] (before: (Time, Time) => Boolean,							//function
+					   elements: Map[String, Tuple[Genre_spk, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[ String ,Genre_spk, Time, Genre_spksTable[Time]]{ 
 
 
 	/*
 	* Implement Methods DECLARED in UWTable trait
 	*/
-	def copy(newElements: Map[String, Tuple[Alb, MVRegister[Int, Time]]]) =
-		    new AlbsTable(this.before, newElements)
+	def copy(newElements: Map[String, Tuple[Genre_spk, MVRegister[Int, Time]]]) =
+		    new Genre_spksTable(this.before, newElements)
 
 	def maintainState() = this
 
 }
 
-object AlbsTable extends CvRDTProof1[AlbsTable]
+object Genre_spksTable extends CvRDTProof1[Genre_spksTable]

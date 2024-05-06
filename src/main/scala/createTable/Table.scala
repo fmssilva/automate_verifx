@@ -1,22 +1,13 @@
 package createTable
 
-import createTable.codeGenerators.{ElemCodeGenerator, ElemTableCodeGenerator, FK_System_Class, Proofs_Class}
+import antidoteSQL_to_veriFx.System_Constants._
+import antidoteSQL_to_veriFx.System_Utils._
+import createTable.codeGenerators._
 
 import java.io._
-import java.nio.file.{Files, Paths}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.util.{Failure, Success, Try}
 
-
-/**
- * Table Constants, declared as static object to be used across multiple classes and objects
- */
-object Table {
-  val TABLE_UPDATE_POLICIES: Array[String] = Array("UPDATE-WINS", "DELETE-WINS", "NO_CONCURRENCY")
-  val SYSTEM_TABLES_FOLDER_NAME: String = "generatedSysTables"
-  val SYSTEM_PROOFS_FOLDER_NAME: String = SYSTEM_TABLES_FOLDER_NAME + "Proofs"
-}
 
 /**
  * Class to process a given list of commands and generate the veriFx code for a new table
@@ -56,38 +47,41 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
    * Generate FOLDERS AND CLASSES
    */
   // folder systemTables
-  private var folderPath = s"./src/main/verifx/${Table.SYSTEM_TABLES_FOLDER_NAME}"
-  createDirectory()
+  createDirectory(SYSTEM_TABLES_FOLDER_PATH)
 
   // folder "Table"
-  folderPath = s"$folderPath/${tableNames._1.toLowerCase()}s"
-  createDirectory()
+  private val folderPath = s"$SYSTEM_TABLES_FOLDER_PATH/${tableNames._1.toLowerCase()}s"
+  createDirectory(folderPath)
 
   // file Element Class
   private var filePath = s"$folderPath/${tableNames._1}.vfx"
   private var classContent = ElemCodeGenerator.generate_Elem_ClassCode(this, cmdTokens.slice(initial_cmd_line, line))
-  createClassFile()
+  createClassFile(classContent, filePath)
 
   // file Elem TABLE Class
   filePath = s"$folderPath/${tableNames._2}.vfx"
   classContent = ElemTableCodeGenerator.generate_ElemTable_ClassCode(this)
-  createClassFile()
+  createClassFile(classContent, filePath)
 
   // file Table_FK_System Class
   if (fk_attributes.nonEmpty) {
     filePath = s"$folderPath/${tableNames._3}.vfx"
     classContent = FK_System_Class.generate_FK_System_ClassCode(this)
-    createClassFile()
+    createClassFile(classContent, filePath)
   }
 
   // folder PROOFS directory
-  folderPath = s"./src/test/scala/${Table.SYSTEM_PROOFS_FOLDER_NAME}"
-  createDirectory()
+  createDirectory(SYSTEM_PROOFS_FOLDER_PATH)
+
+  // file ProverUtils
+  filePath = s"$SYSTEM_PROOFS_FOLDER_PATH/ProverUtils.scala"
+  classContent = Proofs_Utils_Class.generate_ProverUtils_ClassCode()
+  createClassFile(classContent, filePath)
 
   // file PROOFS Elem class
-  filePath = s"$folderPath/${tableNames._1}Proofs.scala"
+  filePath = s"$SYSTEM_PROOFS_FOLDER_PATH/${tableNames._1}Proofs.scala"
   classContent = Proofs_Class.generate_Proofs_ClassCode(this)
-  createClassFile()
+  createClassFile(classContent, filePath)
 
 
 
@@ -100,8 +94,8 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
    */
   private def getTableUpdatePolicy: String = {
     lineTokens.lift(1) match { //1 = idx of Update Policy in the create table statement
-      case Some(policy) if Table.TABLE_UPDATE_POLICIES.contains(policy) => policy
-      case _ => throw new IllegalArgumentException(s"At Create Table - Line: ${cmdTokens(line)._1} - Table Update policy has to be of the kind: ${Table.TABLE_UPDATE_POLICIES.mkString(" | ")}")
+      case Some(policy) if TABLE_UPDATE_POLICIES.contains(policy) => policy
+      case _ => throw new IllegalArgumentException(s"At Create Table - Line: ${cmdTokens(line)._1} - Table Update policy has to be of the kind: ${TABLE_UPDATE_POLICIES.mkString(" | ")}")
     }
   }
 
@@ -128,9 +122,9 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     line += 1
     while (line < cmdTokens.length && cmdTokens(line)._2(0) != ")") {
       val tokens = cmdTokens(line)._2
-      if (tokens(0) == "PRIMARY") { // when multiple attributes are declared first and just after that they are set as PK, ex: PRIMARY KEY (at1, at2 ... atn)
+      if (tokens(0) == PRIMARY) { // when multiple attributes are declared first and just after that they are set as PK, ex: PRIMARY KEY (at1, at2 ... atn)
         tokens match {
-          case Array("PRIMARY", "KEY", "(", tail@_*) =>
+          case Array(PRIMARY, KEY, "(", tail@_*) =>
             tail.foreach {
               case "," | ")" => // Do nothing for these cases
               case word =>
@@ -175,36 +169,6 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     }
   }
 
-
-  /**
-   * Create Directories
-   */
-  private def createDirectory(): Unit = {
-    //TODO: do the delete table to clean the packages and table system map...
-    if (!Files.exists(Paths.get(folderPath)))
-      Files.createDirectories(Paths.get(folderPath))
-  }
-
-
-  /**
-   * Create Element Class File
-   */
-  private def createClassFile(): Unit = {
-    var writer: PrintWriter = null
-    try {
-      writer = new PrintWriter(new File(filePath))
-      writer.println(classContent)
-    } catch {
-      case e: IOException => println(s"Error writing in the file: ${e.getMessage}")
-    } finally {
-      if (writer != null) {
-        Try(writer.close()) match {
-          case Success(_) => println(s"Content written to $filePath")
-          case Failure(ex) => println(s"Error closing writer: ${ex.getMessage}")
-        }
-      }
-    }
-  }
 
   /**
    * toString
