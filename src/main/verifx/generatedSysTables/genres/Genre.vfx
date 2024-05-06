@@ -7,28 +7,28 @@ import antidote.crdts.LamportClock
 
 
 /**
- * Class representing the element(row):::  GENRE_SPK 
+ * Class representing the element(row):::  GENRE 
  *
  * given by the Antidote SQL command:
  *
- *		CREATE UPDATE-WINS TABLE GENRE_SPK (
+ *		CREATE UPDATE-WINS TABLE GENRE (
  *		STYLE VARCHAR PRIMARY KEY ,
  *		DESCRIPTION LWW VARCHAR
  *		)
  */
-class Genre_spk(style: String, description: LWWRegister[String]) extends CvRDT[Genre_spk] {
+class Genre(style: String, description: LWWRegister[String]) extends CvRDT[Genre] {
 
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Genre_spk with that Genre_spk (only concurrently updatable attributes are merged as a CRDT)
-	def merge(that: Genre_spk) = 
-		new Genre_spk(this.style, this.description.merge(that.description))
+	//merge this Genre with that Genre (only concurrently updatable attributes are merged as a CRDT)
+	def merge(that: Genre) = 
+		new Genre(this.style, this.description.merge(that.description))
 
-	//compare this Genre_spk with that Genre_spk (only concurrently updatable attributes matter)
-	def compare(that: Genre_spk) = 
+	//compare this Genre with that Genre (only concurrently updatable attributes matter)
+	def compare(that: Genre) = 
 		this.description.compare(that.description)
 
 
@@ -37,8 +37,8 @@ class Genre_spk(style: String, description: LWWRegister[String]) extends CvRDT[G
    * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
    */
 
-	//this Genre_spk is compatible with that Genre_spk?
-	override def compatible(that: Genre_spk) = 
+	//this Genre is compatible with that Genre?
+	override def compatible(that: Genre) = 
 		this.style == that.style && 
 		this.description.compatible(that.description)
 
@@ -50,7 +50,7 @@ class Genre_spk(style: String, description: LWWRegister[String]) extends CvRDT[G
    */
 
 	def updateDescription(newDescription: String, stampDescription: LamportClock) = { 
-			new Genre_spk(this.style, this.description.assign(newDescription, stampDescription))
+			new Genre(this.style, this.description.assign(newDescription, stampDescription))
 	}
 
 }
@@ -62,10 +62,10 @@ class Genre_spk(style: String, description: LWWRegister[String]) extends CvRDT[G
 * Object to implement the proof functions for the updatable attributes
 */
 
-object Genre_spk extends CvRDTProof[Genre_spk] {
+object Genre extends CvRDTProof[Genre] {
 
-	proof Genre_spk_updateDescription_works {
-		forall(elem: Genre_spk, description1: String, description2: String, c1: LamportClock, c2: LamportClock ) {
+	proof Genre_updateDescription_works {
+		forall(elem: Genre, description1: String, description2: String, c1: LamportClock, c2: LamportClock ) {
 			( elem.reachable()  &&  c1.smaller(c2)
 			 ) =>: {
 				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12

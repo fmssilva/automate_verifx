@@ -12,46 +12,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// be merge idempotent (table)   !!!   ABORTED  in 20-30 seconds!!! 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge idempotent (table)" in {
+	// Art
+	"Art" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Genre_spk", "mergeIdempotent") 
+		val p = ("Art", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge idempotent (table)" in {
+	// Genre
+	"Genre" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Art_cpk", "mergeIdempotent") 
+		val p = ("Genre", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge idempotent (table)" in {
+	// Song
+	"Song" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Song_spk_2sfk", "mergeIdempotent") 
+		val p = ("Song", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge idempotent (table)" in {
+	// Alb
+	"Alb" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Alb_spk_1cfk", "mergeIdempotent") 
+		val p = ("Alb", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge idempotent (table)" in {
+	// Song_view
+	"Song_view" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeIdempotent") 
+		val p = ("Song_view", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
@@ -63,46 +63,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// be merge associative (table)   !!!   ABORTED   in  25 minutes(song_view)   !!! 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge associative (table)" in {
+	// Art
+	"Art" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Genre_spk", "mergeAssociative") 
+		val p = ("Art", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge associative (table)" in {
+	// Genre
+	"Genre" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Art_cpk", "mergeAssociative") 
+		val p = ("Genre", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge associative (table)" in {
+	// Song
+	"Song" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Song_spk_2sfk", "mergeAssociative") 
+		val p = ("Song", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge associative (table)" in {
+	// Alb
+	"Alb" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Alb_spk_1cfk", "mergeAssociative") 
+		val p = ("Alb", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge associative (table)" in {
+	// Song_view
+	"Song_view" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeAssociative") 
+		val p = ("Song_view", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
@@ -114,46 +114,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// be merge associative2 (table)  WORKS  -   30 seconds   -  1:30 minutes 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge associative2 (table)" in {
+	// Art
+	"Art" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Genre_spk", "mergeAssociative2") 
+		val p = ("Art", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge associative2 (table)" in {
+	// Genre
+	"Genre" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Art_cpk", "mergeAssociative2") 
+		val p = ("Genre", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge associative2 (table)" in {
+	// Song
+	"Song" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Song_spk_2sfk", "mergeAssociative2") 
+		val p = ("Song", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge associative2 (table)" in {
+	// Alb
+	"Alb" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Alb_spk_1cfk", "mergeAssociative2") 
+		val p = ("Alb", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge associative2 (table)" in {
+	// Song_view
+	"Song_view" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeAssociative2") 
+		val p = ("Song_view", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
@@ -165,46 +165,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// keep referential integrity generic proof (fk_system)     !!!   DONT TERMINATE   !!! 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "keep referential integrity generic proof (fk_system)" in {
+	// Art
+	"Art" should "keep referential integrity generic proof (fk_system)" in {
 		val startTime = printStartingTime("keep referential integrity generic proof (fk_system)")
-		val p = ("Genre_spk", "genericReferentialIntegrity") 
+		val p = ("Art", "genericReferentialIntegrity") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "keep referential integrity generic proof (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "keep referential integrity generic proof (fk_system)" in {
+	// Genre
+	"Genre" should "keep referential integrity generic proof (fk_system)" in {
 		val startTime = printStartingTime("keep referential integrity generic proof (fk_system)")
-		val p = ("Art_cpk", "genericReferentialIntegrity") 
+		val p = ("Genre", "genericReferentialIntegrity") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "keep referential integrity generic proof (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "keep referential integrity generic proof (fk_system)" in {
+	// Song
+	"Song" should "keep referential integrity generic proof (fk_system)" in {
 		val startTime = printStartingTime("keep referential integrity generic proof (fk_system)")
-		val p = ("Song_spk_2sfk", "genericReferentialIntegrity") 
+		val p = ("Song", "genericReferentialIntegrity") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "keep referential integrity generic proof (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "keep referential integrity generic proof (fk_system)" in {
+	// Alb
+	"Alb" should "keep referential integrity generic proof (fk_system)" in {
 		val startTime = printStartingTime("keep referential integrity generic proof (fk_system)")
-		val p = ("Alb_spk_1cfk", "genericReferentialIntegrity") 
+		val p = ("Alb", "genericReferentialIntegrity") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "keep referential integrity generic proof (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "keep referential integrity generic proof (fk_system)" in {
+	// Song_view
+	"Song_view" should "keep referential integrity generic proof (fk_system)" in {
 		val startTime = printStartingTime("keep referential integrity generic proof (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "genericReferentialIntegrity") 
+		val p = ("Song_view", "genericReferentialIntegrity") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "keep referential integrity generic proof (fk_system)")
 		p
@@ -213,49 +213,49 @@ class Hard_Proofs extends FlatSpec with Prover {
 
 
 	////////////////////////////////////////////////////////////
-	// be merge commutative (fk_system)  WORKS   -   40 sec - 1:40 min 
+	// be merge commutative (fk_system)  WORKS   -   40 sec - 1:40 min -> with generic PK 11 minutes 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge commutative (fk_system)" in {
+	// Art
+	"Art" should "be merge commutative (fk_system)" in {
 		val startTime = printStartingTime("be merge commutative (fk_system)")
-		val p = ("Genre_spk", "mergeCommutative") 
+		val p = ("Art", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge commutative (fk_system)" in {
+	// Genre
+	"Genre" should "be merge commutative (fk_system)" in {
 		val startTime = printStartingTime("be merge commutative (fk_system)")
-		val p = ("Art_cpk", "mergeCommutative") 
+		val p = ("Genre", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge commutative (fk_system)" in {
+	// Song
+	"Song" should "be merge commutative (fk_system)" in {
 		val startTime = printStartingTime("be merge commutative (fk_system)")
-		val p = ("Song_spk_2sfk", "mergeCommutative") 
+		val p = ("Song", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge commutative (fk_system)" in {
+	// Alb
+	"Alb" should "be merge commutative (fk_system)" in {
 		val startTime = printStartingTime("be merge commutative (fk_system)")
-		val p = ("Alb_spk_1cfk", "mergeCommutative") 
+		val p = ("Alb", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge commutative (fk_system)" in {
+	// Song_view
+	"Song_view" should "be merge commutative (fk_system)" in {
 		val startTime = printStartingTime("be merge commutative (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeCommutative") 
+		val p = ("Song_view", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (fk_system)")
 		p
@@ -267,46 +267,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// be merge idempotent (fk_system)     Albs e SongView ABORTED in 1 - 2 minutes;  Song - WORKS - 40 seconds 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge idempotent (fk_system)" in {
+	// Art
+	"Art" should "be merge idempotent (fk_system)" in {
 		val startTime = printStartingTime("be merge idempotent (fk_system)")
-		val p = ("Genre_spk", "mergeIdempotent") 
+		val p = ("Art", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge idempotent (fk_system)" in {
+	// Genre
+	"Genre" should "be merge idempotent (fk_system)" in {
 		val startTime = printStartingTime("be merge idempotent (fk_system)")
-		val p = ("Art_cpk", "mergeIdempotent") 
+		val p = ("Genre", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge idempotent (fk_system)" in {
+	// Song
+	"Song" should "be merge idempotent (fk_system)" in {
 		val startTime = printStartingTime("be merge idempotent (fk_system)")
-		val p = ("Song_spk_2sfk", "mergeIdempotent") 
+		val p = ("Song", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge idempotent (fk_system)" in {
+	// Alb
+	"Alb" should "be merge idempotent (fk_system)" in {
 		val startTime = printStartingTime("be merge idempotent (fk_system)")
-		val p = ("Alb_spk_1cfk", "mergeIdempotent") 
+		val p = ("Alb", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge idempotent (fk_system)" in {
+	// Song_view
+	"Song_view" should "be merge idempotent (fk_system)" in {
 		val startTime = printStartingTime("be merge idempotent (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeIdempotent") 
+		val p = ("Song_view", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (fk_system)")
 		p
@@ -318,46 +318,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// be merge associative (fk_system)  ABORTED: SongView in 1hour:30min, Albs in 1hour:20min 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge associative (fk_system)" in {
+	// Art
+	"Art" should "be merge associative (fk_system)" in {
 		val startTime = printStartingTime("be merge associative (fk_system)")
-		val p = ("Genre_spk", "mergeAssociative") 
+		val p = ("Art", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge associative (fk_system)" in {
+	// Genre
+	"Genre" should "be merge associative (fk_system)" in {
 		val startTime = printStartingTime("be merge associative (fk_system)")
-		val p = ("Art_cpk", "mergeAssociative") 
+		val p = ("Genre", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge associative (fk_system)" in {
+	// Song
+	"Song" should "be merge associative (fk_system)" in {
 		val startTime = printStartingTime("be merge associative (fk_system)")
-		val p = ("Song_spk_2sfk", "mergeAssociative") 
+		val p = ("Song", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge associative (fk_system)" in {
+	// Alb
+	"Alb" should "be merge associative (fk_system)" in {
 		val startTime = printStartingTime("be merge associative (fk_system)")
-		val p = ("Alb_spk_1cfk", "mergeAssociative") 
+		val p = ("Alb", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge associative (fk_system)" in {
+	// Song_view
+	"Song_view" should "be merge associative (fk_system)" in {
 		val startTime = printStartingTime("be merge associative (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeAssociative") 
+		val p = ("Song_view", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (fk_system)")
 		p
@@ -369,46 +369,46 @@ class Hard_Proofs extends FlatSpec with Prover {
 	// be merge Is associative (with assumptions) (fk_system)  WORKS   -   1:30 - 3 minutes 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge Is associative (with assumptions) (fk_system)" in {
+	// Art
+	"Art" should "be merge Is associative (with assumptions) (fk_system)" in {
 		val startTime = printStartingTime("be merge Is associative (with assumptions) (fk_system)")
-		val p = ("Genre_spk", "mergeIsAssociative") 
+		val p = ("Art", "mergeIsAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge Is associative (with assumptions) (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge Is associative (with assumptions) (fk_system)" in {
+	// Genre
+	"Genre" should "be merge Is associative (with assumptions) (fk_system)" in {
 		val startTime = printStartingTime("be merge Is associative (with assumptions) (fk_system)")
-		val p = ("Art_cpk", "mergeIsAssociative") 
+		val p = ("Genre", "mergeIsAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge Is associative (with assumptions) (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge Is associative (with assumptions) (fk_system)" in {
+	// Song
+	"Song" should "be merge Is associative (with assumptions) (fk_system)" in {
 		val startTime = printStartingTime("be merge Is associative (with assumptions) (fk_system)")
-		val p = ("Song_spk_2sfk", "mergeIsAssociative") 
+		val p = ("Song", "mergeIsAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge Is associative (with assumptions) (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge Is associative (with assumptions) (fk_system)" in {
+	// Alb
+	"Alb" should "be merge Is associative (with assumptions) (fk_system)" in {
 		val startTime = printStartingTime("be merge Is associative (with assumptions) (fk_system)")
-		val p = ("Alb_spk_1cfk", "mergeIsAssociative") 
+		val p = ("Alb", "mergeIsAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge Is associative (with assumptions) (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge Is associative (with assumptions) (fk_system)" in {
+	// Song_view
+	"Song_view" should "be merge Is associative (with assumptions) (fk_system)" in {
 		val startTime = printStartingTime("be merge Is associative (with assumptions) (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeIsAssociative") 
+		val p = ("Song_view", "mergeIsAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge Is associative (with assumptions) (fk_system)")
 		p
@@ -417,49 +417,49 @@ class Hard_Proofs extends FlatSpec with Prover {
 
 
 	////////////////////////////////////////////////////////////
-	// be merge associative2 (fk_system)  WORKS  /     In 4 ref tables takes 50 minutes  
+	// be merge associative2 (fk_system)  WORKS  /   In 4 ref tables takes 10 minutes  
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "be merge associative2 (fk_system)" in {
+	// Art
+	"Art" should "be merge associative2 (fk_system)" in {
 		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Genre_spk", "mergeAssociative2") 
+		val p = ("Art", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "be merge associative2 (fk_system)" in {
+	// Genre
+	"Genre" should "be merge associative2 (fk_system)" in {
 		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Art_cpk", "mergeAssociative2") 
+		val p = ("Genre", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "be merge associative2 (fk_system)" in {
+	// Song
+	"Song" should "be merge associative2 (fk_system)" in {
 		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Song_spk_2sfk", "mergeAssociative2") 
+		val p = ("Song", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "be merge associative2 (fk_system)" in {
+	// Alb
+	"Alb" should "be merge associative2 (fk_system)" in {
 		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Alb_spk_1cfk", "mergeAssociative2") 
+		val p = ("Alb", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "be merge associative2 (fk_system)" in {
+	// Song_view
+	"Song_view" should "be merge associative2 (fk_system)" in {
 		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "mergeAssociative2") 
+		val p = ("Song_view", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
 		p
@@ -468,49 +468,49 @@ class Hard_Proofs extends FlatSpec with Prover {
 
 
 	////////////////////////////////////////////////////////////
-	// compatible commutes (fk_system)  Albs/Songs: WORKS: 1-4 minutes;   SongView: Dont terminate after 30 minutes 
+	// compatible commutes (fk_system)  WORKS: 1-4 minutes; 
 	////////////////////////////////////////////////////////////
 
-	// Genre_spk
-	"Genre_spk" should "compatible commutes (fk_system)" in {
+	// Art
+	"Art" should "compatible commutes (fk_system)" in {
 		val startTime = printStartingTime("compatible commutes (fk_system)")
-		val p = ("Genre_spk", "compatibleCommutes") 
+		val p = ("Art", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (fk_system)")
 		p
 	}
 
-	// Art_cpk
-	"Art_cpk" should "compatible commutes (fk_system)" in {
+	// Genre
+	"Genre" should "compatible commutes (fk_system)" in {
 		val startTime = printStartingTime("compatible commutes (fk_system)")
-		val p = ("Art_cpk", "compatibleCommutes") 
+		val p = ("Genre", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (fk_system)")
 		p
 	}
 
-	// Song_spk_2sfk
-	"Song_spk_2sfk" should "compatible commutes (fk_system)" in {
+	// Song
+	"Song" should "compatible commutes (fk_system)" in {
 		val startTime = printStartingTime("compatible commutes (fk_system)")
-		val p = ("Song_spk_2sfk", "compatibleCommutes") 
+		val p = ("Song", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (fk_system)")
 		p
 	}
 
-	// Alb_spk_1cfk
-	"Alb_spk_1cfk" should "compatible commutes (fk_system)" in {
+	// Alb
+	"Alb" should "compatible commutes (fk_system)" in {
 		val startTime = printStartingTime("compatible commutes (fk_system)")
-		val p = ("Alb_spk_1cfk", "compatibleCommutes") 
+		val p = ("Alb", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (fk_system)")
 		p
 	}
 
-	// Song_view_cpk_1cfk_2sfk
-	"Song_view_cpk_1cfk_2sfk" should "compatible commutes (fk_system)" in {
+	// Song_view
+	"Song_view" should "compatible commutes (fk_system)" in {
 		val startTime = printStartingTime("compatible commutes (fk_system)")
-		val p = ("Song_view_cpk_1cfk_2sfk", "compatibleCommutes") 
+		val p = ("Song_view", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (fk_system)")
 		p

@@ -6,7 +6,7 @@ import createTable.codeGenerators.Proofs_Class._
 
 import scala.collection.mutable
 
-object Hard_Proofs {
+object Hard_Proofs_Class {
 
   def gen_hard_proofs(sysTablesMap: mutable.Map[String, Table]): StringBuilder = {
 

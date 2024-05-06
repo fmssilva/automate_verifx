@@ -1,0 +1,119 @@
+
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.LamportClock
+import antidote.crdts.VersionVector
+import antidote.crdts.lemmas.CvRDTProof2
+import generatedSysTables.albs.AlbsTable
+import generatedSysTables.arts.ArtsTable
+import generatedSysTables.arts.Art
+
+/*
+ * class implementing the FK - Referential Integrity - Invariant
+ */
+class Alb_FK_System[Time, PK](
+					albsTable: AlbsTable[Time, PK],
+					artsTable: ArtsTable[Time, PK] )
+					extends CvRDT[Alb_FK_System[Time, PK]] {
+
+
+  /*
+   * OVERRIDE DEFAULT IMPLEMENTATION OF METHODS IN CvRDT TRAIT
+   */ 
+
+	//REACHABLE - check if this table and the referenced tables are reachable
+	override def reachable(): Boolean =
+				this.albsTable.reachable() && 
+				this.artsTable.reachable()
+
+
+	//COMPATIBLE - check if this Alb_FK_System is compatible with that albsTable
+	override def compatible(that: Alb_FK_System[Time, PK]): Boolean =
+				this.albsTable.compatible(that.albsTable) &&
+				this.artsTable.compatible(that.artsTable)
+
+
+	//EQUALS - check if this Alb_FK_System is equal to that Alb_FK_System
+	override def equals(that: Alb_FK_System[Time, PK]) =
+				this == that
+
+
+  /*
+   * IMPLEMENT DECLARED METHODS IN CvRDT TRAIT
+   */
+
+	//MERGE this Alb_FK_System with that Alb_FK_System
+	def merge(that: Alb_FK_System[Time, PK]) =
+		new Alb_FK_System(
+				this.albsTable.merge(that.albsTable), 
+				this.artsTable.merge(that.artsTable) )
+
+	//COMPARE this Alb_FK_System with that Alb_FK_System
+	//ignore
+	def compare(that: Alb_FK_System[Time, PK]) = 
+				true
+
+
+
+  /*
+   * EXTRA METHODS FOR PROOFS
+   */
+
+	//REFERENTIAL INTEGRITY
+	//Checks if for every elem of AlbsTable, there is the corresponding element in the referenced tables
+	def refIntegrityHolds(pk: PK) = {
+		(this.albsTable.isVisible(pk) 
+		 ) =>: {
+				val alb = this.albsTable.get(pk).fst
+				this.artsTable.isVisible( pk )
+				}
+	}
+
+	// REACHABLE WITH ASSUMPTIONS - ASSOCIATIVITY
+	def reachableWithAssociativityAssumptions(): Boolean = {
+				this.albsTable.reachable() && 
+				this.artsTable.reachable() && 
+				this.mergeValuesAssumptions()
+	}
+		//HELPER METHOD - ASSUMPTIONS FOR MERGE ASSOCIATIVITY - for the tables of this Alb_FK_System
+		private def mergeValuesAssumptions(): Boolean = {
+			forall(v1: AlbsTable[Time, PK], v2: AlbsTable[Time, PK], v3: AlbsTable[Time, PK])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  } &&
+			forall(v1: ArtsTable[Time, PK], v2: ArtsTable[Time, PK], v3: ArtsTable[Time, PK])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  }
+		}
+
+}
+
+
+
+/*
+ * OBJECT FOR EXTRA PROOFS
+ */
+object Alb_FK_System extends CvRDTProof2[Alb_FK_System] {
+
+	//REFERENTIAL INTEGRITY
+	proof genericReferentialIntegrity[Time, PK] {
+		forall(s1: Alb_FK_System[Time, PK], s2: Alb_FK_System[Time, PK], pk: PK) {
+			( s1.reachable() && s2.reachable() && 
+			  s1.compatible(s2) &&
+			  s1.refIntegrityHolds(pk) && s2.refIntegrityHolds(pk) 
+			) =>: {
+				s1.merge(s2).refIntegrityHolds(pk)
+			}
+		}
+	}
+
+	//MERGE ASSOCIATIVE
+	proof mergeIsAssociative[Time, PK] {
+		forall(s1: Alb_FK_System[Time, PK], s2: Alb_FK_System[Time, PK], s3: Alb_FK_System[Time, PK]) {
+			(s1.reachable() && s2.reachable() && s3.reachable() &&
+			  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)
+			) =>: {
+				val aux = s1.merge(s2).merge(s3)
+				aux.equals(s1.merge( s2.merge(s3) ))
+				aux.reachable()
+				}
+		}
+	}}

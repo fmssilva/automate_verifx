@@ -1,6 +1,7 @@
 package createTable
 
 import antidoteSQL_to_veriFx.System_Constants._
+
 import scala.collection.mutable
 
 /**

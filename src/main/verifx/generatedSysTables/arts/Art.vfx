@@ -5,39 +5,39 @@ import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
 /**
- * Class representing the composite primary key of the element(row):::  ART_CPK
+ * Class representing the composite primary key of the element(row):::  ART
  * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
  * so no need to extend CvRDT
  */
-class Art_cpk_PKs(name: String, country: String) { }
+class Art_PKs(name: String, country: String) { }
 
 
 
 /**
- * Class representing the element(row):::  ART_CPK 
+ * Class representing the element(row):::  ART 
  *
  * given by the Antidote SQL command:
  *
- *		CREATE UPDATE-WINS TABLE ART_CPK (
+ *		CREATE UPDATE-WINS TABLE ART (
  *		NAME VARCHAR PRIMARY KEY
  *		COUNTRY VARCHAR PRIMARY KEY ,
  *		AGE LWW INT CHECK ( AGE >= 0 AND AGE <= 100 ) ,
  *		RANKING LWW INT CHECK ( RANKING >= 0 AND RANKING <= 100 ) ,
  *		)
  */
-class Art_cpk(art_cpk_PKs: Art_cpk_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art_cpk] {
+class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
 
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Art_cpk with that Art_cpk (only concurrently updatable attributes are merged as a CRDT)
-	def merge(that: Art_cpk) = 
-		new Art_cpk(this.art_cpk_PKs, this.age.merge(that.age), this.ranking.merge(that.ranking))
+	//merge this Art with that Art (only concurrently updatable attributes are merged as a CRDT)
+	def merge(that: Art) = 
+		new Art(this.art_PKs, this.age.merge(that.age), this.ranking.merge(that.ranking))
 
-	//compare this Art_cpk with that Art_cpk (only concurrently updatable attributes matter)
-	def compare(that: Art_cpk) = 
+	//compare this Art with that Art (only concurrently updatable attributes matter)
+	def compare(that: Art) = 
 		this.age.compare(that.age) &&
 		this.ranking.compare(that.ranking)
 
@@ -47,13 +47,13 @@ class Art_cpk(art_cpk_PKs: Art_cpk_PKs, age: LWWRegister[Int], ranking: LWWRegis
    * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
    */
 
-	//this Art_cpk is compatible with that Art_cpk?
-	override def compatible(that: Art_cpk) = 
-		this.art_cpk_PKs == that.art_cpk_PKs && 
+	//this Art is compatible with that Art?
+	override def compatible(that: Art) = 
+		this.art_PKs == that.art_PKs && 
 		this.age.compatible(that.age) &&
 		this.ranking.compatible(that.ranking)
 
-	//Art_cpk is reachable given the CHECK conditions of its attributes?
+	//Art is reachable given the CHECK conditions of its attributes?
 	override def reachable() = { 
 		 this.age.value >= 0 && this.age.value <= 100 && 
 		 this.ranking.value >= 0 && this.ranking.value <= 100
@@ -68,14 +68,14 @@ class Art_cpk(art_cpk_PKs: Art_cpk_PKs, age: LWWRegister[Int], ranking: LWWRegis
 
 	def updateAge(newAge: Int, stampAge: LamportClock) = { 
 		if( newAge >= 0 && newAge <= 100)
-			new Art_cpk(this.art_cpk_PKs, this.age.assign(newAge, stampAge), this.ranking)
+			new Art(this.art_PKs, this.age.assign(newAge, stampAge), this.ranking)
 		else
 			this
 	}
 
 	def updateRanking(newRanking: Int, stampRanking: LamportClock) = { 
 		if( newRanking >= 0 && newRanking <= 100)
-			new Art_cpk(this.art_cpk_PKs, this.age, this.ranking.assign(newRanking, stampRanking))
+			new Art(this.art_PKs, this.age, this.ranking.assign(newRanking, stampRanking))
 		else
 			this
 	}
@@ -89,10 +89,10 @@ class Art_cpk(art_cpk_PKs: Art_cpk_PKs, age: LWWRegister[Int], ranking: LWWRegis
 * Object to implement the proof functions for the updatable attributes
 */
 
-object Art_cpk extends CvRDTProof[Art_cpk] {
+object Art extends CvRDTProof[Art] {
 
-	proof Art_cpk_updateAge_works {
-		forall(elem: Art_cpk, age1: Int, age2: Int, c1: LamportClock, c2: LamportClock ) {
+	proof Art_updateAge_works {
+		forall(elem: Art, age1: Int, age2: Int, c1: LamportClock, c2: LamportClock ) {
 			( elem.reachable()  &&  c1.smaller(c2) &&
 			  age1 >= 0 && age1 <= 100 && age2 >= 0 && age2 <= 100
 			 ) =>: {
@@ -101,19 +101,19 @@ object Art_cpk extends CvRDTProof[Art_cpk] {
 				 val elem2 = elem.updateAge(age2, c2)
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.art_cpk_PKs == elem.art_cpk_PKs && elem2.art_cpk_PKs == elem.art_cpk_PKs &&
+				 elem1.art_PKs == elem.art_PKs && elem2.art_PKs == elem.art_PKs &&
 				 elem1.age.value == age1 && elem2.age.value == age2 &&
 				 elem1.ranking == elem.ranking && elem2.ranking == elem.ranking &&
 				 //check if the merged values are correct and according to the chosen update-policy 
-				 elem12.art_cpk_PKs == elem.art_cpk_PKs &&
+				 elem12.art_PKs == elem.art_PKs &&
 				 elem12.age.value == age2 &&
 				 elem12.ranking == elem.ranking
 			}
 		}
 	}
 
-	proof Art_cpk_updateRanking_works {
-		forall(elem: Art_cpk, ranking1: Int, ranking2: Int, c1: LamportClock, c2: LamportClock ) {
+	proof Art_updateRanking_works {
+		forall(elem: Art, ranking1: Int, ranking2: Int, c1: LamportClock, c2: LamportClock ) {
 			( elem.reachable()  &&  c1.smaller(c2) &&
 			  ranking1 >= 0 && ranking1 <= 100 && ranking2 >= 0 && ranking2 <= 100
 			 ) =>: {
@@ -122,11 +122,11 @@ object Art_cpk extends CvRDTProof[Art_cpk] {
 				 val elem2 = elem.updateRanking(ranking2, c2)
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.art_cpk_PKs == elem.art_cpk_PKs && elem2.art_cpk_PKs == elem.art_cpk_PKs &&
+				 elem1.art_PKs == elem.art_PKs && elem2.art_PKs == elem.art_PKs &&
 				 elem1.age == elem.age && elem2.age == elem.age &&
 				 elem1.ranking.value == ranking1 && elem2.ranking.value == ranking2 &&
 				 //check if the merged values are correct and according to the chosen update-policy 
-				 elem12.art_cpk_PKs == elem.art_cpk_PKs &&
+				 elem12.art_PKs == elem.art_PKs &&
 				 elem12.age == elem.age &&
 				 elem12.ranking.value == ranking2
 			}

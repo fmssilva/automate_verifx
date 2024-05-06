@@ -1,13 +1,14 @@
 package createTable
 
 import antidoteSQL_to_veriFx.System_Constants._
+
 import scala.collection.mutable
 
 /**
  * Class to process the tokens for declaring a new attribute of a table
  *
  * @param lineTokens - line of the antidote SQL command for creating an attribute
- * @param fileLine       - current line of the tokens in the file
+ * @param fileLine   - current line of the tokens in the file
  */
 @SerialVersionUID(1594622921505253437L)
 class TabAttribute(lineTokens: Array[String], fileLine: Int, sysTablesMap: mutable.Map[String, Table]) extends Serializable {

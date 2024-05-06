@@ -1,0 +1,128 @@
+
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.LamportClock
+import antidote.crdts.VersionVector
+import antidote.crdts.lemmas.CvRDTProof2
+import generatedSysTables.songs.SongsTable
+import generatedSysTables.albs.AlbsTable
+import generatedSysTables.genres.GenresTable
+
+/*
+ * class implementing the FK - Referential Integrity - Invariant
+ */
+class Song_FK_System[Time, PK](
+					songsTable: SongsTable[Time, PK],
+					albsTable: AlbsTable[Time, PK], 
+					genresTable: GenresTable[Time, PK] )
+					extends CvRDT[Song_FK_System[Time, PK]] {
+
+
+  /*
+   * OVERRIDE DEFAULT IMPLEMENTATION OF METHODS IN CvRDT TRAIT
+   */ 
+
+	//REACHABLE - check if this table and the referenced tables are reachable
+	override def reachable(): Boolean =
+				this.songsTable.reachable() && 
+				this.albsTable.reachable() && 
+				this.genresTable.reachable()
+
+
+	//COMPATIBLE - check if this Song_FK_System is compatible with that songsTable
+	override def compatible(that: Song_FK_System[Time, PK]): Boolean =
+				this.songsTable.compatible(that.songsTable) &&
+				this.albsTable.compatible(that.albsTable) &&
+				this.genresTable.compatible(that.genresTable)
+
+
+	//EQUALS - check if this Song_FK_System is equal to that Song_FK_System
+	override def equals(that: Song_FK_System[Time, PK]) =
+				this == that
+
+
+  /*
+   * IMPLEMENT DECLARED METHODS IN CvRDT TRAIT
+   */
+
+	//MERGE this Song_FK_System with that Song_FK_System
+	def merge(that: Song_FK_System[Time, PK]) =
+		new Song_FK_System(
+				this.songsTable.merge(that.songsTable), 
+				this.albsTable.merge(that.albsTable),
+				this.genresTable.merge(that.genresTable) )
+
+	//COMPARE this Song_FK_System with that Song_FK_System
+	//ignore
+	def compare(that: Song_FK_System[Time, PK]) = 
+				true
+
+
+
+  /*
+   * EXTRA METHODS FOR PROOFS
+   */
+
+	//REFERENTIAL INTEGRITY
+	//Checks if for every elem of SongsTable, there is the corresponding element in the referenced tables
+	def refIntegrityHolds(pk: PK) = {
+		(this.songsTable.isVisible(pk) 
+		 ) =>: {
+				val song = this.songsTable.get(pk).fst
+				this.albsTable.isVisible(song.alb_title)
+				this.genresTable.isVisible(song.genr_style)
+				}
+	}
+
+	// REACHABLE WITH ASSUMPTIONS - ASSOCIATIVITY
+	def reachableWithAssociativityAssumptions(): Boolean = {
+				this.songsTable.reachable() && 
+				this.albsTable.reachable() &&
+				this.genresTable.reachable() && 
+				this.mergeValuesAssumptions()
+	}
+		//HELPER METHOD - ASSUMPTIONS FOR MERGE ASSOCIATIVITY - for the tables of this Song_FK_System
+		private def mergeValuesAssumptions(): Boolean = {
+			forall(v1: SongsTable[Time, PK], v2: SongsTable[Time, PK], v3: SongsTable[Time, PK])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  } &&
+			forall(v1: AlbsTable[Time, PK], v2: AlbsTable[Time, PK], v3: AlbsTable[Time, PK])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  } &&
+			forall(v1: GenresTable[Time, PK], v2: GenresTable[Time, PK], v3: GenresTable[Time, PK])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  }
+		}
+
+}
+
+
+
+/*
+ * OBJECT FOR EXTRA PROOFS
+ */
+object Song_FK_System extends CvRDTProof2[Song_FK_System] {
+
+	//REFERENTIAL INTEGRITY
+	proof genericReferentialIntegrity[Time, PK] {
+		forall(s1: Song_FK_System[Time, PK], s2: Song_FK_System[Time, PK], pk: PK) {
+			( s1.reachable() && s2.reachable() && 
+			  s1.compatible(s2) &&
+			  s1.refIntegrityHolds(pk) && s2.refIntegrityHolds(pk) 
+			) =>: {
+				s1.merge(s2).refIntegrityHolds(pk)
+			}
+		}
+	}
+
+	//MERGE ASSOCIATIVE
+	proof mergeIsAssociative[Time, PK] {
+		forall(s1: Song_FK_System[Time, PK], s2: Song_FK_System[Time, PK], s3: Song_FK_System[Time, PK]) {
+			(s1.reachable() && s2.reachable() && s3.reachable() &&
+			  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)
+			) =>: {
+				val aux = s1.merge(s2).merge(s3)
+				aux.equals(s1.merge( s2.merge(s3) ))
+				aux.reachable()
+				}
+		}
+	}}

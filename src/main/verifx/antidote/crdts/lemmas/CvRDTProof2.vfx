@@ -12,7 +12,8 @@ trait CvRDTProof2[ T[A, B] <: CvRDT[T[A, B]] ] {
   proof is_a_CvRDT[S, U] {
     forall (x: T[S, U], y: T[S, U], z: T[S, U]) {
       ( x.reachable() && y.reachable() && z.reachable() &&
-          x.compatible(y) && x.compatible(z) && y.compatible(z)) =>: {
+        x.compatible(y) && x.compatible(z) && y.compatible(z)
+      ) =>: {
         x.merge(x).equals(x) && // idempotent
         x.merge(y).equals(y.merge(x)) && // commutative
         x.merge(y).merge(z).equals(x.merge(y.merge(z))) && // associative
@@ -25,7 +26,8 @@ trait CvRDTProof2[ T[A, B] <: CvRDT[T[A, B]] ] {
 
   proof mergeCommutative[S, U] {
     forall (x: T[S, U], y: T[S, U]) {
-      ( x.reachable() && y.reachable() && x.compatible(y)) =>: {
+      ( x.reachable() && y.reachable() && x.compatible(y)
+      ) =>: {
         x.merge(y).equals(y.merge(x)) &&
         x.merge(y).reachable()
       }
@@ -34,25 +36,44 @@ trait CvRDTProof2[ T[A, B] <: CvRDT[T[A, B]] ] {
 
   proof mergeIdempotent[S, U] {
     forall (x: T[S, U]) {
-      x.reachable() =>: x.merge(x).equals(x)
+      x.reachable()
+      =>:
+        x.merge(x).equals(x)
     }
   }
 
   proof mergeAssociative[S, U] {
     forall (x: T[S, U], y: T[S, U], z: T[S, U]) {
       ( x.reachable() && y.reachable() && z.reachable() &&
-          x.compatible(y) && x.compatible(z) && y.compatible(z) ) =>: {
-        x.merge(y).merge(z).equals(x.merge(y.merge(z))) &&
+          x.compatible(y) && x.compatible(z) && y.compatible(z)
+      ) =>: {
+        x.merge(y).merge(z).equals( x.merge(y.merge(z)) ) &&
         x.merge(y).merge(z).reachable()
+      }
+    }
+  }
+
+
+  proof mergeAssociative2[S,U] {
+    forall (x: T[S,U], y: T[S,U], z: T[S,U]) {
+      ( x.reachable() && y.reachable() && z.reachable() &&
+          x.compatible(y) && x.compatible(z) && y.compatible(z)
+      ) =>: {
+        x.merge(y).merge(z).reachable()
+        // TODO: also show that x.merge(y).compatible(z) && x.compatible(y.merge(z)) ??
       }
     }
   }
 
   proof compatibleCommutes[S, U] {
     forall (x: T[S, U], y: T[S, U]) {
-      ( x.reachable() && y.reachable() ) =>: ( x.compatible(y) == y.compatible(x) )
+      ( x.reachable() && y.reachable()
+      )  =>:
+        ( x.compatible(y) == y.compatible(x) )
     }
   }
+
+
 
   proof compareCorrect[S, U] {
     forall (x: T[S, U], y: T[S, U]) {

@@ -4,7 +4,7 @@ import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec
 import generatedSysTablesProofs.ProverUtils._
 
-class Genre_spkProofs extends FlatSpec with Prover { 
+class GenreProofs extends FlatSpec with Prover { 
 
 
 
@@ -12,28 +12,28 @@ class Genre_spkProofs extends FlatSpec with Prover {
 	// ELEMENT PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
-	// WORKS  -   20-30 seconds
-	"Genre_spk" should "be a CvRDT (element)" in {
+	// WORKS  -  20-30 seconds
+	"Genre" should "be a CvRDT (element)" in {
 		val startTime = printStartingTime("be a CvRDT (element)")
-		val p = ("Genre_spk", "is_a_CvRDT") 
+		val p = ("Genre", "is_a_CvRDT") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
 		p
 	}
 
-	// WORKS  -   20-30 seconds
-	"Genre_spk" should "compatible commutes (element)" in {
+	// WORKS  -  20-40 seconds
+	"Genre" should "compatible commutes (element)" in {
 		val startTime = printStartingTime("compatible commutes (element)")
-		val p = ("Genre_spk", "compatibleCommutes") 
+		val p = ("Genre", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (element)")
 		p
 	}
 
 	// WORKS  -   20-30 seconds
-	"Genre_spk" should "compare correct (element)" in {
+	"Genre" should "compare correct (element)" in {
 		val startTime = printStartingTime("compare correct (element)")
-		val p = ("Genre_spk", "compareCorrect") 
+		val p = ("Genre", "compareCorrect") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
 		p
@@ -46,9 +46,9 @@ class Genre_spkProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS  -   20-30 seconds
-	"Genre_spk" should "updateDescription works (element)" in {
+	"Genre" should "updateDescription works (element)" in {
 		val startTime = printStartingTime("updateDescription works (element)")
-		val p = ("Genre_spk", "Genre_spk_updateDescription_works") 
+		val p = ("Genre", "Genre_updateDescription_works") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "updateDescription works (element)")
 		p
@@ -61,45 +61,45 @@ class Genre_spkProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS  -   20-30 seconds
-	"Genre_spksTable" should "be merge commutative (table)" in {
+	"GenresTable" should "be merge commutative (table)" in {
 		val startTime = printStartingTime("be merge commutative (table)")
-		val p = ("Genre_spksTable", "mergeCommutative") 
+		val p = ("GenresTable", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
 		p
 	}
 
 	//  !!!   ABORTED  in 20-30 seconds!!!
-	"Genre_spksTable" should "be merge idempotent (table)" in {
+	"GenresTable" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Genre_spksTable", "mergeIdempotent") 
+		val p = ("GenresTable", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
 	}
 
 	//  !!!   ABORTED   in  25 minutes(song_view)   !!!
-	"Genre_spksTable" should "be merge associative (table)" in {
+	"GenresTable" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Genre_spksTable", "mergeAssociative") 
+		val p = ("GenresTable", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
 	}
 
 	// WORKS  -   30 seconds   -  1:30 minutes
-	"Genre_spksTable" should "be merge associative2 (table)" in {
+	"GenresTable" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Genre_spksTable", "mergeAssociative2") 
+		val p = ("GenresTable", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
 	}
 
 	// WORKS  -   20-30 seconds
-	"Genre_spksTable" should "compatible commutes (table)" in {
+	"GenresTable" should "compatible commutes (table)" in {
 		val startTime = printStartingTime("compatible commutes (table)")
-		val p = ("Genre_spksTable", "compatibleCommutes") 
+		val p = ("GenresTable", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (table)")
 		p

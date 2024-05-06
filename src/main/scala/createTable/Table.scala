@@ -55,12 +55,12 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
 
   // file Element Class
   private var filePath = s"$folderPath/${tableNames._1}.vfx"
-  private var classContent = ElemCodeGenerator.generate_Elem_ClassCode(this, cmdTokens.slice(initial_cmd_line, line))
+  private var classContent = Elem_Row_Class.generate_Elem_ClassCode(this, cmdTokens.slice(initial_cmd_line, line))
   createClassFile(classContent, filePath)
 
   // file Elem TABLE Class
   filePath = s"$folderPath/${tableNames._2}.vfx"
-  classContent = ElemTableCodeGenerator.generate_ElemTable_ClassCode(this)
+  classContent = Table_Class.generate_ElemTable_ClassCode(this)
   createClassFile(classContent, filePath)
 
   // file Table_FK_System Class

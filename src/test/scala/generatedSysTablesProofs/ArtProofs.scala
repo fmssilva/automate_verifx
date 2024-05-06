@@ -4,7 +4,7 @@ import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec
 import generatedSysTablesProofs.ProverUtils._
 
-class Art_cpkProofs extends FlatSpec with Prover { 
+class ArtProofs extends FlatSpec with Prover { 
 
 
 
@@ -12,28 +12,28 @@ class Art_cpkProofs extends FlatSpec with Prover {
 	// ELEMENT PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
-	// WORKS  -   20-30 seconds
-	"Art_cpk" should "be a CvRDT (element)" in {
+	// WORKS  -  20-30 seconds
+	"Art" should "be a CvRDT (element)" in {
 		val startTime = printStartingTime("be a CvRDT (element)")
-		val p = ("Art_cpk", "is_a_CvRDT") 
+		val p = ("Art", "is_a_CvRDT") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
 		p
 	}
 
-	// WORKS  -   20-30 seconds
-	"Art_cpk" should "compatible commutes (element)" in {
+	// WORKS  -  20-40 seconds
+	"Art" should "compatible commutes (element)" in {
 		val startTime = printStartingTime("compatible commutes (element)")
-		val p = ("Art_cpk", "compatibleCommutes") 
+		val p = ("Art", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (element)")
 		p
 	}
 
 	// WORKS  -   20-30 seconds
-	"Art_cpk" should "compare correct (element)" in {
+	"Art" should "compare correct (element)" in {
 		val startTime = printStartingTime("compare correct (element)")
-		val p = ("Art_cpk", "compareCorrect") 
+		val p = ("Art", "compareCorrect") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
 		p
@@ -46,18 +46,18 @@ class Art_cpkProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS  -   20-30 seconds
-	"Art_cpk" should "updateAge works (element)" in {
+	"Art" should "updateAge works (element)" in {
 		val startTime = printStartingTime("updateAge works (element)")
-		val p = ("Art_cpk", "Art_cpk_updateAge_works") 
+		val p = ("Art", "Art_updateAge_works") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "updateAge works (element)")
 		p
 	}
 
 	// WORKS  -   20-30 seconds
-	"Art_cpk" should "updateRanking works (element)" in {
+	"Art" should "updateRanking works (element)" in {
 		val startTime = printStartingTime("updateRanking works (element)")
-		val p = ("Art_cpk", "Art_cpk_updateRanking_works") 
+		val p = ("Art", "Art_updateRanking_works") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "updateRanking works (element)")
 		p
@@ -70,45 +70,45 @@ class Art_cpkProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS  -   20-30 seconds
-	"Art_cpksTable" should "be merge commutative (table)" in {
+	"ArtsTable" should "be merge commutative (table)" in {
 		val startTime = printStartingTime("be merge commutative (table)")
-		val p = ("Art_cpksTable", "mergeCommutative") 
+		val p = ("ArtsTable", "mergeCommutative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
 		p
 	}
 
 	//  !!!   ABORTED  in 20-30 seconds!!!
-	"Art_cpksTable" should "be merge idempotent (table)" in {
+	"ArtsTable" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
-		val p = ("Art_cpksTable", "mergeIdempotent") 
+		val p = ("ArtsTable", "mergeIdempotent") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
 		p
 	}
 
 	//  !!!   ABORTED   in  25 minutes(song_view)   !!!
-	"Art_cpksTable" should "be merge associative (table)" in {
+	"ArtsTable" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("Art_cpksTable", "mergeAssociative") 
+		val p = ("ArtsTable", "mergeAssociative") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p
 	}
 
 	// WORKS  -   30 seconds   -  1:30 minutes
-	"Art_cpksTable" should "be merge associative2 (table)" in {
+	"ArtsTable" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("Art_cpksTable", "mergeAssociative2") 
+		val p = ("ArtsTable", "mergeAssociative2") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
 		p
 	}
 
 	// WORKS  -   20-30 seconds
-	"Art_cpksTable" should "compatible commutes (table)" in {
+	"ArtsTable" should "compatible commutes (table)" in {
 		val startTime = printStartingTime("compatible commutes (table)")
-		val p = ("Art_cpksTable", "compatibleCommutes") 
+		val p = ("ArtsTable", "compatibleCommutes") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (table)")
 		p

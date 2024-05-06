@@ -44,7 +44,7 @@ object Proofs_Class {
     generateProofFunctionsComments(s"ELEMENT PROOFS FOR UPDATABLE ATTRIBUTES  - specified in object TableName extends CvRDTProof", classContent)
     val proofs = mutable.LinkedHashMap[String, (String, String)]()
     table.attributesList.filter(_.allowConcurrentUpdates).map(
-      at => proofs += s"update${at.attribName.capitalize} works (element)" -> (s"${tableNames._1}_update${at.attribName.capitalize}_works", "WORKS  -   20-30 seconds")
+      at => proofs += s"update${at.attribName.capitalize} works (element)" -> (s"${tableNames._1}_update${at.attribName.capitalize}_works", updateAttributeProof)
     )
     generateProofFunction(proofs, tableNames._1, classContent)
 

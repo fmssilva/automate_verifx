@@ -1,0 +1,33 @@
+
+import generatedSysTables.genres.Genre
+import antidote.crdts.lemmas.CvRDTProof2
+import antidote.crdts.tables.UWTable
+
+/**
+ * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
+ *		- GENRE -
+ *
+ * @param before - function to compare two Time values
+ * @param elements - Map of elements/rows in the table,
+ *                   where Key is the PK of the Table
+ *                   and Value is a Tuple with the Element itself,
+ *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
+ *                                                    - and a Time
+ */
+class GenresTable[Time, PK] 
+					( before: (Time, Time) => Boolean,							//function
+					  elements: Map[ PK, Tuple[Genre, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[ PK ,Genre, Time, GenresTable[Time, PK]]{ 
+
+
+	/*
+	* Implement Methods DECLARED in UWTable trait
+	*/
+	def copy(newElements: Map[ PK, Tuple[Genre, MVRegister[Int, Time]]]) =
+		    new GenresTable(this.before, newElements)
+
+	def maintainState() = this
+
+}
+
+object GenresTable extends CvRDTProof2[GenresTable]

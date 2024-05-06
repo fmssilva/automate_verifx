@@ -4,7 +4,7 @@ package antidoteSQL_to_veriFx
 import antidoteSQL_to_veriFx.System_Constants._
 import antidoteSQL_to_veriFx.System_Utils.createClassFile
 import createTable.Table
-import createTable.codeGenerators.Hard_Proofs
+import createTable.codeGenerators.Hard_Proofs_Class
 
 import java.io.{FileOutputStream, ObjectOutputStream}
 import java.nio.file.Files
@@ -45,7 +45,7 @@ object AntidoteSQL_To_VeriFx {
 
       // GENERATE HARDER PROOFS OF DIFFERENT TABLES IN 1 DOCUMENT
       val filePath = s"$SYSTEM_PROOFS_FOLDER_PATH/Hard_Proofs.scala"
-      val classContent = Hard_Proofs.gen_hard_proofs(sysTablesMap)
+      val classContent = Hard_Proofs_Class.gen_hard_proofs(sysTablesMap)
       createClassFile(classContent, filePath)
 
       // SAVE SYSTEM CURRENT TABLES
