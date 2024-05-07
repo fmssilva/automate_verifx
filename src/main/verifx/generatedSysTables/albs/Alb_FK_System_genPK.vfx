@@ -1,0 +1,99 @@
+
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.LamportClock
+import antidote.crdts.VersionVector
+import antidote.crdts.lemmas.CvRDTProof3
+import generatedSysTables.albs.AlbsTable_genPK
+import generatedSysTables.arts.ArtsTable_genPK
+import generatedSysTables.arts.Art
+
+/*
+ * class implementing the Convergence proof
+ */
+class Alb_FK_System_genPK[Time, PK, A](
+					albsTable: AlbsTable_genPK[Time, PK],
+					artsTable: ArtsTable_genPK[Time, A] )
+					extends CvRDT[Alb_FK_System_genPK[Time, PK, A]] {
+
+
+  /*
+   * OVERRIDE DEFAULT IMPLEMENTATION OF METHODS IN CvRDT TRAIT
+   */ 
+
+	//REACHABLE - check if this table and the referenced tables are reachable
+	override def reachable(): Boolean =
+				this.albsTable.reachable() && 
+				this.artsTable.reachable()
+
+
+	//COMPATIBLE - check if this Alb_FK_System is compatible with that albsTable
+	override def compatible(that: Alb_FK_System_genPK[Time, PK, A]): Boolean =
+				this.albsTable.compatible(that.albsTable) &&
+				this.artsTable.compatible(that.artsTable)
+
+
+	//EQUALS - check if this Alb_FK_System is equal to that Alb_FK_System
+	override def equals(that: Alb_FK_System_genPK[Time, PK, A]) =
+				this == that
+
+
+  /*
+   * IMPLEMENT DECLARED METHODS IN CvRDT TRAIT
+   */
+
+	//MERGE this Alb_FK_System with that Alb_FK_System
+	def merge(that: Alb_FK_System_genPK[Time, PK, A]) =
+		new Alb_FK_System_genPK(
+				this.albsTable.merge(that.albsTable), 
+				this.artsTable.merge(that.artsTable) )
+
+	//COMPARE this Alb_FK_System with that Alb_FK_System
+	//ignore
+	def compare(that: Alb_FK_System_genPK[Time, PK, A]) = 
+				true
+
+
+
+  /*
+   * EXTRA METHODS FOR PROOFS
+   */
+
+	// REACHABLE WITH ASSUMPTIONS - ASSOCIATIVITY
+	def reachableWithAssociativityAssumptions(): Boolean = {
+				this.albsTable.reachable() && 
+				this.artsTable.reachable() && 
+				this.mergeValuesAssumptions()
+	}
+		//HELPER METHOD - ASSUMPTIONS FOR MERGE ASSOCIATIVITY - for the tables of this Alb_FK_System
+		private def mergeValuesAssumptions(): Boolean = {
+			forall(v1: AlbsTable_genPK[Time, PK], v2: AlbsTable_genPK[Time, PK], v3: AlbsTable_genPK[Time, PK])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  } &&
+			forall(v1: ArtsTable_genPK[Time, A], v2: ArtsTable_genPK[Time, A], v3: ArtsTable_genPK[Time, A])
+				  { v1.merge(v2).merge(v3) == v1.merge( v2.merge(v3) )
+				  }
+		}
+
+}
+
+
+
+/*
+ * OBJECT FOR EXTRA PROOFS
+ */
+object Alb_FK_System_genPK extends CvRDTProof3[Alb_FK_System_genPK] {
+
+	//MERGE ASSOCIATIVE
+	proof mergeIsAssociative_genPK[Time, PK] {
+		forall(s1: AlbsTable_genPK[Time, PK], s2: AlbsTable_genPK[Time, PK], s3: AlbsTable_genPK[Time, PK]) {
+			(s1.reachable() && s2.reachable() && s3.reachable() &&
+			  s1.compatible(s2) && s1.compatible(s3) && s2.compatible(s3)
+			) =>: {
+				val aux = s1.merge(s2).merge(s3)
+				aux.equals(s1.merge( s2.merge(s3) ))
+				aux.reachable()
+				}
+		}
+	}
+
+}

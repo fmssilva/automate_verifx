@@ -56,7 +56,10 @@ object Proofs_Class {
     // FK REFERENTIAL PROOFS
     generateProofFunctionsComments(s"FK REFERENTIAL PROOFS    ", classContent)
     if (table.fk_attributes.nonEmpty) {
-      generateProofFunction(fk_proofs, tableNames._3, classContent)
+      classContent.append(s"\n\n\t//Convergence Proofs - with generic PK for faster access and proof")
+      generateProofFunction(fk_proofs_genPK, tableNames._3 + GENERIC_PK_FILE_NAME, classContent)
+      classContent.append(s"\n\n\t//Referential Integrity Proofs - with specific PK for referential integrity tests")
+      generateProofFunction(fk_proofs_specificPK, tableNames._3, classContent)
     }
 
     //CLASS CLOSE

@@ -20,7 +20,7 @@ object System_Constants {
     elem_be_a_CvRDT, elem_compatible_commutes, elem_compare_correct
   )
 
-  // TABLE PROOFS
+  // TABLE PROOFS - All proofs use the generic PK type
   private val table_merge_commutative = "be merge commutative (table)" -> ("mergeCommutative", "WORKS  -   20-30 seconds")
   private val table_merge_idempotent = "be merge idempotent (table)" -> ("mergeIdempotent", " !!!   ABORTED  in 20-30 seconds!!!")
   private val table_merge_associative = "be merge associative (table)" -> ("mergeAssociative", " !!!   ABORTED   in  25 minutes(song_view)   !!!")
@@ -31,23 +31,29 @@ object System_Constants {
   )
 
   // FK REFERENTIAL PROOFS
-  private val fk_generic_referential_integrity = "keep referential integrity generic proof (fk_system)" -> ("genericReferentialIntegrity", "   !!!   DONT TERMINATE   !!!")
+  // Generic PK for faster access and proof
   private val fk_merge_commutative = "be merge commutative (fk_system)" -> ("mergeCommutative", "WORKS   -   40 sec - 1:40 min -> with generic PK 11 minutes")
   private val fk_merge_idempotent = "be merge idempotent (fk_system)" -> ("mergeIdempotent", "   Albs e SongView ABORTED in 1 - 2 minutes;  Song - WORKS - 40 seconds")
   private val fk_merge_associative = "be merge associative (fk_system)" -> ("mergeAssociative", "ABORTED: SongView in 1hour:30min, Albs in 1hour:20min")
   private val fk_merge_IS_associative = "be merge Is associative (with assumptions) (fk_system)" -> ("mergeIsAssociative", "WORKS   -   1:30 - 3 minutes")
   private val fk_merge_associative2 = "be merge associative2 (fk_system)" -> ("mergeAssociative2", "WORKS  /   In 4 ref tables takes 10 minutes ")
   private val fk_compatible_commutes = "compatible commutes (fk_system)" -> ("compatibleCommutes", "WORKS: 1-4 minutes;")
-  val fk_proofs: mutable.LinkedHashMap[String, (String, String)] = mutable.LinkedHashMap(
-    fk_generic_referential_integrity, fk_merge_commutative, fk_merge_idempotent, fk_merge_associative, fk_merge_IS_associative, fk_merge_associative2, fk_compatible_commutes
+  val fk_proofs_genPK: mutable.LinkedHashMap[String, (String, String)] = mutable.LinkedHashMap(
+    fk_merge_commutative, fk_merge_idempotent, fk_merge_associative, fk_merge_IS_associative, fk_merge_associative2, fk_compatible_commutes
+  )
+  // Specific PK data type, necessary for referential integrity tests
+  private val fk_generic_referential_integrity = "keep referential integrity generic proof (fk_system)" -> ("genericReferentialIntegrity", "   !!!   DONT TERMINATE   !!!")
+  val fk_proofs_specificPK: mutable.LinkedHashMap[String, (String, String)] = mutable.LinkedHashMap(
+    fk_generic_referential_integrity
   )
 
-  // HARD PROOFS
-  val hard_proofs: mutable.LinkedHashMap[String, (String, String)] = mutable.LinkedHashMap(
-    // ELEMENT PROOFS
-    // TABLE PROOFS
+  // TABLE - HARD PROOFS
+  val table_hard_proofs: mutable.LinkedHashMap[String, (String, String)] = mutable.LinkedHashMap(
     table_merge_idempotent, table_merge_associative, table_merge_associative2,
-    // FK REFERENTIAL PROOFS
+  )
+
+  // FK - HARD PROOFS
+  val fk_hard_proofs: mutable.LinkedHashMap[String, (String, String)] = mutable.LinkedHashMap(
     fk_generic_referential_integrity, fk_merge_commutative, fk_merge_idempotent, fk_merge_associative, fk_merge_IS_associative, fk_merge_associative2, fk_compatible_commutes
   )
 
@@ -112,6 +118,11 @@ object System_Constants {
   val DELETE = "DELETE"
   val CASCADE = "CASCADE"
   val CHECK = "CHECK"
+
+  // Table PK type
+  val SPECIFIC_PK = ""
+  val GENERIC_PK = "PK"
+  val GENERIC_PK_FILE_NAME = "_genPK"
 
 
 }

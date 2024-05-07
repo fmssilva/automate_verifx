@@ -1,6 +1,6 @@
 
 import generatedSysTables.arts.Art
-import antidote.crdts.lemmas.CvRDTProof2
+import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 
 /**
@@ -14,20 +14,20 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class ArtsTable[Time, PK] 
-					( before: (Time, Time) => Boolean,							//function
-					  elements: Map[ PK, Tuple[Art, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[ PK ,Art, Time, ArtsTable[Time, PK]]{ 
+class ArtsTable[Time] 
+					( before: (Time, Time) => Boolean,						//function
+					  elements: Map[Art_PKs, Tuple[Art, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[Art_PKs, Art, Time, ArtsTable[Time]]{ 
 
 
 	/*
 	* Implement Methods DECLARED in UWTable trait
 	*/
-	def copy(newElements: Map[ PK, Tuple[Art, MVRegister[Int, Time]]]) =
+	def copy(newElements: Map[Art_PKs, Tuple[Art, MVRegister[Int, Time]]]) =
 		    new ArtsTable(this.before, newElements)
 
 	def maintainState() = this
 
 }
 
-object ArtsTable extends CvRDTProof2[ArtsTable]
+object ArtsTable extends CvRDTProof1[ArtsTable]

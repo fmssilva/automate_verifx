@@ -42,6 +42,8 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
   val (pk_name, pk_data_type) = setTablePK()
   val fk_attributes: mutable.Seq[TabAttribute] = attributesList.filter(_.attribInvariant.fk_options.isDefined)
   checkIf_FKs_ReferenceAllPK_Of_ReferencedTable()
+  val fk_Tables = fk_attributes.map(_.attribInvariant.fk_options.map(_.referencedTable).get).toSet.toList
+
 
   /**
    * Generate FOLDERS AND CLASSES
@@ -58,15 +60,25 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
   private var classContent = Elem_Row_Class.generate_Elem_ClassCode(this, cmdTokens.slice(initial_cmd_line, line))
   createClassFile(classContent, filePath)
 
-  // file Elem TABLE Class
-  filePath = s"$folderPath/${tableNames._2}.vfx"
-  classContent = Table_Class.generate_ElemTable_ClassCode(this)
+  // file TABLE Class - Generic PK (for faster access and proofs)
+  filePath = s"$folderPath/${tableNames._2}_genPK.vfx"
+  classContent = Table_Class.generate_ElemTable_ClassCode(this, pkIsGenericType = true)
   createClassFile(classContent, filePath)
 
-  // file Table_FK_System Class
+  // file TABLE Class - Specific PK (necessary for referential integrity proofs)
+  filePath = s"$folderPath/${tableNames._2}.vfx"
+  classContent = Table_Class.generate_ElemTable_ClassCode(this, pkIsGenericType = false)
+  createClassFile(classContent, filePath)
+
+
+  // file Table_FK_System Class - Generic PK (for faster access and proofs)
   if (fk_attributes.nonEmpty) {
+    filePath = s"$folderPath/${tableNames._3}$GENERIC_PK_FILE_NAME.vfx"
+    classContent = FK_System_Class_GenPK.generate_FK_System_ClassCode(this, pkIsGenericType = true)
+    createClassFile(classContent, filePath)
+
     filePath = s"$folderPath/${tableNames._3}.vfx"
-    classContent = FK_System_Class.generate_FK_System_ClassCode(this)
+    classContent = FK_System_Class_GenPK.generate_FK_System_ClassCode(this, pkIsGenericType = false)
     createClassFile(classContent, filePath)
   }
 
@@ -156,6 +168,9 @@ class Table(cmdTokens: List[(Int, Array[String])], var line: Int, sysTablesMap: 
     else
       (tableNames._1.toLowerCase() + "_PKs", tableNames._1 + "_PKs")
   }
+
+
+
 
   /**
    * Check if the FKs of this table reference all the PKs of the referenced tables

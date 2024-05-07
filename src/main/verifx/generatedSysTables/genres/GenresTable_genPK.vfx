@@ -1,11 +1,11 @@
 
-import generatedSysTables.albs.Alb
-import antidote.crdts.lemmas.CvRDTProof1
+import generatedSysTables.genres.Genre
+import antidote.crdts.lemmas.CvRDTProof2
 import antidote.crdts.tables.UWTable
 
 /**
  * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
- *		- ALB -
+ *		- GENRE -
  *
  * @param before - function to compare two Time values
  * @param elements - Map of elements/rows in the table,
@@ -14,20 +14,20 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class AlbsTable[Time] 
+class GenresTable_genPK[Time, PK] 
 					( before: (Time, Time) => Boolean,						//function
-					  elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[String, Alb, Time, AlbsTable[Time]]{ 
+					  elements: Map[PK, Tuple[Genre, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[PK, Genre, Time, GenresTable_genPK[Time, PK]]{ 
 
 
 	/*
 	* Implement Methods DECLARED in UWTable trait
 	*/
-	def copy(newElements: Map[String, Tuple[Alb, MVRegister[Int, Time]]]) =
-		    new AlbsTable(this.before, newElements)
+	def copy(newElements: Map[PK, Tuple[Genre, MVRegister[Int, Time]]]) =
+		    new GenresTable_genPK(this.before, newElements)
 
 	def maintainState() = this
 
 }
 
-object AlbsTable extends CvRDTProof1[AlbsTable]
+object GenresTable_genPK extends CvRDTProof2[GenresTable_genPK]

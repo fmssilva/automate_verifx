@@ -21,7 +21,7 @@ object Table_Class {
    * @param table - table to generate the code for
    * @return - the code for the class
    */
-  def generate_ElemTable_ClassCode(table: Table): StringBuilder = {
+  def generate_ElemTable_ClassCode(table: Table, pkIsGenericType: Boolean): StringBuilder = {
 
     println("generating file code at generate_ElemTable_ClassCode() at CreateTable class")
 
@@ -32,16 +32,16 @@ object Table_Class {
     this.tableNames = table.tableNames
 
     // IMPORTS, COMMENTS, CLASS HEADER
-    gen_Class_Imports()
+    gen_Class_Imports(pkIsGenericType)
     gen_Class_Comments()
-    gen_Class_Header()
+    gen_Class_Header(pkIsGenericType)
 
     //METHODS DECLARED IN UWTable TRAIT
     classContent.append("\n\n\n\t/*\n\t* Implement Methods DECLARED in UWTable trait\n\t*/")
     //COPY
     classContent.append(
-      s"\n\tdef copy(newElements: Map[ PK, Tuple[${tableNames._1}, MVRegister[Int, Time]]]) =" +
-        s"\n\t\t    new ${tableNames._2}(this.before, newElements)"
+      s"\n\tdef copy(newElements: Map[${get_PK_type_generic_vs_specific(pkIsGenericType)}, Tuple[${tableNames._1}, MVRegister[Int, Time]]]) =" +
+        s"\n\t\t    new ${tableNames._2}${if (pkIsGenericType) GENERIC_PK_FILE_NAME else ""}(this.before, newElements)"
     )
     //MAINTAIN STATE
     classContent.append(s"\n\n\tdef maintainState() = this")
@@ -51,7 +51,7 @@ object Table_Class {
     classContent.append(s"\n\n}")
 
     //OBJECT CLASS
-    classContent.append(s"\n\nobject ${tableNames._2} extends CvRDTProof2[${tableNames._2}]")
+    classContent.append(s"\n\nobject ${tableNames._2}${if (pkIsGenericType) GENERIC_PK_FILE_NAME else ""} extends CvRDTProof${get_Proof_import_for_generic_vs_specific_PK(pkIsGenericType)}[${tableNames._2}${if (pkIsGenericType) GENERIC_PK_FILE_NAME else ""}]")
 
     classContent
   }
@@ -63,16 +63,17 @@ object Table_Class {
   /**
    * IMPORTS
    */
-  private def gen_Class_Imports(): Unit = {
+  private def gen_Class_Imports(pkIsGenericType: Boolean): Unit = {
     classContent.append(
-      s"\nimport ${SYSTEM_TABLES_FOLDER_NAME}.${tableNames._1.toLowerCase()}s.${tableNames._1}" +
-        s"\nimport antidote.crdts.lemmas.CvRDTProof2" +
+      s"\nimport $SYSTEM_TABLES_FOLDER_NAME.${tableNames._1.toLowerCase()}s.${tableNames._1}" +
+        s"\nimport antidote.crdts.lemmas.CvRDTProof${get_Proof_import_for_generic_vs_specific_PK(pkIsGenericType)}" +
         (update_policy match {
           case "UPDATE-WINS" => s"\nimport antidote.crdts.tables.UWTable"
           //TODO: other cases
         })
     )
   }
+
 
   /**
    * CLASS COMMENT
@@ -96,17 +97,27 @@ object Table_Class {
   /**
    * CLASS HEADER
    */
-  private def gen_Class_Header(): Unit = {
+  private def gen_Class_Header(pkIsGenericType: Boolean): Unit = {
     classContent.append(
-      s"\nclass ${tableNames._2}[Time, PK] " +
-        s"\n\t\t\t\t\t( before: (Time, Time) => Boolean,\t\t\t\t\t\t\t//function" +
-        s"\n\t\t\t\t\t  elements: Map[ PK, Tuple[${tableNames._1}, MVRegister[Int,Time]]]\t//row" +
+      s"\nclass ${tableNames._2}${if (pkIsGenericType) GENERIC_PK_FILE_NAME else ""}[Time${if (pkIsGenericType) ", " + GENERIC_PK else SPECIFIC_PK}] " +
+        s"\n\t\t\t\t\t( before: (Time, Time) => Boolean,\t\t\t\t\t\t//function" +
+        s"\n\t\t\t\t\t  elements: Map[${get_PK_type_generic_vs_specific(pkIsGenericType)}, Tuple[${tableNames._1}, MVRegister[Int,Time]]]\t//row" +
         s"\n\t\t\t\t\t  ) extends " +
         (update_policy match {
-          case "UPDATE-WINS" => s"UWTable[ PK ,${tableNames._1}, Time, ${tableNames._2}[Time, PK]]{ "
+          case "UPDATE-WINS" => s"UWTable[${if (pkIsGenericType) GENERIC_PK else table.pk_data_type}, ${tableNames._1}, Time, ${tableNames._2}${if (pkIsGenericType) GENERIC_PK_FILE_NAME else ""}[Time${if (pkIsGenericType) ", " + GENERIC_PK else ""}]]{ "
           case "DELETE-WINS" => throw new Exception("check args of DWTable trait")
           case "NO_CONCURRENCY" => throw new Exception("What to do with table NO_CONCURRENCY")
         })
     )
   }
+
+  private def get_PK_type_generic_vs_specific(pkIsGenericType: Boolean): String = {
+    if (pkIsGenericType) GENERIC_PK else table.pk_data_type
+  }
+
+  private def get_Proof_import_for_generic_vs_specific_PK(pkIsGenericType: Boolean): String = {
+    if (pkIsGenericType) "2" else "1"
+  }
+
+
 }

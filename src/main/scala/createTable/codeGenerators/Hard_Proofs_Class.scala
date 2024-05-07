@@ -19,14 +19,24 @@ object Hard_Proofs_Class {
     gen_imports(classContent)
     gen_Class_Header(classContent, "Hard_Proofs")
 
-    // HARDER ELEMENT PROOFS
-    hard_proofs.map { proof =>
+    // TABLE HARD PROOFS
+    table_hard_proofs.map { proof =>
       generateProofFunctionsComments(proof._1 + "  " + proof._2._2, classContent)
       val sortedTablesSeq = sysTablesMap.toSeq.sortBy(_._2.fk_attributes.size)
       sortedTablesSeq.map { case (t_name, table) =>
-        generateProofFunction(mutable.LinkedHashMap(proof._1 -> (proof._2._1, table.tableNames._1)), table.tableNames._1, classContent)
+        generateProofFunction(mutable.LinkedHashMap(proof._1 -> (proof._2._1, proof._2._2)), table.tableNames._2, classContent)
       }
     }
+
+    // FK HARD PROOFS - TODO: factorizar este codigo
+    fk_hard_proofs.map { proof =>
+      generateProofFunctionsComments(proof._1 + "  " + proof._2._2, classContent)
+      val sortedTablesSeq = sysTablesMap.toSeq.filter(_._2.fk_attributes.nonEmpty).sortBy(_._2.fk_attributes.size)
+      sortedTablesSeq.map { case (t_name, table) =>
+        generateProofFunction(mutable.LinkedHashMap(proof._1 -> (proof._2._1, proof._2._2)), table.tableNames._3, classContent)
+      }
+    }
+
 
     //CLASS CLOSE
     classContent.append(s"\n\n}")

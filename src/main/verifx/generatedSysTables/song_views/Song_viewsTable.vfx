@@ -1,6 +1,6 @@
 
 import generatedSysTables.song_views.Song_view
-import antidote.crdts.lemmas.CvRDTProof2
+import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.UWTable
 
 /**
@@ -14,20 +14,20 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class Song_viewsTable[Time, PK] 
-					( before: (Time, Time) => Boolean,							//function
-					  elements: Map[ PK, Tuple[Song_view, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[ PK ,Song_view, Time, Song_viewsTable[Time, PK]]{ 
+class Song_viewsTable[Time] 
+					( before: (Time, Time) => Boolean,						//function
+					  elements: Map[Song_view_PKs, Tuple[Song_view, MVRegister[Int,Time]]]	//row
+					  ) extends UWTable[Song_view_PKs, Song_view, Time, Song_viewsTable[Time]]{ 
 
 
 	/*
 	* Implement Methods DECLARED in UWTable trait
 	*/
-	def copy(newElements: Map[ PK, Tuple[Song_view, MVRegister[Int, Time]]]) =
+	def copy(newElements: Map[Song_view_PKs, Tuple[Song_view, MVRegister[Int, Time]]]) =
 		    new Song_viewsTable(this.before, newElements)
 
 	def maintainState() = this
 
 }
 
-object Song_viewsTable extends CvRDTProof2[Song_viewsTable]
+object Song_viewsTable extends CvRDTProof1[Song_viewsTable]
