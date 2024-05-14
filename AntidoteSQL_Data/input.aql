@@ -10,6 +10,7 @@
      description LWW varchar
  )
 
+
 // ART - composite PKs
 CREATE UPDATE-WINS TABLE Art (
     name VARCHAR PRIMARY KEY

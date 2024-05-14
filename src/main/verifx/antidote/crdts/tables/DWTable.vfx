@@ -1,0 +1,192 @@
+
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.registers.MVRegister
+
+/**
+ * A table is a map of elements with entries:  < primary key, tuple (value, [flags/Time]) >
+ *      flags: 0 - I (inserted/updated), 1 - T (touched), 2 - D (deleted)
+ * @param PK: primary key type
+ * @param V: value type
+ * @param Time: time type
+ * @param T: table type
+ */
+trait DWTable[ PK , V <: CvRDT[V], Time, T <: UWTable[PK, V, Time, T]] extends CvRDT {
+     // TODO: mudar a class UW para extend DWTable e faz override a alguns metodos
+     // como isVisible, insert, remove, touch, etc
+
+
+    // Table is a map of elements with entries:  < primary key, tuple (value, [flags/Time]) >
+    val table: Map[PK, Tuple[V, MVRegister[Int, Time]]]
+
+    // Before is defined in VersionVector
+    //TODO: pra quê declarar aqui???
+    val before: (Time, Time) => Boolean
+
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    //////////////   Functions to be implemented by each Table   //////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+    def copy(newTable: Map[PK, Tuple[V, MVRegister[Int, Time]]]): T
+
+    // TODO: implementar isto nas classes das tabelas
+    // TODO: pra podermos ter listas de Tables e PKs:
+            // ter uma class PK que todas PKs extends
+            // implementar super class Table que DW e UW herdam... ou na prática todas as tabelas tem que ser DW agora, mesmo que sejam UW policy?
+    // get for all fk attributes, the FK Table, FK values, FK version number
+    def getFKsData (pk: PK) : Set[LList[Table, PK, Int]]
+
+
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    ////////////////////////   Table Operations   /////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * Update the values of the element
+     * @param pk: primary key of the element
+     * @param v: new value of the element
+     * @return the updated table
+     * @Pre: the element exists, so we don't check if isVisible again
+     */
+    private def updateValues (pk: PK, v: V): T = {
+        val curr_flags = this.get(pk).snd     // TODO: é bom atualizar o time da flag I?
+        val new_row = new Tuple(v, curr_flags)
+        this.copy( this.table.add(pk, new_row) )
+    }
+
+
+    /**
+    * Delete an element from the table
+    * @param pk: primary key of the element
+    * @param t: time of the operation
+    * @return the updated table
+    * @Pre: the element exists, so we don't check again
+    */
+    private def deleteElement(pk: PK, row: Tuple[V, MVRegister[Int, Time]], t: Time): T = {
+        val new_flags = row.snd.assign(2, t) // D  //TODO: este assing apaga o I, ou é preciso fazer um remove(I)? pq o MVRegister não tem um remove
+        val new_row = new Tuple(row.fst, new_flags)
+        this.copy( this.table.add(pk, new_row) )
+    }
+
+    /**
+     * Remove an element from the table, if exists
+     * @param pk: primary key of the element
+     * @param v: value of the element
+     * @param t: time of the operation
+     * @return the updated table
+     */
+    def remove (pk: PK, t: Time): T = {
+        if ( this.table.contains(pk) ) {
+            val row = this.table.get(pk)
+            if ( ! row.snd.contains(2) )// D flag
+                this.deleteElement(pk, row, t)
+        }
+        else
+            this
+    }
+
+
+
+    /**
+     * Check if the element is visible
+     * @param pk: primary key of the element
+     * @param t: time of the operation (so we can delete the element if it's not visible to avoid checking again in the future)
+     * @return true if the element is visible, false otherwise
+     */
+    def isVisible(pk: PK, t: Time): Int = {
+        // check element in this table
+        if ( ! this.table.contains(pk) )
+            return 0 //TODO: versions começam em 1, assim 0 é um valor especial pra dizer que não existe, ou então usar MAX_INT
+        val row = this.table.get(pk)
+        if ( row.snd.contains(2) ) // D flag
+            return 0
+        // check FK references in "parents" and confirm versions
+        val elem_version = row.fst.pk_version  //TODO: criar este atributo com este nome certo, e assim podemos aceder diretamente ao seu valor?
+        val fks_data = this.getFKsData(pk)
+        val fks_are_visible = fks_data.forall(
+                fk_entry => {
+                    val parent_version = fk_entry[0].isVisible( fk_entry[1], fk_entry[2], t )  // recursive check of FK attributes until the root table
+                    elem_version == parent_version
+                }
+            )
+        if ( fks_are_visible  )
+            return elem_version
+        // else: delete this element, so next time we stop the search sooner instead of going to the root table again
+        this.deleteElement(pk, row, t)
+        return 0
+    }
+
+    /**
+     * Check if the FK attributes are visible (without checking the if the pk is visible in this table)
+     * @param pk: primary key of the element
+     * @param t: time of the operation (so we can delete the element if it's not visible to avoid checking again in the future)
+     * @return true if the FK attributes are visible, false otherwise
+     */
+    private def fksAreVisible(pk : PK, t: Time): Boolean = {
+        val fks_data = this.getFKsData(pk)
+        fks_data.forall( fk_entry => fk_entry[0].isVisible( fk_entry[1],  t ) )
+    }
+
+
+    /**
+     * Insert an element in the table
+     * @param pk: primary key of the element
+     * @param v: value of the element
+     * @param t: time of the operation
+     * @return the updated table
+     */
+    def insert(pk: PK, v: V, t: Time): T = {
+        // get booleans into variables to avoid multiple calls
+        val fks_are_visible = this.fksAreVisible(pk, t)
+        val pk_exists = this.table.contains(pk)
+        if ( fks_are_visible ) {
+            if ( pk_exists )
+                this.updateValues(pk, v)
+            else { //pk dont exist -> add new element
+                fks.map(
+                    tupl => {
+                        //TODO: este Touch não é preciso pra nada...
+                        val version = tupl.fst.touch(tupl.snd, t)
+                        // save the fk version number in the element
+                        v.updateVersion(PK, version) //TODO: implementar isto nas classes dos Elementos
+                    }
+                )
+                val flags = new MVRegister[Int, Time](this.before).assign(0, t) //I
+                val row = new Tuple(v, flags)
+                this.copy( this.table.add(pk, row) )
+            }
+        } else { // fks are not visible
+            if ( this.table.contains(pk) )
+                val row = this.table.get(pk)
+                this.deleteElement(pk, row, t) // delete the element to make future search faster
+            else
+                this
+        }
+    }
+
+
+    def merge(that: T): T = {
+        //TODO: podemos declarar funções assim como variaveis pra ficar mais claro?
+        val mergeRowFunction = ( e1: Tuple[E, MVRegister[Int, Time]],
+                                  e2: Tuple[E, MVRegister[Int, Int, Time]]
+                                 ) => new Tuple( e1.fst.merge(e2.fst), e1.snd.merge(e2.snd) )
+                                 //TODO: se 1 for D e 2 for I, confirmar que apagamos o I
+        val mergedMap = this.table.combine( that.table, mergeRowFunction )
+        this.copy(mergedSet)
+    }
+
+    def compare(that: T): Boolean = { //ignore
+        true
+    }
+
+    override def equals(that: T): Boolean = {
+        this == that
+    }
+
+}
+
+

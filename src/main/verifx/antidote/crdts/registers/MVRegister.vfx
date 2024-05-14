@@ -1,8 +1,10 @@
 import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.lemmas.CvRDTProof2
 
-class MVRegister[V, Time](before: (Time, Time) => Boolean,
-                           values: Set[Tuple[V, Time]] = new Set[Tuple[V, Time]]()) extends CvRDT[MVRegister[V, Time]] {
+class MVRegister[V, Time](
+                            before: (Time, Time) => Boolean,
+                            values: Set[Tuple[V, Time]] = new Set[Tuple[V, Time]]()
+                          ) extends CvRDT[MVRegister[V, Time]] {
 
   // Define some helper functions regarding time based on `before`
   private def concurrent(t1: Time, t2: Time) = !this.before(t1, t2) && !this.before(t2, t1) && t1 != t2
