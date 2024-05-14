@@ -1,0 +1,12 @@
+
+import antidote.crdts.lemmas.CvRDT
+
+class DWElement[V <: DWElement[V]] extends CvRDT[DWElement[V]] {
+// 123456789 123456789 123456789 123456789 123456789 123456789 123456789
+    def update_PK_version(version: Int): V
+
+    def get_PK_version(): Int
+
+}
+
+

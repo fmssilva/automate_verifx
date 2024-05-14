@@ -1,5 +1,7 @@
+
 import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.registers.MVRegister
+import antidote.crdts.tables.PKTrait
 
 //0: I, 1: T, 2: D
 //object Flags {
@@ -8,7 +10,8 @@ import antidote.crdts.registers.MVRegister
 //  }
 //}
 
-trait UWTable[  PK  , V <: CvRDT[V], Time, T <: UWTable[PK, V, Time, T]] extends CvRDT {
+trait UWTable[ PK <: PKTrait, V <: CvRDT[V], Time, T <: UWTable[ PK , V, Time, T]]
+    extends CvRDT {
 
   val elements: Map[PK, Tuple[V, MVRegister[Int, Time]]]
 

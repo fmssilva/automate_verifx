@@ -1,5 +1,7 @@
 // T is the type of the concrete implementation, e.g. `GCounter`
 trait CvRDT[T <: CvRDT[T]] {
+
+
   // Excludes states that are not reachable in practice.
   // Returns true if the state is reachable, false otherwise.
   def reachable(): Boolean = true

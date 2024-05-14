@@ -1,7 +1,7 @@
 
 import generatedSysTables.arts.Art
 import antidote.crdts.lemmas.CvRDTProof1
-import antidote.crdts.tables.UWTable
+import antidote.crdts.tables.DWTable
 
 /**
  * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
@@ -14,19 +14,34 @@ import antidote.crdts.tables.UWTable
  *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
  *                                                    - and a Time
  */
-class ArtsTable[Time] 
+class ArtsTable[Time, FK <: PKTrait, V <: CvRDT_Element[V], T <: DWTable[ PK, V, Time, T]]
 					( before: (Time, Time) => Boolean,						//function
-					  elements: Map[Art_PKs, Tuple[Art, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[Art_PKs, Art, Time, ArtsTable[Time]]{ 
+					  elements: Map[Art_PKs, Tuple[Art, MVRegister[Int,Time]]],	//row
+					  //fkTables: LList [DWTable [FK, V, Time, T]]  //TODO: é assim que se declara o tipo de tabelas? Time pode ser o mesmo que esta tabela??
+					  ) extends DWTable[Art_PKs, Art, Time, ArtsTable[Time]]{
+
+
+
 
 
 	/*
-	* Implement Methods DECLARED in UWTable trait
+	* Implement Methods DECLARED in DWTable trait
 	*/
 	def copy(newElements: Map[Art_PKs, Tuple[Art, MVRegister[Int, Time]]]) =
 		    new ArtsTable(this.before, newElements)
 
 	def maintainState() = this
+
+//	//TODO: confirmar tipo de lista de DWTables e atualizar aqui e no header da class
+//	def getFKsTables () : LList [DWTable [FK, V, Time, T]] =
+//        this.fkTables
+//
+//
+//	//
+//	def getFKsAttributes (pk: PK): LList[Tuple[PK, Int]] =
+//        elements.get(pk).fks
+
+
 
 }
 

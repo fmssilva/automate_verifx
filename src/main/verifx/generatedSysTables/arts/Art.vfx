@@ -1,4 +1,6 @@
 
+import antidote.crdts.tables.PKTrait
+import antidote.crdts.tables.DWElement
 import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.lemmas.CvRDTProof
 import antidote.crdts.registers.LWWRegister
@@ -9,7 +11,7 @@ import antidote.crdts.LamportClock
  * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
  * so no need to extend CvRDT
  */
-class Art_PKs(name: String, country: String) { }
+class Art_PKs(name: String, country: String) extends PKTrait { }
 
 
 
@@ -24,20 +26,38 @@ class Art_PKs(name: String, country: String) { }
  *		AGE LWW INT CHECK ( AGE >= 0 AND AGE <= 100 ) ,
  *		RANKING LWW INT CHECK ( RANKING >= 0 AND RANKING <= 100 ) ,
  *		)
+ *
+ * 	@constructor create a new Art with the given primary keys and attributes
+ * 	@param pk_version the version of the primary keys
+ *   @Pre: pk_version >= 1 (initial version = 1 and then increments)
+ *                       (0 is reserved to represent "invalid" versions)
+                            TODO: é do tipo Int... e serve... ou tem de ser LWWRegister[Int]?
  */
-class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
+class Art(  art_PKs: Art_PKs,
+            pk_version: Int,
+            age: LWWRegister[Int], ranking: LWWRegister[Int]    // other attributes
+            ) extends DWElement[Art] {
 
+
+    def update_PK_version(new_pk_version: Int) =
+        new Art(this.art_PKs, new_pk_version, this.age, this.ranking)
+
+    def get_PK_version() = this.pk_version
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
 	//merge this Art with that Art (only concurrently updatable attributes are merged as a CRDT)
-	def merge(that: Art) = 
-		new Art(this.art_PKs, this.age.merge(that.age), this.ranking.merge(that.ranking))
+	def merge(that: Art) = {
+	    //TODO: como merge o pk_version?
+	    val version = if(this.pk_version > that.pk_version) this.pk_version else that.pk_version
+		new Art(this.art_PKs, version, this.age.merge(that.age), this.ranking.merge(that.ranking))
+    }
 
 	//compare this Art with that Art (only concurrently updatable attributes matter)
-	def compare(that: Art) = 
+	def compare(that: Art) =
+	    this.pk_version == that.pk_version && //TODO: como comparar o pk_version?
 		this.age.compare(that.age) &&
 		this.ranking.compare(that.ranking)
 
@@ -49,13 +69,14 @@ class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) ex
 
 	//this Art is compatible with that Art?
 	override def compatible(that: Art) = 
-		this.art_PKs == that.art_PKs && 
+		this.art_PKs == that.art_PKs &&
+		this.pk_version == that.pk_version &&  //TODO: como comparar o pk_version?
 		this.age.compatible(that.age) &&
 		this.ranking.compatible(that.ranking)
 
 	//Art is reachable given the CHECK conditions of its attributes?
-	override def reachable() = { 
-		 this.age.value >= 0 && this.age.value <= 100 && 
+	override def reachable() = {
+	     this.age.value >= 0 && this.age.value <= 100 &&
 		 this.ranking.value >= 0 && this.ranking.value <= 100
 	}
 
@@ -68,14 +89,14 @@ class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) ex
 
 	def updateAge(newAge: Int, stampAge: LamportClock) = { 
 		if( newAge >= 0 && newAge <= 100)
-			new Art(this.art_PKs, this.age.assign(newAge, stampAge), this.ranking)
+			new Art(this.art_PKs, this.pk_version, this.age.assign(newAge, stampAge), this.ranking)
 		else
 			this
 	}
 
 	def updateRanking(newRanking: Int, stampRanking: LamportClock) = { 
 		if( newRanking >= 0 && newRanking <= 100)
-			new Art(this.art_PKs, this.age, this.ranking.assign(newRanking, stampRanking))
+			new Art(this.art_PKs, this.pk_version, this.age, this.ranking.assign(newRanking, stampRanking))
 		else
 			this
 	}

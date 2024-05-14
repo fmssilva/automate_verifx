@@ -1,0 +1,10 @@
+
+
+// doesn´t extend CvRDT because it is not a CRDT (PKs are not updatable or mergeable)
+
+/**
+ * Trait for Primary Keys
+ */
+trait PKTrait {
+
+}

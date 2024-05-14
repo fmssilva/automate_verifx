@@ -19,7 +19,8 @@ import antidote.crdts.LamportClock
  *		PRICE LWW INT CHECK ( PRICE >= 0 AND PRICE <= 10000 ) ,
  *		)
  */
-class Alb(title: String, art_name: String, art_country: String, year: LWWRegister[Int], price: LWWRegister[Int]) extends CvRDT[Alb] {
+class Alb(title: String, art_name: String, art_country: String, year: LWWRegister[Int], price: LWWRegister[Int])
+    extends CvRDT[Alb] {
 
 
   /*
