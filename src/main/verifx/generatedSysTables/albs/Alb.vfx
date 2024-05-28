@@ -3,6 +3,7 @@ import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.lemmas.CvRDTProof
 import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
+import generatedSysTables.arts.Art
 
 
 
@@ -22,7 +23,8 @@ import antidote.crdts.LamportClock
 class Alb(
         title: String,  // PK
         pk_version: LWWRegister[Int], // PK_version
-        art_name: String, art_country: String, //FK
+        art_FKs: Art_PKs, // FK as 1 element
+//        art_name: String, art_country: String, //FK
         year: LWWRegister[Int], price: LWWRegister[Int] //other atrributes
         ) extends CvRDT[Alb] {
 
@@ -35,7 +37,7 @@ class Alb(
 	// only concurrently updatable attributes are merged as a CRDT
 	// Returns the LUB of `this` and `that`
 	def merge(that: Alb) =
-	 	new Alb(this.title, this.pk_version.merge(that.pk_version), this.art_name, this.art_country, this.year.merge(that.year), this.price.merge(that.price))
+	 	new Alb(this.title, this.pk_version.merge(that.pk_version), this.art_FKs, this.year.merge(that.year), this.price.merge(that.price))
 
 	//compare this Alb with that Alb (only concurrently updatable attributes matter)
 	def compare(that: Alb) =
@@ -53,8 +55,7 @@ class Alb(
 	override def compatible(that: Alb) =
 		this.title == that.title &&
 	    this.pk_version.compatible(that.pk_version) &&
-		this.art_name == that.art_name &&
-		this.art_country == that.art_country &&
+		this.art_FKs == that.art_FKs &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
 
@@ -73,14 +74,14 @@ class Alb(
 
 	def updateYear(newYear: Int, stampYear: LamportClock) = {
 		if( newYear >= 1900 && newYear <= 2022)
-			new Alb(this.title, this.pk_version, this.art_name, this.art_country, this.year.assign(newYear, stampYear), this.price)
+			new Alb(this.title, this.pk_version, this.art_FKs, this.year.assign(newYear, stampYear), this.price)
 		else
 			this
 	}
 
 	def updatePrice(newPrice: Int, stampPrice: LamportClock) = {
 		if( newPrice >= 0 && newPrice <= 10000)
-			new Alb(this.title, this.pk_version, this.art_name, this.art_country, this.year, this.price.assign(newPrice, stampPrice))
+			new Alb(this.title, this.pk_version, this.art_FKs, this.year, this.price.assign(newPrice, stampPrice))
 		else
 			this
 	}
@@ -108,14 +109,12 @@ object Alb extends CvRDTProof[Alb] {
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.title == elem.title && elem2.title == elem.title &&
 				 elem1.pk_version == elem.pk_version && elem2.pk_version == elem.pk_version &&
-				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
-				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
+				 elem1.art_FKs == elem.art_FKs && elem2.art_FKs == elem.art_FKs &&
 				 elem1.year.value == year1 && elem2.year.value == year2 &&
 				 elem1.price == elem.price && elem2.price == elem.price &&
 				 //check if the merged values are correct and according to the chosen update-policy
 				 elem12.title == elem.title &&
-				 elem12.art_name == elem.art_name &&
-				 elem12.art_country == elem.art_country &&
+				 elem12.art_FKs == elem.art_FKs &&
 				 elem12.year.value == year2 &&
 				 elem12.pk_version == elem.pk_version &&
 				 elem12.price == elem.price
@@ -135,14 +134,12 @@ object Alb extends CvRDTProof[Alb] {
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.title == elem.title && elem2.title == elem.title &&
  				 elem1.pk_version == elem.pk_version && elem2.pk_version == elem.pk_version &&
-				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
-				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
+				 elem1.art_FKs == elem.art_FKs && elem2.art_FKs == elem.art_FKs &&
 				 elem1.year == elem.year && elem2.year == elem.year &&
 				 elem1.price.value == price1 && elem2.price.value == price2 &&
 				 //check if the merged values are correct and according to the chosen update-policy
 				 elem12.title == elem.title &&
-				 elem12.art_name == elem.art_name &&
-				 elem12.art_country == elem.art_country &&
+				 elem12.art_FKs == elem.art_FKs &&
 				 elem12.year == elem.year &&
 				 elem12.price.value == price2
 			}
