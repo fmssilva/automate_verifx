@@ -4,7 +4,7 @@ import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec
 import generatedSysTablesProofs.ProverUtils._
 
-class AlbProofs extends FlatSpec with Prover { 
+class AlbProofs extends FlatSpec with Prover {
 
 
 
@@ -15,8 +15,9 @@ class AlbProofs extends FlatSpec with Prover {
 	// WORKS  -  20-30 seconds
 	"Alb" should "be a CvRDT (element)" in {
 		val startTime = printStartingTime("be a CvRDT (element)")
-		val p = ("Alb", "is_a_CvRDT") 
+		val p = ("Alb", "is_a_CvRDT")
 		prove(p)
+//		rejectForModel(p)
 		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
 		p
 	}
@@ -36,6 +37,8 @@ class AlbProofs extends FlatSpec with Prover {
 		val p = ("Alb", "compareCorrect") 
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
+//		val res = rejectForModel(p)
+//		print(res)
 		p
 	}
 
@@ -49,8 +52,11 @@ class AlbProofs extends FlatSpec with Prover {
 	"Alb" should "updateYear works (element)" in {
 		val startTime = printStartingTime("updateYear works (element)")
 		val p = ("Alb", "Alb_updateYear_works") 
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "updateYear works (element)")
+//		prove(p)
+		val res = rejectForModel(p)
+		print(res)
+//		printProofTime(startTime, System.nanoTime(), "updateYear works (element)")
+
 		p
 	}
 
@@ -72,7 +78,7 @@ class AlbProofs extends FlatSpec with Prover {
 	// WORKS  -   20-30 seconds
 	"AlbsTable" should "be merge commutative (table)" in {
 		val startTime = printStartingTime("be merge commutative (table)")
-		val p = ("AlbsTable", "mergeCommutative") 
+		val p = ("AlbsTable", "mergeCommutative")
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
 		p

@@ -29,7 +29,7 @@ object ProverUtils {
 		val durationInSeconds = (endTime - startTime) / 1e9d // convert nanoseconds to seconds
 		val minutes = (durationInSeconds / 60).toInt
 		val seconds = (durationInSeconds % 60).toInt
-		println("Proof " + proof + " took " +  minutes + " minutes : " + seconds + " seconds.")
+		println("\nProof " + proof + " took " +  minutes + " minutes : " + seconds + " seconds.")
 	}
 
 }

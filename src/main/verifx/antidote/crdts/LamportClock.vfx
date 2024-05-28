@@ -1,4 +1,6 @@
+
 class LamportClock(replica: Int, counter: Int) {
+
   def increment() = new LamportClock(this.replica, this.counter + 1)
 
   def sync(that: LamportClock) = {

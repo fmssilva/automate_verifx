@@ -12,7 +12,7 @@ import generatedSysTables.arts.Art
  *
  * given by the Antidote SQL command:
  *
- *		CREATE UPDATE-WINS TABLE ALB (
+ *		CREATE DELETE-WINS TABLE ALB (
  *		TITLE VARCHAR PRIMARY KEY ,
  *		ART_NAME VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( NAME ) ,
  *		ART_COUNTRY VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( COUNTRY ) ,
@@ -20,30 +20,54 @@ import generatedSysTables.arts.Art
  *		PRICE LWW INT CHECK ( PRICE >= 0 AND PRICE <= 10000 ) ,
  *		)
  */
-class Alb(
-        title: String,  // PK
-        pk_version: LWWRegister[Int], // PK_version
-        art_FKs: Art_PKs, // FK as 1 element
-//        art_name: String, art_country: String, //FK
-        year: LWWRegister[Int], price: LWWRegister[Int] //other atrributes
-        ) extends CvRDT[Alb] {
+class Alb(  title: String,  // PK
+            pk_version: LWWRegister[Int], // PK_version
+            art_FKs: Art_PKs, // FK
+            art_fk_version: LWWRegister[Int], // FK_version
+            year: LWWRegister[Int], price: LWWRegister[Int] //other atrributes
+            ) extends CvRDT[Alb] {
 
 
-  /*
-   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
-   */
+    /*
+     * HELPER METHODS
+     */
+
+    // get bigger version of two LWWRegisters
+    def getBiggerValue_or_LWW( v1 : LWWRegister[Int], v2 : LWWRegister[Int] ) = {
+        if( v1.getValue() > v2.getValue() )
+            v1
+        else if ( v2.getValue() > v1.getValue() )
+            v2
+        else
+            v1.merge(v2) //LWW
+    }
+
+
+    /*
+     * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
+     */
 
 	// merge this Alb with that Alb
 	// only concurrently updatable attributes are merged as a CRDT
 	// Returns the LUB of `this` and `that`
 	def merge(that: Alb) =
-	 	new Alb(this.title, this.pk_version.merge(that.pk_version), this.art_FKs, this.year.merge(that.year), this.price.merge(that.price))
+	        new Alb(this.title,                                                             // keep PK
+                    this.getBiggerValue_or_LWW (this.pk_version, that.pk_version),          // bigger version
+                    this.art_FKs,                                                           // keep FK
+                    this.getBiggerValue_or_LWW (this.art_fk_version, that.art_fk_version),  // bigger version
+                    this.year.merge(that.year), this.price.merge(that.price))               // merge other attributes
 
-	//compare this Alb with that Alb (only concurrently updatable attributes matter)
-	def compare(that: Alb) =
-    	this.pk_version.compare(that.pk_version) &&
-		this.year.compare(that.year) &&
-		this.price.compare(that.price)
+
+
+    // compare this Alb with that Alb
+    // only concurrently updatable attributes matter
+    // return True if `this <= that`
+    def compare(that: Alb) =
+        this.pk_version.compare(that.pk_version) &&
+        this.art_fk_version.compare(that.art_fk_version) &&
+        this.year.compare(that.year) &&
+        this.price.compare(that.price)
+
 
 
 
@@ -51,18 +75,23 @@ class Alb(
    * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
    */
 
-	//this Alb is compatible with that Alb?
-	override def compatible(that: Alb) =
+	// return True if 'this is compatible that'
+	// have same attributes of the same types, well formed...
+    override def compatible(that: Alb) =
 		this.title == that.title &&
 	    this.pk_version.compatible(that.pk_version) &&
 		this.art_FKs == that.art_FKs &&
+		this.art_fk_version.compatible(that.art_fk_version) &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
 
-	//Alb is reachable given the CHECK conditions of its attributes?
+
+	// return True if all the CHECK conditions are met
 	override def reachable() = {
-		 this.year.value >= 1900 && this.year.value <= 2022 &&
-		 this.price.value >= 0 && this.price.value <= 10000
+	    this.pk_version.getValue() >= 1 &&
+	    this.art_fk_version.getValue() >= 1 &&
+		this.year.value >= 1900 && this.year.value <= 2022 &&
+		this.price.value >= 0 && this.price.value <= 10000
 	}
 
 
@@ -72,17 +101,26 @@ class Alb(
    * to be used by the prover, useful in CmRDT - Operations
    */
 
-	def updateYear(newYear: Int, stampYear: LamportClock) = {
+	def updateYear(newYear: Int, time: LamportClock) = {
 		if( newYear >= 1900 && newYear <= 2022)
-			new Alb(this.title, this.pk_version, this.art_FKs, this.year.assign(newYear, stampYear), this.price)
+			new Alb(this.title,                                                     // keep PK
+			        this.pk_version.assign(this.pk_version.getValue() + 1, time),   // update PK_version
+			        this.art_FKs,                                                   // keep FK
+			        this.art_fk_version,                                            // keep FK_versions
+			        this.year.assign(newYear, time),                                // update Attribute
+			        this.price)                                                     // keep other attributes
 		else
 			this
 	}
 
-	def updatePrice(newPrice: Int, stampPrice: LamportClock) = {
+	def updatePrice(newPrice: Int, time: LamportClock) = {
 		if( newPrice >= 0 && newPrice <= 10000)
-			new Alb(this.title, this.pk_version, this.art_FKs, this.year, this.price.assign(newPrice, stampPrice))
-		else
+			new Alb(this.title,                                                     // keep PK
+			        this.pk_version.assign(this.pk_version.getValue() + 1, time),   // update PK_version
+                    this.art_FKs, this.art_fk_version,                              // keep FK e FK_versions
+                    this.year,                                                      // keep other attribute
+                    this.price.assign(newPrice, time))                        // update Attribute
+        else
 			this
 	}
 
@@ -97,9 +135,19 @@ class Alb(
 
 object Alb extends CvRDTProof[Alb] {
 
+	def checkUpdateAlb1_Alb2(elem1: Alb, elem2: Alb, elem12: Alb): Boolean = {
+                    elem1.title == elem2.title && elem2.title == elem12.title &&
+                    elem1.pk_version == elem2.pk_version && elem2.pk_version == elem12.pk_version &&
+                    elem1.art_FKs == elem2.art_FKs && elem2.art_FKs == elem12.art_FKs &&
+                    elem1.art_fk_version == elem2.art_fk_version && elem2.art_fk_version == elem12.art_fk_version &&
+                    elem1.year == elem2.year && elem2.year == elem12.year &&
+                    elem1.price == elem2.price && elem2.price == elem12.price
+                }
+
 	proof Alb_updateYear_works {
 		forall(elem: Alb, year1: Int, year2: Int, c1: LamportClock, c2: LamportClock ) {
-			( elem.reachable()  &&  c1.smaller(c2) &&
+			( elem.reachable()  &&
+			  c1.smaller(c2) &&
 			  year1 >= 1900 && year1 <= 2022 && year2 >= 1900 && year2 <= 2022
 			 ) =>: {
 				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
@@ -107,14 +155,11 @@ object Alb extends CvRDTProof[Alb] {
 				 val elem2 = elem.updateYear(year2, c2)
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.title == elem.title && elem2.title == elem.title &&
-				 elem1.pk_version == elem.pk_version && elem2.pk_version == elem.pk_version &&
-				 elem1.art_FKs == elem.art_FKs && elem2.art_FKs == elem.art_FKs &&
-				 elem1.year.value == year1 && elem2.year.value == year2 &&
-				 elem1.price == elem.price && elem2.price == elem.price &&
+				 this.checkUpdateAlb1_Alb2(elem1, elem2, elem12) &&
 				 //check if the merged values are correct and according to the chosen update-policy
 				 elem12.title == elem.title &&
 				 elem12.art_FKs == elem.art_FKs &&
+				 elem12.art_fk_version == elem.art_fk_version &&
 				 elem12.year.value == year2 &&
 				 elem12.pk_version == elem.pk_version &&
 				 elem12.price == elem.price
@@ -132,14 +177,11 @@ object Alb extends CvRDTProof[Alb] {
 				 val elem2 = elem.updatePrice(price2, c2)
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.title == elem.title && elem2.title == elem.title &&
- 				 elem1.pk_version == elem.pk_version && elem2.pk_version == elem.pk_version &&
-				 elem1.art_FKs == elem.art_FKs && elem2.art_FKs == elem.art_FKs &&
-				 elem1.year == elem.year && elem2.year == elem.year &&
-				 elem1.price.value == price1 && elem2.price.value == price2 &&
+				 this.checkUpdateAlb1_Alb2(elem1, elem2, elem12) &&
 				 //check if the merged values are correct and according to the chosen update-policy
 				 elem12.title == elem.title &&
 				 elem12.art_FKs == elem.art_FKs &&
+ 				 elem12.art_fk_version == elem.art_fk_version &&
 				 elem12.year == elem.year &&
 				 elem12.price.value == price2
 			}
