@@ -4,22 +4,43 @@ import be.vub.kdeporre.crdtproofs.Prover
 import org.scalatest.FlatSpec
 import generatedSysTablesProofs.ProverUtils._
 
-class ArtProofs extends FlatSpec with Prover { 
+class ArtProofs extends FlatSpec with Prover {
 
+
+	// ELEMENT
+	// WORKS  -  20-30 seconds
+	"Art" should "be a CvRDT (element)" in {
+		val startTime = printStartingTime("be a CvRDT (element)")
+		val p = ("Art", "is_a_CvRDT")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
+		p
+	}
+
+
+	//TABLE
+	// WORKS  -   20-30 seconds
+	"ArtsTable" should "be merge commutative (table)" in {
+		val startTime = printStartingTime("be merge commutative (table)")
+		val p = ("ArtsTable", "mergeCommutative")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
+		p
+	}
 
 
 	////////////////////////////////////////////////////////////
 	// ELEMENT PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
-	// WORKS  -  20-30 seconds
-	"Art" should "be a CvRDT (element)" in {
-		val startTime = printStartingTime("be a CvRDT (element)")
-		val p = ("Art", "is_a_CvRDT") 
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
-		p
-	}
+//	// WORKS  -  20-30 seconds
+//	"Art" should "be a CvRDT (element)" in {
+//		val startTime = printStartingTime("be a CvRDT (element)")
+//		val p = ("Art", "is_a_CvRDT")
+//		prove(p)
+//		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
+//		p
+//	}
 
 	// WORKS  -  20-40 seconds
 	"Art" should "compatible commutes (element)" in {
@@ -69,14 +90,14 @@ class ArtProofs extends FlatSpec with Prover {
 	// TABLE PROOFS  - specified in CvRDTProof1 trait 
 	////////////////////////////////////////////////////////////
 
-	// WORKS  -   20-30 seconds
-	"ArtsTable" should "be merge commutative (table)" in {
-		val startTime = printStartingTime("be merge commutative (table)")
-		val p = ("ArtsTable", "mergeCommutative") 
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
-		p
-	}
+//	// WORKS  -   20-30 seconds
+//	"ArtsTable" should "be merge commutative (table)" in {
+//		val startTime = printStartingTime("be merge commutative (table)")
+//		val p = ("ArtsTable", "mergeCommutative")
+//		prove(p)
+//		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
+//		p
+//	}
 
 	//  !!!   ABORTED  in 20-30 seconds!!!
 	"ArtsTable" should "be merge idempotent (table)" in {

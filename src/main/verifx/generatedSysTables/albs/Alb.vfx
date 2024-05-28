@@ -7,7 +7,7 @@ import antidote.crdts.LamportClock
 
 
 /**
- * Class representing the element(row):::  ALB 
+ * Class representing the element(row):::  ALB
  *
  * given by the Antidote SQL command:
  *
@@ -19,19 +19,27 @@ import antidote.crdts.LamportClock
  *		PRICE LWW INT CHECK ( PRICE >= 0 AND PRICE <= 10000 ) ,
  *		)
  */
-class Alb(title: String, art_name: String, art_country: String, year: LWWRegister[Int], price: LWWRegister[Int]) extends CvRDT[Alb] {
+class Alb(
+        title: String,  // PK
+        pk_version: LWWRegister[Int], // PK_version
+        art_name: String, art_country: String, //FK
+        year: LWWRegister[Int], price: LWWRegister[Int] //other atrributes
+        ) extends CvRDT[Alb] {
 
 
   /*
    * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
    */
 
-	//merge this Alb with that Alb (only concurrently updatable attributes are merged as a CRDT)
-	def merge(that: Alb) = 
-		new Alb(this.title, this.art_name, this.art_country, this.year.merge(that.year), this.price.merge(that.price))
+	// merge this Alb with that Alb
+	// only concurrently updatable attributes are merged as a CRDT
+	// Returns the LUB of `this` and `that`
+	def merge(that: Alb) =
+	 	new Alb(this.title, this.pk_version.merge(that.pk_version), this.art_name, this.art_country, this.year.merge(that.year), this.price.merge(that.price))
 
 	//compare this Alb with that Alb (only concurrently updatable attributes matter)
-	def compare(that: Alb) = 
+	def compare(that: Alb) =
+    	this.pk_version.compare(that.pk_version) &&
 		this.year.compare(that.year) &&
 		this.price.compare(that.price)
 
@@ -42,16 +50,17 @@ class Alb(title: String, art_name: String, art_country: String, year: LWWRegiste
    */
 
 	//this Alb is compatible with that Alb?
-	override def compatible(that: Alb) = 
-		this.title == that.title && 
+	override def compatible(that: Alb) =
+		this.title == that.title &&
+	    this.pk_version.compatible(that.pk_version) &&
 		this.art_name == that.art_name &&
 		this.art_country == that.art_country &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
 
 	//Alb is reachable given the CHECK conditions of its attributes?
-	override def reachable() = { 
-		 this.year.value >= 1900 && this.year.value <= 2022 && 
+	override def reachable() = {
+		 this.year.value >= 1900 && this.year.value <= 2022 &&
 		 this.price.value >= 0 && this.price.value <= 10000
 	}
 
@@ -62,16 +71,16 @@ class Alb(title: String, art_name: String, art_country: String, year: LWWRegiste
    * to be used by the prover, useful in CmRDT - Operations
    */
 
-	def updateYear(newYear: Int, stampYear: LamportClock) = { 
+	def updateYear(newYear: Int, stampYear: LamportClock) = {
 		if( newYear >= 1900 && newYear <= 2022)
-			new Alb(this.title, this.art_name, this.art_country, this.year.assign(newYear, stampYear), this.price)
+			new Alb(this.title, this.pk_version, this.art_name, this.art_country, this.year.assign(newYear, stampYear), this.price)
 		else
 			this
 	}
 
-	def updatePrice(newPrice: Int, stampPrice: LamportClock) = { 
+	def updatePrice(newPrice: Int, stampPrice: LamportClock) = {
 		if( newPrice >= 0 && newPrice <= 10000)
-			new Alb(this.title, this.art_name, this.art_country, this.year, this.price.assign(newPrice, stampPrice))
+			new Alb(this.title, this.pk_version, this.art_name, this.art_country, this.year, this.price.assign(newPrice, stampPrice))
 		else
 			this
 	}
@@ -98,15 +107,17 @@ object Alb extends CvRDTProof[Alb] {
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.title == elem.title && elem2.title == elem.title &&
+				 elem1.pk_version == elem.pk_version && elem2.pk_version == elem.pk_version &&
 				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
 				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
 				 elem1.year.value == year1 && elem2.year.value == year2 &&
 				 elem1.price == elem.price && elem2.price == elem.price &&
-				 //check if the merged values are correct and according to the chosen update-policy 
+				 //check if the merged values are correct and according to the chosen update-policy
 				 elem12.title == elem.title &&
 				 elem12.art_name == elem.art_name &&
 				 elem12.art_country == elem.art_country &&
 				 elem12.year.value == year2 &&
+				 elem12.pk_version == elem.pk_version &&
 				 elem12.price == elem.price
 			}
 		}
@@ -123,11 +134,12 @@ object Alb extends CvRDTProof[Alb] {
 				 val elem12 = elem1.merge(elem2)
 				 //check if the update in elem 1 and 2 kept the correct values
 				 elem1.title == elem.title && elem2.title == elem.title &&
+ 				 elem1.pk_version == elem.pk_version && elem2.pk_version == elem.pk_version &&
 				 elem1.art_name == elem.art_name && elem2.art_name == elem.art_name &&
 				 elem1.art_country == elem.art_country && elem2.art_country == elem.art_country &&
 				 elem1.year == elem.year && elem2.year == elem.year &&
 				 elem1.price.value == price1 && elem2.price.value == price2 &&
-				 //check if the merged values are correct and according to the chosen update-policy 
+				 //check if the merged values are correct and according to the chosen update-policy
 				 elem12.title == elem.title &&
 				 elem12.art_name == elem.art_name &&
 				 elem12.art_country == elem.art_country &&
