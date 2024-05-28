@@ -1,0 +1,93 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.registers.MVRegister
+
+//0: I, 1: T, 2: D
+//object Flags {
+//  enum Flag {
+//    I() | T() | D()
+//  }
+//}
+
+trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends CvRDT {
+
+  val elements: Map[PK, Tuple[V, MVRegister[Int, Time]]]
+
+  val before: (Time, Time) => Boolean
+
+  def copy(newElements: Map[PK, Tuple[V, MVRegister[Int, Time]]]): T
+
+  def maintainState(): T
+
+  def isVisible(pk: PK): Boolean =
+    this.elements.contains(pk) && this.flagsVisibility(pk)
+
+  def flagsVisibility(pk: PK): Boolean =
+    this.get(pk).snd.contains(1) || this.get(pk).snd.contains(0)
+
+  def get(pk: PK): Tuple[V, MVRegister[Int, Time]] =
+    this.elements.get(pk)
+
+
+  private def beforeAssumptions(): Boolean = {
+    forall (t1: Time, t2: Time) {
+      this.before(t1, t2) =>: !this.before(t2, t1)
+    } &&
+    forall (t1: Time) {
+      !this.before(t1, t1)
+    } &&
+    forall (t1: Time, t2: Time, t3: Time) {
+      (this.before(t1, t2) && this.before(t2, t3)) =>: this.before(t1, t3) // time must be transitive
+    }
+  }
+
+  private def mergeValuesAssumptions(): Boolean = {
+    forall(v1: V, v2: V) {
+      v1.merge(v2) == v2.merge(v1) //merge is commutative
+    } &&
+    forall(v1: V) {
+      v1.merge(v1) == v1 //merge is idempotent
+    } &&
+    forall(v1: V, v2: V, v3: V) {
+      v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+    }
+  }
+
+  // TODO: use an enum to the mvregister
+  override def reachable(): Boolean = {
+    this.beforeAssumptions() && this.mergeValuesAssumptions() &&
+    this.elements.values().forall((elem: Tuple[V, MVRegister[Int, Time]]) =>
+                                   //elem.snd.cvrdt() &&
+                                   //elem.fst.reachable() &&
+                                   elem.snd.reachableWithoutTime(this.before) &&
+                                   // restricts the values of the mvregister to the values of the flags
+                                   elem.snd.values.forall((v: Tuple[Int, Time]) => v.fst == 0 || v.fst == 1 ||
+                                   v.fst == 2 ))
+  }
+
+  override def compatible(that: T): Boolean = {
+    this.before == that.before &&
+    this.elements.zip(that.elements).values().forall(
+        (t: Tuple[Tuple[V, MVRegister[Int, Time]], Tuple[V, MVRegister[Int, Time]]]) => {
+            val t1 = t.fst
+            val t2 = t.snd
+            t1.fst.compatible(t2.fst) && t1.snd.compatible(t2.snd)
+        } )
+  }
+
+  def merge(that: T): T = {
+    val mergedSet = this.elements.combine(that.elements,
+        (e1: Tuple[V, MVRegister[Int, Time]], e2: Tuple[V, MVRegister[Int, Time]]) =>
+            new Tuple(e1.fst.merge(e2.fst), e1.snd.merge(e2.snd)))
+    this.copy(mergedSet)
+  }
+
+  def compare(that: T): Boolean = { //ignore
+    true
+  }
+
+  override def equals(that: T): Boolean = {
+    this == that
+  }
+}
+
+

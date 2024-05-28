@@ -1,7 +1,7 @@
 
 import generatedSysTables.arts.Art
 import antidote.crdts.lemmas.CvRDTProof1
-import antidote.crdts.tables.UWTable
+import antidote.crdts.tables.DWTable
 
 /**
  * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
@@ -17,7 +17,7 @@ import antidote.crdts.tables.UWTable
 class ArtsTable[Time] 
 					( before: (Time, Time) => Boolean,						//function
 					  elements: Map[Art_PKs, Tuple[Art, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[Art_PKs, Art, Time, ArtsTable[Time]]{ 
+					  ) extends DWTable[Art_PKs, Art, Time, ArtsTable[Time]]{
 
 
 	/*

@@ -1,7 +1,7 @@
 
 import generatedSysTables.albs.Alb
 import antidote.crdts.lemmas.CvRDTProof1
-import antidote.crdts.tables.UWTable
+import antidote.crdts.tables.DWTable
 
 /**
  * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
@@ -17,11 +17,11 @@ import antidote.crdts.tables.UWTable
 class AlbsTable[Time] 
 					( before: (Time, Time) => Boolean,						//function
 					  elements: Map[String, Tuple[Alb, MVRegister[Int,Time]]]	//row
-					  ) extends UWTable[String, Alb, Time, AlbsTable[Time]]{ 
+					  ) extends DWTable[String, Alb, Time, AlbsTable[Time]]{ 
 
 
 	/*
-	* Implement Methods DECLARED in UWTable trait
+	* Implement Methods DECLARED in DWTable trait
 	*/
 	def copy(newElements: Map[String, Tuple[Alb, MVRegister[Int, Time]]]) =
 		    new AlbsTable(this.before, newElements)
