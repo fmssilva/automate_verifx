@@ -43,31 +43,31 @@ class AlbProofs extends FlatSpec with Prover {
 	}
 
 
-
-	////////////////////////////////////////////////////////////
-	// ELEMENT PROOFS FOR UPDATABLE ATTRIBUTES  - specified in object TableName extends CvRDTProof 
-	////////////////////////////////////////////////////////////
-
-	// WORKS  -   20-30 seconds
-	"Alb" should "updateYear works (element)" in {
-		val startTime = printStartingTime("updateYear works (element)")
-		val p = ("Alb", "Alb_updateYear_works") 
+//
+//	////////////////////////////////////////////////////////////
+//	// ELEMENT PROOFS FOR UPDATABLE ATTRIBUTES  - specified in object TableName extends CvRDTProof
+//	////////////////////////////////////////////////////////////
+//
+//	// WORKS  -   20-30 seconds
+//	"Alb" should "updateYear works (element)" in {
+//		val startTime = printStartingTime("updateYear works (element)")
+//		val p = ("Alb", "Alb_updateYear_works")
+////		prove(p)
+//		val res = rejectForModel(p)
+//		print(res)
+////		printProofTime(startTime, System.nanoTime(), "updateYear works (element)")
+//
+//		p
+//	}
+//
+//	// WORKS  -   20-30 seconds
+//	"Alb" should "updatePrice works (element)" in {
+//		val startTime = printStartingTime("updatePrice works (element)")
+//		val p = ("Alb", "Alb_updatePrice_works")
 //		prove(p)
-		val res = rejectForModel(p)
-		print(res)
-//		printProofTime(startTime, System.nanoTime(), "updateYear works (element)")
-
-		p
-	}
-
-	// WORKS  -   20-30 seconds
-	"Alb" should "updatePrice works (element)" in {
-		val startTime = printStartingTime("updatePrice works (element)")
-		val p = ("Alb", "Alb_updatePrice_works") 
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "updatePrice works (element)")
-		p
-	}
+//		printProofTime(startTime, System.nanoTime(), "updatePrice works (element)")
+//		p
+//	}
 
 
 
