@@ -13,12 +13,8 @@ import generatedSysTables.arts.Art
 class Alb_FK_System[Time](
 					albsTable: AlbsTable[Time],
 					artsTable: ArtsTable[Time] )
-					extends CvRDT[Alb_FK_System[Time]] {
+					extends CvRDT[Alb_FK_System[Time]]  {
 
-
-  /*
-   * OVERRIDE DEFAULT IMPLEMENTATION OF METHODS IN CvRDT TRAIT
-   */ 
 
 	//REACHABLE - check if this table and the referenced tables are reachable
 	override def reachable(): Boolean =

@@ -5,19 +5,77 @@ import antidote.crdts.tables.DWTable
 import antidote.crdts.tables.DWFlags
 
 
-class AlbsTable[Time] 
+class AlbsTable[Time]
 					( before: (Time, Time) => Boolean,						//function
-					  elements: Map[String, Tuple[Alb, LWWRegister[Int]]]	//row
-					  ) extends DWTable[String, Alb, Time, AlbsTable[Time]]{ 
+					  elements: Map[AlbPK, Tuple[DWFlags, Alb]]	//row
+					  ) extends CvRDT[AlbsTable[Time]] {
 
 
-	/*
-	* Implement Methods DECLARED in DWTable trait
-	*/
-	def copy(newElements: Map[String, Tuple[Alb, LWWRegister[Int]]]) =
+    // HELPER FUNCTIONS FOR FK SYSTEM
+    def getVersion (pk: AlbPK): Int = {
+        elem = this.elements.get(pk)
+        if (elem.fst.flag == 0) // DELETED
+            0
+        else
+            elem.fst.version
+    }
+
+
+
+    override def reachable(): Boolean = {
+        this.elements.values().forall(
+            (elem: Tuple[DWFlags, Alb]) =>
+                elem.fst.version >= 1 &&
+                elem.fst.flag != 0 &&  // NOT DELETED
+                elem.snd.reachable()
+        )
+    }
+
+    def merge (that: AlbsTable[Time]) = {
+        val mergedElements = this.elements.combine(that.elements, (elem1: Tuple[DWFlags, Alb], elem2: Tuple[DWFlags, Alb]) => {
+            if (elem1.fst.version > elem2.fst.version)
+                elem1
+            else if (elem2.fst.version > elem1.fst.version)
+                elem2
+            else if (elem1.fst.flag == 0 && elem2.fst.flag == 1) // this is DELETED
+                elem1
+            else if (elem2.fst.flag == 0 && elem1.fst.flag == 1) // that is DELETED
+                elem2
+            else
+                elem1
+        })
+        this.copy(mergedElements)
+    }
+
+    override def compatible(that: AlbsTable[Time]): Boolean = {
+        this.before == that.before &&
+        this.elements.zip(that.elements).values().forall(
+            (elem: Tuple[Tuple[DWFlags, Alb], Tuple[DWFlags, Alb]]) =>
+                elem.fst.fst.compatible(elem.snd.fst) && // flags
+                elem.fst.snd.compatible(elem.snd.snd)   // Alb
+        )
+    }
+
+    def compare(that: AlbsTable[Time]): Boolean = {
+        this.elements.zip(that.elements).values().forall(
+                (elem: Tuple[Tuple[DWFlags, Alb], Tuple[DWFlags, Alb]]) =>
+                    elem.fst.fst.compare(elem.snd.fst) && // flags
+                    elem.fst.snd.compare(elem.snd.snd)    // Alb
+            )
+    }
+
+    override def equals(that: AlbsTable[Time]): Boolean = {
+        this.before == that.before &&
+        this.elements.zip(that.elements).values().forall(
+            (elem: Tuple[Tuple[DWFlags, Alb], Tuple[DWFlags, Alb]]) =>
+                elem.fst.fst == elem.snd.fst && // flags
+                elem.fst.snd == elem.snd.snd    // Alb
+        )
+    }
+
+	def copy(newElements: Map[AlbPK, Tuple[DWFlags, Alb]]) =
 		    new AlbsTable(this.before, newElements)
 
-	def maintainState() = this
 
 }
 

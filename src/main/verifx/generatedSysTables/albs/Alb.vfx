@@ -6,21 +6,9 @@ import antidote.crdts.LamportClock
 import generatedSysTables.arts.Art
 
 
+class AlbPK(title: String) { }
 
-/**
- * Class representing the element(row):::  ALB
- *
- * given by the Antidote SQL command:
- *
- *		CREATE DELETE-WINS TABLE ALB (
- *		TITLE VARCHAR PRIMARY KEY ,
- *		ART_NAME VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( NAME ) ,
- *		ART_COUNTRY VARCHAR FOREIGN KEY UPDATE-WINS REFERENCES ART ( COUNTRY ) ,
- *		YEAR LWW INT CHECK ( YEAR >= 1900 AND YEAR <= 2022 ) ,
- *		PRICE LWW INT CHECK ( PRICE >= 0 AND PRICE <= 10000 ) ,
- *		)
- */
-class Alb(  title: String,  // PK
+class Alb(  albPK: AlbPK,   // PK
             artFK: ArtPK,   // FK
             year: LWWRegister[Int], price: LWWRegister[Int] //other atrributes
             ) extends CvRDT[Alb] {
@@ -37,7 +25,7 @@ class Alb(  title: String,  // PK
 	// only concurrently updatable attributes are merged as a CRDT
 	// Returns the LUB of `this` and `that`
 	def merge(that: Alb): Alb =
-	        new Alb(this.title,
+	        new Alb(this.albPK,
 	                this.artFK,                                                             // keep FK
                     this.year.merge(that.year), this.price.merge(that.price))               // merge other attributes
 
@@ -45,7 +33,7 @@ class Alb(  title: String,  // PK
 	// return True if 'this is compatible that'
 	// have same attributes of the same types, well formed...
     override def compatible(that: Alb): Boolean =
-		this.title == that.title &&
+		this.albPK == that.albPK &&
 		this.artFK == that.artFK &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
@@ -60,7 +48,7 @@ class Alb(  title: String,  // PK
         this.price.compare(that.price)
 
     override def equals (that: Alb): Boolean =
-        this.title == that.title &&
+        this.albPK == that.albPK &&
         this.artFK == that.artFK &&
         this.year == that.year &&
         this.price == that.price

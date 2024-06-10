@@ -141,6 +141,8 @@ class AlbProofs extends FlatSpec with Prover {
 		val startTime = printStartingTime("compatible commutes (table)")
 		val p = ("AlbsTable", "compatibleCommutes") 
 		prove(p)
+//		val res = rejectForModel(p)
+//		print(res)
 		printProofTime(startTime, System.nanoTime(), "compatible commutes (table)")
 		p
 	}
