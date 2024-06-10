@@ -2,18 +2,9 @@
 import generatedSysTables.albs.Alb
 import antidote.crdts.lemmas.CvRDTProof1
 import antidote.crdts.tables.DWTable
+import antidote.crdts.tables.DWFlags
 
-/**
- * CLASS REPRESENTING A TABLE OF ROWS OF ELEMENTS OF TYPE:
- *		- ALB -
- *
- * @param before - function to compare two Time values
- * @param elements - Map of elements/rows in the table,
- *                   where Key is the PK of the Table
- *                   and Value is a Tuple with the Element itself,
- *                          and a MVRegister to store - the flags for Insert/Update, Touched/Referenced, Delete, as Int values, 
- *                                                    - and a Time
- */
+
 class AlbsTable[Time] 
 					( before: (Time, Time) => Boolean,						//function
 					  elements: Map[String, Tuple[Alb, LWWRegister[Int]]]	//row
@@ -30,4 +21,4 @@ class AlbsTable[Time]
 
 }
 
-object AlbsTable extends CvRDTProof1[AlbsTable]
+object AlbsTable extends CvRDTProof1[AlbsTable] {}

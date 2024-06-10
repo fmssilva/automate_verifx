@@ -18,7 +18,7 @@ trait UWTable[  PK  , V <: CvRDT[V], Time, T <: UWTable[PK, V, Time, T]] extends
 
   def maintainState(): T
 
-  /*
+
   def add(id: String, v: V, t: Time): T = {
     if(this.isVisible(id)) //the table already contains an object with primary key id
       this.maintainState()

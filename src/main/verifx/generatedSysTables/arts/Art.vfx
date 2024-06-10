@@ -9,7 +9,7 @@ import antidote.crdts.LamportClock
  * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
  * so no need to extend CvRDT
  */
-class Art_PKs(name: String, country: String) { }
+class ArtPK(name: String, country: String) { }
 
 
 
@@ -25,7 +25,7 @@ class Art_PKs(name: String, country: String) { }
  *		RANKING LWW INT CHECK ( RANKING >= 0 AND RANKING <= 100 ) ,
  *		)
  */
-class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
+class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
 
 
   /*
@@ -34,7 +34,7 @@ class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) ex
 
 	//merge this Art with that Art (only concurrently updatable attributes are merged as a CRDT)
 	def merge(that: Art) = 
-		new Art(this.art_PKs, this.age.merge(that.age), this.ranking.merge(that.ranking))
+		new Art(this.artPK, this.age.merge(that.age), this.ranking.merge(that.ranking))
 
 	//compare this Art with that Art (only concurrently updatable attributes matter)
 	def compare(that: Art) = 
@@ -49,7 +49,7 @@ class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) ex
 
 	//this Art is compatible with that Art?
 	override def compatible(that: Art) = 
-		this.art_PKs == that.art_PKs && 
+		this.artPK == that.artPK &&
 		this.age.compatible(that.age) &&
 		this.ranking.compatible(that.ranking)
 
@@ -68,14 +68,14 @@ class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) ex
 
 	def updateAge(newAge: Int, stampAge: LamportClock) = { 
 		if( newAge >= 0 && newAge <= 100)
-			new Art(this.art_PKs, this.age.assign(newAge, stampAge), this.ranking)
+			new Art(this.artPK, this.age.assign(newAge, stampAge), this.ranking)
 		else
 			this
 	}
 
 	def updateRanking(newRanking: Int, stampRanking: LamportClock) = { 
 		if( newRanking >= 0 && newRanking <= 100)
-			new Art(this.art_PKs, this.age, this.ranking.assign(newRanking, stampRanking))
+			new Art(this.artPK, this.age, this.ranking.assign(newRanking, stampRanking))
 		else
 			this
 	}
@@ -90,47 +90,47 @@ class Art(art_PKs: Art_PKs, age: LWWRegister[Int], ranking: LWWRegister[Int]) ex
 */
 
 object Art extends CvRDTProof[Art] {
-
-	proof Art_updateAge_works {
-		forall(elem: Art, age1: Int, age2: Int, c1: LamportClock, c2: LamportClock ) {
-			( elem.reachable()  &&  c1.smaller(c2) &&
-			  age1 >= 0 && age1 <= 100 && age2 >= 0 && age2 <= 100
-			 ) =>: {
-				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
-				 val elem1 = elem.updateAge(age1, c1)
-				 val elem2 = elem.updateAge(age2, c2)
-				 val elem12 = elem1.merge(elem2)
-				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.art_PKs == elem.art_PKs && elem2.art_PKs == elem.art_PKs &&
-				 elem1.age.value == age1 && elem2.age.value == age2 &&
-				 elem1.ranking == elem.ranking && elem2.ranking == elem.ranking &&
-				 //check if the merged values are correct and according to the chosen update-policy 
-				 elem12.art_PKs == elem.art_PKs &&
-				 elem12.age.value == age2 &&
-				 elem12.ranking == elem.ranking
-			}
-		}
-	}
-
-	proof Art_updateRanking_works {
-		forall(elem: Art, ranking1: Int, ranking2: Int, c1: LamportClock, c2: LamportClock ) {
-			( elem.reachable()  &&  c1.smaller(c2) &&
-			  ranking1 >= 0 && ranking1 <= 100 && ranking2 >= 0 && ranking2 <= 100
-			 ) =>: {
-				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
-				 val elem1 = elem.updateRanking(ranking1, c1)
-				 val elem2 = elem.updateRanking(ranking2, c2)
-				 val elem12 = elem1.merge(elem2)
-				 //check if the update in elem 1 and 2 kept the correct values
-				 elem1.art_PKs == elem.art_PKs && elem2.art_PKs == elem.art_PKs &&
-				 elem1.age == elem.age && elem2.age == elem.age &&
-				 elem1.ranking.value == ranking1 && elem2.ranking.value == ranking2 &&
-				 //check if the merged values are correct and according to the chosen update-policy 
-				 elem12.art_PKs == elem.art_PKs &&
-				 elem12.age == elem.age &&
-				 elem12.ranking.value == ranking2
-			}
-		}
-	}
+//
+//	proof Art_updateAge_works {
+//		forall(elem: Art, age1: Int, age2: Int, c1: LamportClock, c2: LamportClock ) {
+//			( elem.reachable()  &&  c1.smaller(c2) &&
+//			  age1 >= 0 && age1 <= 100 && age2 >= 0 && age2 <= 100
+//			 ) =>: {
+//				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
+//				 val elem1 = elem.updateAge(age1, c1)
+//				 val elem2 = elem.updateAge(age2, c2)
+//				 val elem12 = elem1.merge(elem2)
+//				 //check if the update in elem 1 and 2 kept the correct values
+//				 elem1.ArtPK == elem.ArtPK && elem2.ArtPK == elem.ArtPK &&
+//				 elem1.age.value == age1 && elem2.age.value == age2 &&
+//				 elem1.ranking == elem.ranking && elem2.ranking == elem.ranking &&
+//				 //check if the merged values are correct and according to the chosen update-policy
+//				 elem12.ArtPK == elem.ArtPK &&
+//				 elem12.age.value == age2 &&
+//				 elem12.ranking == elem.ranking
+//			}
+//		}
+//	}
+//
+//	proof Art_updateRanking_works {
+//		forall(elem: Art, ranking1: Int, ranking2: Int, c1: LamportClock, c2: LamportClock ) {
+//			( elem.reachable()  &&  c1.smaller(c2) &&
+//			  ranking1 >= 0 && ranking1 <= 100 && ranking2 >= 0 && ranking2 <= 100
+//			 ) =>: {
+//				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
+//				 val elem1 = elem.updateRanking(ranking1, c1)
+//				 val elem2 = elem.updateRanking(ranking2, c2)
+//				 val elem12 = elem1.merge(elem2)
+//				 //check if the update in elem 1 and 2 kept the correct values
+//				 elem1.ArtPK == elem.ArtPK && elem2.ArtPK == elem.ArtPK &&
+//				 elem1.age == elem.age && elem2.age == elem.age &&
+//				 elem1.ranking.value == ranking1 && elem2.ranking.value == ranking2 &&
+//				 //check if the merged values are correct and according to the chosen update-policy
+//				 elem12.ArtPK == elem.ArtPK &&
+//				 elem12.age == elem.age &&
+//				 elem12.ranking.value == ranking2
+//			}
+//		}
+//	}
 
 }

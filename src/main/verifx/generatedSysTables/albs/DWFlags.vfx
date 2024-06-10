@@ -1,0 +1,50 @@
+import antidote.crdts.lemmas.CvRDT
+import antidote.crdts.lemmas.CvRDTProof
+import antidote.crdts.LamportClock
+
+
+
+// DELETE = 0; VISIBLE = 1
+class DWFlags(version: Int, flag: Int) extends CvRDT[DWFlags] {
+                                    // , stamp: LamportClock
+
+	// return True if all the CHECK conditions are met
+	override def reachable(): Boolean = {
+		this.version >= 1 &&
+		(this.flag == 0 || this.flag == 1)
+	}
+
+	// merge this Alb with that Alb
+	// only concurrently updatable attributes are merged as a CRDT
+	// Returns the LUB of `this` and `that`
+	def merge(that: DWFlags): DWFlags = {
+	    if (this.version > that.version)
+            this
+        else if (that.version > this.version)
+            that
+        else if (this.flag == 0 && that.flag == 1) // this is DELETED
+            this
+        else if (that.flag == 0 && this.flag == 1) // that is DELETED
+            that
+//        else if (this.stamp.smallerOrEqual(that.stamp))
+//            this
+        else
+            this
+	}
+
+    // compare this Alb with that Alb
+    // only concurrently updatable attributes matter
+    // return True if `this <= that`
+    def compare(that: DWFlags): Boolean =
+        this.version <= that.version &&
+        this.flag <= that.flag
+//        this.stamp.smallerOrEqual(that.stamp)
+
+    override def equals (that: DWFlags): Boolean =
+        this.version == that.version &&
+        this.flag == that.flag
+
+}
+
+
+object DWFlags extends CvRDTProof[DWFlags] { }

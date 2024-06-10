@@ -1,12 +1,4 @@
 import antidote.crdts.lemmas.CvRDT
-import antidote.crdts.registers.MVRegister
-
-//0: I, 1: T, 2: D
-//object Flags {
-//  enum Flag {
-//    I() | T() | D()
-//  }
-//}
 
 trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends CvRDT {
 

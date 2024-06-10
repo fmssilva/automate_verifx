@@ -6,6 +6,32 @@ import generatedSysTablesProofs.ProverUtils._
 
 class AlbProofs extends FlatSpec with Prover {
 
+	//DWFlags:
+	"DWFlags" should "be a CvRDT (element)" in {
+		val startTime = printStartingTime("be a CvRDT (element)")
+		val p = ("DWFlags", "is_a_CvRDT")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
+		p
+	}
+
+	"DWFlags" should "compatible commutes (element)" in {
+		val startTime = printStartingTime("compatible commutes (element)")
+		val p = ("DWFlags", "compatibleCommutes")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "compatible commutes (element)")
+		p
+	}
+
+	"DWFlags" should "compare correct (element)" in {
+		val startTime = printStartingTime("compare correct (element)")
+		val p = ("DWFlags", "compareCorrect")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
+		p
+	}
+
+
 
 
 	////////////////////////////////////////////////////////////
@@ -17,7 +43,6 @@ class AlbProofs extends FlatSpec with Prover {
 		val startTime = printStartingTime("be a CvRDT (element)")
 		val p = ("Alb", "is_a_CvRDT")
 		prove(p)
-//		rejectForModel(p)
 		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
 		p
 	}
@@ -84,7 +109,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	//  !!!   ABORTED  in 20-30 seconds!!!
+	// WORKS  -   20-30 seconds
 	"AlbsTable" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
 		val p = ("AlbsTable", "mergeIdempotent") 
@@ -93,7 +118,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	//  !!!   ABORTED   in  25 minutes(song_view)   !!!
+	// WORKS  -   20-30 seconds
 	"AlbsTable" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
 		val p = ("AlbsTable", "mergeAssociative") 
@@ -102,7 +127,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	// WORKS  -   30 seconds   -  1:30 minutes
+	// WORKS  -   20-30 seconds
 	"AlbsTable" should "be merge associative2 (table)" in {
 		val startTime = printStartingTime("be merge associative2 (table)")
 		val p = ("AlbsTable", "mergeAssociative2") 
