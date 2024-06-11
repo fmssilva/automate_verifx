@@ -6,77 +6,23 @@ import antidote.crdts.tables.DWFlags
 
 
 class ArtsTable[Time] 
-					( before: (Time, Time) => Boolean,						//function
-					  elements: Map[ArtPK, Tuple[DWFlags, Art]]	//row
-					  ) extends CvRDT[ArtsTable[Time]] {
+					( before: (Time, Time) => Boolean,				//function
+					  elements: Map[ArtPK, Tuple[DWFlags, Art]]	    //row
+					  ) extends DWTable[ArtPK, Art, Time, ArtsTable[Time]] {
 
-
-    // HELPER FUNCTIONS FOR FK SYSTEM
-    def getVersion (pk: ArtPK): Int = {
-        val elem = this.elements.get(pk)
-        if (elem.fst.flag == 0) // DELETED
-            0
-        else
-            elem.fst.version
-    }
-
-
-    override def reachable(): Boolean = {
-        this.elements.values().forall(
-            (elem: Tuple[DWFlags, Art]) =>
-                elem.fst.version >= 1 &&
-                elem.fst.flag != 0 &&  // NOT DELETED
-                elem.snd.reachable()
-        )
-    }
-
-    def merge (that: ArtsTable[Time]) = {
-        val mergedElements = this.elements.combine(
-            that.elements,
-            (elem1: Tuple[DWFlags, Art], elem2: Tuple[DWFlags, Art]) => {
-                if (elem1.fst.version > elem2.fst.version)
-                    elem1
-                else if (elem2.fst.version > elem1.fst.version)
-                    elem2
-                else if (elem1.fst.flag == 0 && elem2.fst.flag == 1) // this is DELETED
-                    elem1
-                else if (elem2.fst.flag == 0 && elem1.fst.flag == 1) // that is DELETED
-                    elem2
-                else
-                    elem1
-            })
-        this.copy(mergedElements)
-    }
-
-    override def compatible(that: ArtsTable[Time]): Boolean = {
-        this.before == that.before &&
-        this.elements.zip(that.elements).values().forall(
-            (elem: Tuple[Tuple[DWFlags, Art], Tuple[DWFlags, Art]]) =>
-                elem.fst.fst.compatible(elem.snd.fst) && // flags
-                elem.fst.snd.compatible(elem.snd.snd)   // Art
-        )
-    }
-
-    def compare(that: ArtsTable[Time]): Boolean = {
-        this.elements.zip(that.elements).values().forall(
-                (elem: Tuple[Tuple[DWFlags, Art], Tuple[DWFlags, Art]]) =>
-                    elem.fst.fst.compare(elem.snd.fst) && // flags
-                    elem.fst.snd.compare(elem.snd.snd)    // Art
-            )
-    }
-
-    override def equals(that: ArtsTable[Time]): Boolean = {
-        this.before == that.before &&
-        this.elements.zip(that.elements).values().forall(
-            (elem: Tuple[Tuple[DWFlags, Art], Tuple[DWFlags, Art]]) =>
-                elem.fst.fst == elem.snd.fst && // flags
-                elem.fst.snd == elem.snd.snd    // Art
-        )
-    }
-
+//
+//    // HELPER FUNCTIONS FOR FK SYSTEM
+//    def getVersion (pk: ArtPK): Int = {
+//        val elem = this.elements.get(pk)
+//        if (elem.fst.flag == 0) // DELETED
+//            0
+//        else
+//            elem.fst.version
+//    }
+//
 
 	/*
-	* Implement Methods DECLARED in UWTable trait
+	* Implement Methods DECLARED in DWTable trait
 	*/
 	def copy(newElements: Map[ArtPK, Tuple[DWFlags, Art]]) =
 		    new ArtsTable(this.before, newElements)

@@ -10,7 +10,6 @@ import antidote.crdts.lemmas.CvRDT
  */
 trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
 
-
   proof is_a_CvRDT[S] {
     forall (x: T[S], y: T[S], z: T[S]) {
       ( x.reachable() && y.reachable() && z.reachable() &&
@@ -26,14 +25,20 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
     }
   }
 
-  proof mergeCommutative[S] {
+
+  proof compatibleCommutes[S] {
     forall (x: T[S], y: T[S]) {
-      (x.reachable() && y.reachable() && x.compatible(y)
-      ) =>: {
-        val x_merge_y = x.merge(y)
-        x_merge_y.equals(y.merge(x))
-        x_merge_y.reachable()
-      }
+      ( x.reachable() && y.reachable()
+      ) =>: ( x.compatible(y) == y.compatible(x) )
+    }
+  }
+
+  // TODO: mudar o nome deste para ser equalsCorrect
+  // e assim verificar tudo para o caso de não ser BD sempre crescente??
+  proof compareCorrect[S] {
+    forall (x: T[S], y: T[S]) {
+      ( x.reachable() && y.reachable() && x.compatible(y)
+      ) =>: ( x.equals(y) == (x == y) )
     }
   }
 
@@ -44,20 +49,34 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
     }
   }
 
+
+
+  proof mergeCommutative[S] {
+    forall (x: T[S], y: T[S]) {
+      (x.reachable() && y.reachable() && x.compatible(y)
+      ) =>: {
+        x.merge(y).equals(y.merge(x))
+        x.merge(y).reachable()
+      }
+    }
+  }
+
+
+
   proof mergeAssociative[S] {
     forall (x: T[S], y: T[S], z: T[S]) {
       ( x.reachable() && y.reachable() && z.reachable() &&
         x.compatible(y) && x.compatible(z) && y.compatible(z)
       ) =>: {
-        val xyz = x.merge(y).merge(z)
-        xyz.equals(x.merge(y.merge(z))) // 26 seconds
-        // TODO: estas de baixo estavam em comentário
-        xyz.reachable()                 // 32 seconds
-        x.merge(y).compatible(z)        // 25 seconds
-        x.compatible(y.merge(z))        // 26 seconds
+        x.merge(y).merge(z).equals(x.merge(y.merge(z)))
+        // These next verifications are done in mergeAssociative2 and 3
+        // x.merge(y).merge(z).reachable()
+        // x.merge(y).compatible(z)
+        // x.compatible(y.merge(z))
       }
     }
   }
+
 
   proof mergeAssociative2[S] {
     forall (x: T[S], y: T[S], z: T[S]) {
@@ -65,23 +84,22 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
         x.compatible(y) && x.compatible(z) && y.compatible(z)
        ) =>: {
         x.merge(y).merge(z).reachable()
-        // TODO: also show that x.merge(y).compatible(z) && x.compatible(y.merge(z)) ??
       }
     }
   }
 
-  proof compatibleCommutes[S] {
-    forall (x: T[S], y: T[S]) {
-      ( x.reachable() && y.reachable()
-      ) =>: ( x.compatible(y) == y.compatible(x) )
+
+  proof mergeAssociative3[S] {
+    forall (x: T[S], y: T[S], z: T[S]) {
+      ( x.reachable() && y.reachable() && z.reachable() &&
+        x.compatible(y) && x.compatible(z) && y.compatible(z)
+       ) =>: {
+        x.merge(y).compatible(z)
+        x.compatible(y.merge(z))
+      }
     }
   }
 
-  proof compareCorrect[S] {
-    forall (x: T[S], y: T[S]) {
-      ( x.reachable() && y.reachable() && x.compatible(y)
-      ) =>: (x.equals(y) == (x == y))
-    }
-  }
+
 
 }

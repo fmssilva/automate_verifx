@@ -18,17 +18,15 @@ class DWFlags(version: Int, flag: Int) extends CvRDT[DWFlags] {
 	// only concurrently updatable attributes are merged as a CRDT
 	// Returns the LUB of `this` and `that`
 	def merge(that: DWFlags): DWFlags = {
-	    if (this.version > that.version)
+        if (this.version > that.version)
             this
         else if (that.version > this.version)
             that
-        else if (this.flag == 0 && that.flag == 1) // this is DELETED
+        else if (this.flag == 0 && that.flag != 0) // this is DELETED
             this
-        else if (that.flag == 0 && this.flag == 1) // that is DELETED
+        else if (that.flag == 0 && this.flag != 0) // that is DELETED
             that
-//        else if (this.stamp.smallerOrEqual(that.stamp))
-//            this
-        else
+        else // flags are the same so use this
             this
 	}
 

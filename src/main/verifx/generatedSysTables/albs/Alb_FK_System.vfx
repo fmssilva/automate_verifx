@@ -19,16 +19,8 @@ class Alb_FK_System[Time](
 	//REACHABLE - check if this table and the referenced tables are reachable
 	override def reachable(): Boolean =
         this.albsTable.reachable() &&
-        this.albsTable.elements.values().forall(
-            (elem: Tuple[DWFlags, Alb]) => {
-                val art_version = this.artsTable.getVersion(elem.snd.artFK)
-                if (elem.fst.flag != art_version)
-                    false
-                    //TODO: amortizar caminho
-                else
-                    true
-            }
-        )
+        this.artsTable.reachable()
+
 
     //TODO: getVersion do Alb_FK_System (só está feito o do ArtsTable)
 
@@ -60,6 +52,24 @@ class Alb_FK_System[Time](
         this.albsTable.equals(that.albsTable) &&
         this.artsTable.equals(that.artsTable)
 
+
+
+    def refIntegrityHolds(pk : AlbPK): Boolean = {
+        //@Pre: this FK_System is reachable()
+        this.albsTable.elements.values().forall(
+            (elem: Tuple[DWFlags, Alb]) => {
+                val art_version = this.artsTable.getVersion(elem.snd.artFK)
+                if (elem.fst.version == art_version)
+                    true
+                else
+                    false
+                    //TODO: amortizar caminho ajudará??
+            }
+        )
+
+    }
+
+
 }
 
 
@@ -73,9 +83,10 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
 	proof genericReferentialIntegrity[Time] {
         forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: AlbPK) {
             ( s1.compatible(s2) &&
-              s1.reachable() && s2.reachable()
+              s1.reachable() && s2.reachable() &&
+              s1.refIntegrityHolds(pk) && s2.refIntegrityHolds(pk)
               ) =>: {
-                s1.merge(s2).reachable()
+                s1.merge(s2).refIntegrityHolds(pk)
               }
         }
     }
