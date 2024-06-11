@@ -18,8 +18,28 @@ class Alb_FK_System[Time](
 
 	//REACHABLE - check if this table and the referenced tables are reachable
 	override def reachable(): Boolean =
-				this.albsTable.reachable() && 
-				this.artsTable.reachable()
+        this.albsTable.reachable() &&
+        this.albsTable.elements.values().forall(
+            (elem: Tuple[DWFlags, Alb]) => {
+                val art_version = this.artsTable.getVersion(elem.snd.artFK)
+                if (elem.fst.flag != art_version)
+                    false
+                    //TODO: amortizar caminho
+                else
+                    true
+            }
+        )
+
+    //TODO: getVersion do Alb_FK_System (só está feito o do ArtsTable)
+
+
+    //MERGE this Alb_FK_System with that Alb_FK_System
+    def merge(that: Alb_FK_System[Time]) =
+        new Alb_FK_System(
+                this.albsTable.merge(that.albsTable),
+                this.artsTable.merge(that.artsTable) )
+
+
 
 
 	//COMPATIBLE - check if this Alb_FK_System is compatible with that albsTable
@@ -28,41 +48,17 @@ class Alb_FK_System[Time](
 				this.artsTable.compatible(that.artsTable)
 
 
+	//COMPARE this Alb_FK_System with that Alb_FK_System
+	def compare(that: Alb_FK_System[Time]) =
+        this.albsTable.compare(that.albsTable) &&
+        this.artsTable.compare(that.artsTable)
+
+
+
 	//EQUALS - check if this Alb_FK_System is equal to that Alb_FK_System
 	override def equals(that: Alb_FK_System[Time]) =
-				this == that
-
-
-  /*
-   * IMPLEMENT DECLARED METHODS IN CvRDT TRAIT
-   */
-
-	//MERGE this Alb_FK_System with that Alb_FK_System
-	def merge(that: Alb_FK_System[Time]) =
-		new Alb_FK_System(
-				this.albsTable.merge(that.albsTable), 
-				this.artsTable.merge(that.artsTable) )
-
-	//COMPARE this Alb_FK_System with that Alb_FK_System
-	//ignore
-	def compare(that: Alb_FK_System[Time]) = 
-				true
-
-
-
-  /*
-   * EXTRA METHODS FOR PROOFS
-   */
-
-	//REFERENTIAL INTEGRITY
-	//Checks if for every elem of AlbsTable, there is the corresponding element in the referenced tables
-	def refIntegrityHolds(pk: String) = {
-		(this.albsTable.isVisible(pk) 
-		 ) =>: {
-				val alb = this.albsTable.get(pk).fst
-				this.artsTable.isVisible( new Art_PKs(alb.art_name, alb.art_country ))
-				}
-	}
+        this.albsTable.equals(that.albsTable) &&
+        this.artsTable.equals(that.artsTable)
 
 }
 
@@ -75,14 +71,14 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
 
 	//REFERENTIAL INTEGRITY
 	proof genericReferentialIntegrity[Time] {
-		forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: String) {
-			( s1.reachable() && s2.reachable() && 
-			  s1.compatible(s2) &&
-			  s1.refIntegrityHolds(pk) && s2.refIntegrityHolds(pk) 
-			) =>: {
-				s1.merge(s2).refIntegrityHolds(pk)
-			}
-		}
-	}
+        forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: AlbPK) {
+            ( s1.compatible(s2) &&
+              s1.reachable() && s2.reachable()
+              ) =>: {
+                s1.merge(s2).reachable()
+              }
+        }
+    }
+
 
 }

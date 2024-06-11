@@ -9,7 +9,12 @@ import antidote.crdts.LamportClock
  * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
  * so no need to extend CvRDT
  */
-class ArtPK(name: String, country: String) { }
+class ArtPK(name: String, country: String) {
+
+    def equals(that: ArtPK): Boolean =
+        this.name == that.name &&
+        this.country == that.country
+}
 
 
 
@@ -41,6 +46,12 @@ class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extend
 		this.age.compare(that.age) &&
 		this.ranking.compare(that.ranking)
 
+    override def equals (that: Art): Boolean =
+        this.artPK.equals(that.artPK) &&
+        this.age == that.age &&
+        this.ranking == that.ranking
+
+
 
 
   /*
@@ -59,78 +70,8 @@ class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extend
 		 this.ranking.value >= 0 && this.ranking.value <= 100
 	}
 
-
-
-  /*
-   * IMPLEMENT METHODS FOR CONCURRENTLY UPDATABLE ATTRIBUTES,
-   * to be used by the prover, useful in CmRDT - Operations
-   */
-
-	def updateAge(newAge: Int, stampAge: LamportClock) = { 
-		if( newAge >= 0 && newAge <= 100)
-			new Art(this.artPK, this.age.assign(newAge, stampAge), this.ranking)
-		else
-			this
-	}
-
-	def updateRanking(newRanking: Int, stampRanking: LamportClock) = { 
-		if( newRanking >= 0 && newRanking <= 100)
-			new Art(this.artPK, this.age, this.ranking.assign(newRanking, stampRanking))
-		else
-			this
-	}
-
 }
 
 
 
-
-/*
-* Object to implement the proof functions for the updatable attributes
-*/
-
-object Art extends CvRDTProof[Art] {
-//
-//	proof Art_updateAge_works {
-//		forall(elem: Art, age1: Int, age2: Int, c1: LamportClock, c2: LamportClock ) {
-//			( elem.reachable()  &&  c1.smaller(c2) &&
-//			  age1 >= 0 && age1 <= 100 && age2 >= 0 && age2 <= 100
-//			 ) =>: {
-//				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
-//				 val elem1 = elem.updateAge(age1, c1)
-//				 val elem2 = elem.updateAge(age2, c2)
-//				 val elem12 = elem1.merge(elem2)
-//				 //check if the update in elem 1 and 2 kept the correct values
-//				 elem1.ArtPK == elem.ArtPK && elem2.ArtPK == elem.ArtPK &&
-//				 elem1.age.value == age1 && elem2.age.value == age2 &&
-//				 elem1.ranking == elem.ranking && elem2.ranking == elem.ranking &&
-//				 //check if the merged values are correct and according to the chosen update-policy
-//				 elem12.ArtPK == elem.ArtPK &&
-//				 elem12.age.value == age2 &&
-//				 elem12.ranking == elem.ranking
-//			}
-//		}
-//	}
-//
-//	proof Art_updateRanking_works {
-//		forall(elem: Art, ranking1: Int, ranking2: Int, c1: LamportClock, c2: LamportClock ) {
-//			( elem.reachable()  &&  c1.smaller(c2) &&
-//			  ranking1 >= 0 && ranking1 <= 100 && ranking2 >= 0 && ranking2 <= 100
-//			 ) =>: {
-//				 //simulate the update of the element in 2 replicas, creating elem 1 and 2, and then merging them in elem12
-//				 val elem1 = elem.updateRanking(ranking1, c1)
-//				 val elem2 = elem.updateRanking(ranking2, c2)
-//				 val elem12 = elem1.merge(elem2)
-//				 //check if the update in elem 1 and 2 kept the correct values
-//				 elem1.ArtPK == elem.ArtPK && elem2.ArtPK == elem.ArtPK &&
-//				 elem1.age == elem.age && elem2.age == elem.age &&
-//				 elem1.ranking.value == ranking1 && elem2.ranking.value == ranking2 &&
-//				 //check if the merged values are correct and according to the chosen update-policy
-//				 elem12.ArtPK == elem.ArtPK &&
-//				 elem12.age == elem.age &&
-//				 elem12.ranking.value == ranking2
-//			}
-//		}
-//	}
-
-}
+object Art extends CvRDTProof[Art] { }

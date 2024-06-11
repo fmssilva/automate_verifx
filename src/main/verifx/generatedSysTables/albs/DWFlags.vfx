@@ -36,8 +36,9 @@ class DWFlags(version: Int, flag: Int) extends CvRDT[DWFlags] {
     // only concurrently updatable attributes matter
     // return True if `this <= that`
     def compare(that: DWFlags): Boolean =
-        this.version <= that.version &&
-        this.flag <= that.flag
+        false
+//        this.version <= that.version &&
+//        this.flag <= that.flag
 //        this.stamp.smallerOrEqual(that.stamp)
 
     override def equals (that: DWFlags): Boolean =

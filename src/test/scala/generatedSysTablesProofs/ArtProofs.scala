@@ -7,7 +7,10 @@ import generatedSysTablesProofs.ProverUtils._
 class ArtProofs extends FlatSpec with Prover {
 
 
-	// ELEMENT
+	////////////////////////////////////////////////////////////
+	// ELEMENT PROOFS  - specified in CvRDTProof trait 
+	////////////////////////////////////////////////////////////
+
 	// WORKS  -  20-30 seconds
 	"Art" should "be a CvRDT (element)" in {
 		val startTime = printStartingTime("be a CvRDT (element)")
@@ -16,31 +19,6 @@ class ArtProofs extends FlatSpec with Prover {
 		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
 		p
 	}
-
-
-	//TABLE
-	// WORKS  -   20-30 seconds
-	"ArtsTable" should "be merge commutative (table)" in {
-		val startTime = printStartingTime("be merge commutative (table)")
-		val p = ("ArtsTable", "mergeCommutative")
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
-		p
-	}
-
-
-	////////////////////////////////////////////////////////////
-	// ELEMENT PROOFS  - specified in CvRDTProof trait 
-	////////////////////////////////////////////////////////////
-
-//	// WORKS  -  20-30 seconds
-//	"Art" should "be a CvRDT (element)" in {
-//		val startTime = printStartingTime("be a CvRDT (element)")
-//		val p = ("Art", "is_a_CvRDT")
-//		prove(p)
-//		printProofTime(startTime, System.nanoTime(), "be a CvRDT (element)")
-//		p
-//	}
 
 	// WORKS  -  20-40 seconds
 	"Art" should "compatible commutes (element)" in {
@@ -90,16 +68,16 @@ class ArtProofs extends FlatSpec with Prover {
 	// TABLE PROOFS  - specified in CvRDTProof1 trait 
 	////////////////////////////////////////////////////////////
 
-//	// WORKS  -   20-30 seconds
-//	"ArtsTable" should "be merge commutative (table)" in {
-//		val startTime = printStartingTime("be merge commutative (table)")
-//		val p = ("ArtsTable", "mergeCommutative")
-//		prove(p)
-//		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
-//		p
-//	}
+	// WORKS  -   20-30 seconds
+	"ArtsTable" should "be merge commutative (table)" in {
+		val startTime = printStartingTime("be merge commutative (table)")
+		val p = ("ArtsTable", "mergeCommutative")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
+		p
+	}
 
-	//  !!!   ABORTED  in 20-30 seconds!!!
+	// WORKS  -   20-30 seconds
 	"ArtsTable" should "be merge idempotent (table)" in {
 		val startTime = printStartingTime("be merge idempotent (table)")
 		val p = ("ArtsTable", "mergeIdempotent") 
@@ -108,7 +86,7 @@ class ArtProofs extends FlatSpec with Prover {
 		p
 	}
 
-	//  !!!   ABORTED   in  25 minutes(song_view)   !!!
+	// WORKS  -   20-30 seconds
 	"ArtsTable" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
 		val p = ("ArtsTable", "mergeAssociative") 

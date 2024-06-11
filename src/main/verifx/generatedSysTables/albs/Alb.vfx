@@ -6,7 +6,12 @@ import antidote.crdts.LamportClock
 import generatedSysTables.arts.Art
 
 
-class AlbPK(title: String) { }
+class AlbPK(title: String) {
+
+    def equals(that: AlbPK): Boolean =
+        this.title == that.title
+
+}
 
 class Alb(  albPK: AlbPK,   // PK
             artFK: ArtPK,   // FK
@@ -44,8 +49,9 @@ class Alb(  albPK: AlbPK,   // PK
     // only concurrently updatable attributes matter
     // return True if `this <= that`
     def compare(that: Alb): Boolean =
-        this.year.compare(that.year) &&
-        this.price.compare(that.price)
+        false
+//        this.year.compare(that.year) &&
+//        this.price.compare(that.price)
 
     override def equals (that: Alb): Boolean =
         this.albPK == that.albPK &&
