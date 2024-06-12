@@ -81,7 +81,7 @@ class Alb_FK_System[Time](
 object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
 
 	//REFERENTIAL INTEGRITY
-	proof genericReferentialIntegrity[Time] {
+	proof refIntegrityCorrect[Time] {
         forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: AlbPK) {
             ( s1.compatible(s2) &&
               s1.reachable() && s2.reachable() &&

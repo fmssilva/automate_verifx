@@ -248,12 +248,12 @@ class AlbProofs extends FlatSpec with Prover {
 
 	//Referential Integrity - Proof implemented in FK_System Class
 
-	//  ???
-	"Alb_FK_System" should "keep referential integrity generic proof (fk_system)" in {
-		val startTime = printStartingTime("keep referential integrity generic proof (fk_system)")
-		val p = ("Alb_FK_System", "genericReferentialIntegrity") 
+	// WORKS - 1 minute 30 seconds
+	"Alb_FK_System" should "ref Integrity Correct (fk_system)" in {
+		val startTime = printStartingTime("ref Integrity Correct (fk_system)")
+		val p = ("Alb_FK_System", "refIntegrityCorrect")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "keep referential integrity generic proof (fk_system)")
+		printProofTime(startTime, System.nanoTime(), "ref Integrity Correct (fk_system)")
 		p
 	}
 
