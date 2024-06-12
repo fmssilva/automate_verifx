@@ -7,6 +7,7 @@ import generatedSysTablesProofs.ProverUtils._
 class AlbProofs extends FlatSpec with Prover {
 
 	//DWFlags:
+	// WORKS	-  20 seconds
 	"DWFlags" should "be a CvRDT (element)" in {
 		val startTime = printStartingTime("be a CvRDT (element)")
 		val p = ("DWFlags", "is_a_CvRDT")
@@ -15,6 +16,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
+	// WORKS	-  20 seconds
 	"DWFlags" should "compatible commutes (element)" in {
 		val startTime = printStartingTime("compatible commutes (element)")
 		val p = ("DWFlags", "compatibleCommutes")
@@ -23,6 +25,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
+	// WORKS	-  20 seconds
 	"DWFlags" should "compare correct (element)" in {
 		val startTime = printStartingTime("compare correct (element)")
 		val p = ("DWFlags", "compareCorrect")
@@ -99,7 +102,7 @@ class AlbProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 
-	// WORKS  -   45 seconds (with assumptions)
+	// WORKS  -   30-40 seconds (with assumptions)
 	"AlbsTable" should "compatible commutes (table)" in {
 		val startTime = printStartingTime("compatible commutes (table)")
 		val p = ("AlbsTable", "compatibleCommutes")
@@ -108,13 +111,11 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	// ???
+	// WORKS  -   40 seconds
 	"AlbsTable" should "compareCorrect (equals) (fk_system)" in {
 		val startTime = printStartingTime("compareCorrect (equals) (fk_system)")
 		val p = ("AlbsTable", "compareCorrect")
-		//		prove(p)
-		val res = rejectForModel(p)
-		print(res)
+		prove(p)
 		printProofTime(startTime, System.nanoTime(), "compareCorrect (equals) (fk_system)")
 		p
 	}
@@ -138,21 +139,30 @@ class AlbProofs extends FlatSpec with Prover {
 	}
 
 
-	// WORKS  -   20 seconds
-	"AlbsTable" should "be merge associative (table)" in {
-		val startTime = printStartingTime("be merge associative (table)")
+	// WORKS  -   50 seconds
+	"AlbsTable" should "be merge Associative (table)" in {
+		val startTime = printStartingTime("be merge Associative (table)")
 		val p = ("AlbsTable", "mergeAssociative") 
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
+		printProofTime(startTime, System.nanoTime(), "be merge Associative (table)")
 		p
 	}
 
 	// WORKS  -   20 seconds
-	"AlbsTable" should "be merge associative2 (table)" in {
-		val startTime = printStartingTime("be merge associative2 (table)")
-		val p = ("AlbsTable", "mergeAssociative2") 
+	"AlbsTable" should "be merge Reachable (table)" in {
+		val startTime = printStartingTime("be merge Reachable (table)")
+		val p = ("AlbsTable", "mergeReachable")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge associative2 (table)")
+		printProofTime(startTime, System.nanoTime(), "be merge Reachable (table)")
+		p
+	}
+
+	// WORKS  -   50 seconds
+	"AlbsTable" should "be merge Compatible (table)" in {
+		val startTime = printStartingTime("be merge Compatible (table)")
+		val p = ("AlbsTable", "mergeCompatible")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "be merge Compatible (table)")
 		p
 	}
 
@@ -164,7 +174,7 @@ class AlbProofs extends FlatSpec with Prover {
 	// FK REFERENTIAL PROOFS     
 	////////////////////////////////////////////////////////////
 
-	// ???
+	// WORKS - 60 seconds
 	"Alb_FK_System" should "compatible commutes (fk_system)" in {
 		val startTime = printStartingTime("compatible commutes (fk_system)")
 		val p = ("Alb_FK_System", "compatibleCommutes")
@@ -184,7 +194,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	// WORKS - 30 seconds
+	// WORKS - 40 seconds
 	"Alb_FK_System" should "be merge idempotent (fk_system)" in {
 		val startTime = printStartingTime("be merge idempotent (fk_system)")
 		val p = ("Alb_FK_System", "mergeIdempotent")
@@ -193,7 +203,7 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	// WORKS - 30 seconds
+	// WORKS - 40 seconds
 	"Alb_FK_System" should "be merge commutative (fk_system)" in {
 		val startTime = printStartingTime("be merge commutative (fk_system)")
 		val p = ("Alb_FK_System", "mergeCommutative")
@@ -214,20 +224,20 @@ class AlbProofs extends FlatSpec with Prover {
 
 
 	// WORKS - 30 seconds
-	"Alb_FK_System" should "be merge associative2 (fk_system)" in {
-		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Alb_FK_System", "mergeAssociative2")
+	"Alb_FK_System" should "be merge Reachable (fk_system)" in {
+		val startTime = printStartingTime("be merge Reachable (fk_system)")
+		val p = ("Alb_FK_System", "mergeReachable")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
+		printProofTime(startTime, System.nanoTime(), "be merge Reachable (fk_system)")
 		p
 	}
 
 	// WORKS - 60 seconds
-	"Alb_FK_System" should "be merge associative3 (fk_system)" in {
-		val startTime = printStartingTime("be merge associative2 (fk_system)")
-		val p = ("Alb_FK_System", "mergeAssociative3")
+	"Alb_FK_System" should "be merge Compatible (fk_system)" in {
+		val startTime = printStartingTime("be merge Compatible (fk_system)")
+		val p = ("Alb_FK_System", "mergeCompatible")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge associative2 (fk_system)")
+		printProofTime(startTime, System.nanoTime(), "be merge Compatible (fk_system)")
 		p
 	}
 

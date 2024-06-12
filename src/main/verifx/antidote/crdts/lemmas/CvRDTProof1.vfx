@@ -10,20 +10,21 @@ import antidote.crdts.lemmas.CvRDT
  */
 trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
 
-  proof is_a_CvRDT[S] {
-    forall (x: T[S], y: T[S], z: T[S]) {
-      ( x.reachable() && y.reachable() && z.reachable() &&
-        x.compatible(y) && x.compatible(z) && y.compatible(z)
-        ) =>: {
-            x.merge(x).equals(x) && // idempotent
-            x.merge(y).equals(y.merge(x)) && // commutative
-            x.merge(y).merge(z).equals(x.merge(y.merge(z))) && // associative
-            x.merge(y).reachable() && // merged state is reachable
-            x.merge(y).merge(z).reachable() &&
-            x.compatible(y) == y.compatible(x) // compatible commutes
-          }
+    // Proof that the data type `T` is a CvRDT
+    proof is_a_CvRDT[S] {
+        forall (x: T[S], y: T[S], z: T[S]) {
+            ( x.reachable() && y.reachable() && z.reachable() &&
+              x.compatible(y) && x.compatible(z) && y.compatible(z)
+            ) =>: {
+                x.merge(x).equals(x) && // idempotent
+                x.merge(y).equals(y.merge(x)) && // commutative
+                x.merge(y).merge(z).equals(x.merge(y.merge(z))) && // associative
+                x.merge(y).reachable() && // merged state is reachable
+                x.merge(y).merge(z).reachable() &&
+                x.compatible(y) == y.compatible(x) // compatible commutes
+            }
+        }
     }
-  }
 
 
   proof compatibleCommutes[S] {
@@ -35,6 +36,8 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
 
   // TODO: mudar o nome deste para ser equalsCorrect
   // e assim verificar tudo para o caso de não ser BD sempre crescente??
+  // O equals estar implementado dessa forma tem a ver com a definição formal de um state-based CRDT
+  // No nosso caso podes fazer o que estás a dizer
   proof compareCorrect[S] {
     forall (x: T[S], y: T[S]) {
       ( x.reachable() && y.reachable() && x.compatible(y)
@@ -78,7 +81,7 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
   }
 
 
-  proof mergeAssociative2[S] {
+  proof mergeReachable[S] {
     forall (x: T[S], y: T[S], z: T[S]) {
       ( x.reachable() && y.reachable() && z.reachable() &&
         x.compatible(y) && x.compatible(z) && y.compatible(z)
@@ -89,7 +92,7 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
   }
 
 
-  proof mergeAssociative3[S] {
+  proof mergeCompatible[S] {
     forall (x: T[S], y: T[S], z: T[S]) {
       ( x.reachable() && y.reachable() && z.reachable() &&
         x.compatible(y) && x.compatible(z) && y.compatible(z)

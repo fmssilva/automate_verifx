@@ -87,7 +87,6 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
                 val e2 = elem.snd
                 e1.fst.compatible(e2.fst) && // DWFlags
                 e1.snd.compatible(e2.snd)   // Value
-//                true
             }
         )
     }
