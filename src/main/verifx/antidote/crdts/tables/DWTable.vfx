@@ -52,15 +52,42 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
         this.copy(mergedElements)
     }
 
+
+      private def beforeAssumptions(): Boolean = {
+        forall (t1: Time, t2: Time) {
+          this.before(t1, t2) =>: !this.before(t2, t1)
+        } &&
+        forall (t1: Time) {
+          !this.before(t1, t1)
+        } &&
+        forall (t1: Time, t2: Time, t3: Time) {
+          (this.before(t1, t2) && this.before(t2, t3)) =>: this.before(t1, t3) // time must be transitive
+        }
+      }
+
+      private def mergeValuesAssumptions(): Boolean = {
+        forall(v1: V, v2: V) {
+          v1.merge(v2) == v2.merge(v1) //merge is commutative
+        } &&
+        forall(v1: V) {
+          v1.merge(v1) == v1 //merge is idempotent
+        } &&
+        forall(v1: V, v2: V, v3: V) {
+          v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+        }
+      }
+
     override def compatible(that: T): Boolean = {
+        this.beforeAssumptions() &&
+        this.mergeValuesAssumptions() &&
         this.before == that.before &&
         this.elements.zip(that.elements).values().forall(
             (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
-//                val e1 = elem.fst
-//                val e2 = elem.snd
-//                e1.fst.compatible(e2.fst) //&& // DWFlags
-//                e1.snd.compatible(e2.snd)   // Value
-                true
+                val e1 = elem.fst
+                val e2 = elem.snd
+                e1.fst.compatible(e2.fst) && // DWFlags
+                e1.snd.compatible(e2.snd)   // Value
+//                true
             }
         )
     }
