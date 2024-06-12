@@ -22,12 +22,16 @@ class DWFlags(version: Int, flag: Int) extends CvRDT[DWFlags] {
             this
         else if (that.version > this.version)
             that
-        else if (this.flag == 0 && that.flag != 0) // this is DELETED
-            this
-        else if (that.flag == 0 && this.flag != 0) // that is DELETED
-            that
-        else // flags are the same so use this
-            this
+        else { // equal versions
+            if (this.flag == that.flag) // both DELETED or both INSERTED, so just peek one
+                this
+            else { // one is DELETED and the other is INSERTED
+                if (this.flag == 0) // this is DELETED
+                    this
+                else // that is DELETED
+                    that
+            }
+        }
 	}
 
     // compare this Alb with that Alb
@@ -40,6 +44,10 @@ class DWFlags(version: Int, flag: Int) extends CvRDT[DWFlags] {
 //        this.stamp.smallerOrEqual(that.stamp)
 
     override def equals (that: DWFlags): Boolean =
+        this.version == that.version &&
+        this.flag == that.flag
+
+    override def compatible(that: DWFlags): Boolean =
         this.version == that.version &&
         this.flag == that.flag
 

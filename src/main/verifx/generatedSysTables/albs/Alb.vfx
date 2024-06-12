@@ -11,6 +11,9 @@ class AlbPK(title: String) {
     def equals(that: AlbPK): Boolean =
         this.title == that.title
 
+    def compatible(that: AlbPK): Boolean =
+        this.equals(that)
+
 }
 
 class Alb(  albPK: AlbPK,   // PK
@@ -38,8 +41,8 @@ class Alb(  albPK: AlbPK,   // PK
 	// return True if 'this is compatible that'
 	// have same attributes of the same types, well formed...
     override def compatible(that: Alb): Boolean =
-		this.albPK == that.albPK &&
-		this.artFK == that.artFK &&
+        this.albPK.compatible(that.albPK) &&
+        this.artFK.compatible(that.artFK) &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
 
@@ -54,10 +57,10 @@ class Alb(  albPK: AlbPK,   // PK
 //        this.price.compare(that.price)
 
     override def equals (that: Alb): Boolean =
-        this.albPK == that.albPK &&
-        this.artFK == that.artFK &&
-        this.year == that.year &&
-        this.price == that.price
+        this.albPK.equals(that.albPK) &&
+        this.artFK.equals(that.artFK) &&
+        this.year.equals(that.year) &&
+        this.price.equals(that.price)
 
 }
 

@@ -10,17 +10,6 @@ class ArtsTable[Time]
 					  elements: Map[ArtPK, Tuple[DWFlags, Art]]	    //row
 					  ) extends DWTable[ArtPK, Art, Time, ArtsTable[Time]] {
 
-//
-//    // HELPER FUNCTIONS FOR FK SYSTEM
-//    def getVersion (pk: ArtPK): Int = {
-//        val elem = this.elements.get(pk)
-//        if (elem.fst.flag == 0) // DELETED
-//            0
-//        else
-//            elem.fst.version
-//    }
-//
-
 	/*
 	* Implement Methods DECLARED in DWTable trait
 	*/
@@ -28,5 +17,6 @@ class ArtsTable[Time]
 		    new ArtsTable(this.before, newElements)
 
 }
+
 
 object ArtsTable extends CvRDTProof1[ArtsTable]

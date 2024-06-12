@@ -45,7 +45,7 @@ trait CvRDTProof[T <: CvRDT[T]] {
      *                  (this.stamp == that.stamp) =>: (this.value == that.value)
      *          Hence, if two registers have the same timestamp but different values they are not compatible since this cannot occur in practice.
      */
-    proof is_a_CvRDT {
+    proof mergeCorrect {
         forall(x: T, y: T, z: T) {
             ( x.reachable() && y.reachable() && z.reachable() &&
               x.compatible(y) && x.compatible(z) && y.compatible(z)

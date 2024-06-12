@@ -10,18 +10,13 @@ class AlbsTable[Time]
 					  elements: Map[AlbPK, Tuple[DWFlags, Alb]]	//row
 					  ) extends DWTable[AlbPK, Alb, Time, AlbsTable[Time]] {
 
-//    // HELPER FUNCTIONS FOR FK SYSTEM
-//    def getVersion (pk: AlbPK): Int = {
-//        val elem = this.elements.get(pk)
-//        if (elem.fst.flag == 0) // DELETED
-//            0
-//        else
-//            elem.fst.version
-//    }
-
-
+    /*
+     * Copy function
+     * To be called by DWTable methods
+     */
 	def copy(newElements: Map[AlbPK, Tuple[DWFlags, Alb]]) =
 		    new AlbsTable(this.before, newElements)
+
 
 }
 

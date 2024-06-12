@@ -14,6 +14,11 @@ class ArtPK(name: String, country: String) {
     def equals(that: ArtPK): Boolean =
         this.name == that.name &&
         this.country == that.country
+
+    //TODO: meter isto num trait PK e todos extendem ele e este metodo fica la e assim a DWTable não recebe generico PK??? mas sim PK <: PK ??
+    def compatible(that: ArtPK): Boolean =
+        this.equals(that)
+
 }
 
 
@@ -43,13 +48,14 @@ class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extend
 
 	//compare this Art with that Art (only concurrently updatable attributes matter)
 	def compare(that: Art) = 
-		this.age.compare(that.age) &&
-		this.ranking.compare(that.ranking)
+//		this.age.compare(that.age) &&
+//		this.ranking.compare(that.ranking)
+        false
 
     override def equals (that: Art): Boolean =
         this.artPK.equals(that.artPK) &&
-        this.age == that.age &&
-        this.ranking == that.ranking
+        this.age.equals(that.age) &&
+        this.ranking.equals(that.ranking)
 
 
 

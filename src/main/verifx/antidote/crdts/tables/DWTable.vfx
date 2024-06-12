@@ -36,46 +36,36 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
         val mergedElements = this.elements.combine(
             that.elements,
             (elem1: Tuple[DWFlags, V], elem2: Tuple[DWFlags, V]) => {
-                val e1_flags = elem1.fst
-                val e2_flags = elem2.fst
-                if (e1_flags.version > e2_flags.version)
+                if (elem1.fst.version > elem2.fst.version)
                     elem1
-                else if (e2_flags.version > e1_flags.version)
+                else if (elem2.fst.version > elem1.fst.version)
                     elem2
-                else if (e1_flags.flag == 0 && e2_flags.flag == 1) // this is DELETED
-                    elem1
-                else if (e2_flags.flag == 0 && e1_flags.flag == 1) // that is DELETED
-                    elem2
-                else
-                    new Tuple(e1_flags, elem1.snd.merge(elem2.snd)) // flags are the same so use e1; and merge Values from e1 and e2
+                else // if both flags == I -> merge Values, else if some D -> merge Values anyway even if it doesn't matter anymore
+                    new Tuple(elem1.fst.merge(elem2.fst) , elem1.snd.merge(elem2.snd))
             })
         this.copy(mergedElements)
     }
 
 
-      private def beforeAssumptions(): Boolean = {
-        forall (t1: Time, t2: Time) {
-          this.before(t1, t2) =>: !this.before(t2, t1)
-        } &&
+    private def beforeAssumptions(): Boolean = {
         forall (t1: Time) {
-          !this.before(t1, t1)
-        } &&
-        forall (t1: Time, t2: Time, t3: Time) {
-          (this.before(t1, t2) && this.before(t2, t3)) =>: this.before(t1, t3) // time must be transitive
+            !this.before(t1, t1)    // time must be irreflexive
+        } && forall (t1: Time, t2: Time) {
+            this.before(t1, t2) =>: !this.before(t2, t1)    // time must be antisymmetric
+        } && forall (t1: Time, t2: Time, t3: Time) {
+            (this.before(t1, t2) && this.before(t2, t3)) =>: this.before(t1, t3) // time must be transitive
         }
-      }
+    }
 
-      private def mergeValuesAssumptions(): Boolean = {
-        forall(v1: V, v2: V) {
-          v1.merge(v2) == v2.merge(v1) //merge is commutative
-        } &&
+    private def mergeValuesAssumptions(): Boolean = {
         forall(v1: V) {
-          v1.merge(v1) == v1 //merge is idempotent
-        } &&
-        forall(v1: V, v2: V, v3: V) {
-          v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) //merge is associative
+            v1.merge(v1) == v1 // merge is idempotent
+        } && forall(v1: V, v2: V) {
+            v1.merge(v2) == v2.merge(v1) // merge is commutative
+        } && forall(v1: V, v2: V, v3: V) {
+            v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) // merge is associative
         }
-      }
+    }
 
     override def compatible(that: T): Boolean = {
         this.beforeAssumptions() &&

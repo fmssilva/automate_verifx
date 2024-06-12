@@ -42,8 +42,9 @@ class Alb_FK_System[Time](
 
 	//COMPARE this Alb_FK_System with that Alb_FK_System
 	def compare(that: Alb_FK_System[Time]) =
-        this.albsTable.compare(that.albsTable) &&
-        this.artsTable.compare(that.artsTable)
+//        this.albsTable.compare(that.albsTable) &&
+//        this.artsTable.compare(that.artsTable)
+        false
 
 
 
