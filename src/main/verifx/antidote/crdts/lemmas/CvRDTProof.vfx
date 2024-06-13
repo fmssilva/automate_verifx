@@ -50,7 +50,7 @@ trait CvRDTProof[T <: CvRDT[T]] {
              * i.e. the outcome should not depend on the order of the arguments.
 
      */
-    proof mergeCorrect {
+    proof is_a_CvRDT {
         forall(x: T, y: T, z: T) {
             ( x.reachable() && y.reachable() && z.reachable() &&
               x.compatible(y) && x.compatible(z) && y.compatible(z)

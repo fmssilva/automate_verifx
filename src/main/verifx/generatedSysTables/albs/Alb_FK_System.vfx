@@ -15,105 +15,160 @@ class Alb_FK_System[Time](
 					artsTable: ArtsTable[Time] )
 					extends CvRDT[Alb_FK_System[Time]]  {
 
+    ///////////////////////////////////////////////////////////////
+    //            FK_SYSTEM CvRDT methods
+    ///////////////////////////////////////////////////////////////
 
-	//REACHABLE - check if this table and the referenced tables are reachable
-	override def reachable(): Boolean =
+	/*
+    * REACHABLE
+    * return true if the all tables of this system are reachable
+    */
+	override def reachable(): Boolean = {
         this.albsTable.reachable() &&
-        this.artsTable.reachable()
+        this.artsTable.reachable() &&
+        this.albsTable.elements.values().forall(
+            (elem: Tuple[DWFlags, Alb]) => this.hasCorrectVersion(elem) )
+    }
 
-
-    //TODO: getVersion do Alb_FK_System (só está feito o do ArtsTable)
-
-
-    //MERGE this Alb_FK_System with that Alb_FK_System
-    def merge(that: Alb_FK_System[Time]) =
-        new Alb_FK_System(
-                this.albsTable.merge(that.albsTable),
-                this.artsTable.merge(that.artsTable) )
-
-
-
-
-	//COMPATIBLE - check if this Alb_FK_System is compatible with that albsTable
-	override def compatible(that: Alb_FK_System[Time]): Boolean =
-				this.albsTable.compatible(that.albsTable) &&
-				this.artsTable.compatible(that.artsTable)
-
-
-	//COMPARE this Alb_FK_System with that Alb_FK_System
-	def compare(that: Alb_FK_System[Time]) =
-//        this.albsTable.compare(that.albsTable) &&
-//        this.artsTable.compare(that.artsTable)
-        false
-
-
-
-	//EQUALS - check if this Alb_FK_System is equal to that Alb_FK_System
+    /*
+	 * EQUALS
+	 * return true if all tables of this system are equal to all tables of that system
+	 * » if we do not override this method, the default implementation in CvRDT will be used
+     *      which will compare if (this <= that and that <= this), which is unnecessary work
+     */
 	override def equals(that: Alb_FK_System[Time]) =
         this.albsTable.equals(that.albsTable) &&
         this.artsTable.equals(that.artsTable)
 
+    /*
+     * COMPARE
+     * return true if all tables of this system are <= than the tables of that system
+     * » this method is never used, if we override the equal method of the CvRDT
+     */
+    def compare(that: Alb_FK_System[Time]) =
+        this.albsTable.compare(that.albsTable) &&
+        this.artsTable.compare(that.artsTable)
+
+    /*
+     * COMPATIBLE
+     * return true if all tables of this system are compatible with the tables of that system
+     */
+	override def compatible(that: Alb_FK_System[Time]): Boolean =
+				this.albsTable.compatible(that.albsTable) &&
+				this.artsTable.compatible(that.artsTable)
+
+    /*
+     * MERGE
+     * return a new system with the elements of each table of this system merged with tables of that system
+     */
+    def merge(that: Alb_FK_System[Time]) =
+        new Alb_FK_System(  this.albsTable.merge(that.albsTable),
+                            this.artsTable.merge(that.artsTable)
+                          )
 
 
-    // HELPER FUNCTION FOR REF INTEGRITY PROOFS
+    ///////////////////////////////////////////////////////////////
+    //  FK_SYSTEM helper methods to be called by other FK_Systems
+    ///////////////////////////////////////////////////////////////
 
-    //TODO: este metodo está a receber a pk mas está a ver toda a tabela... fazer pra ver só esse pk mesmo
-    def refIntegrityHolds(pk : AlbPK): Boolean = {
-        //@Pre: this FK_System is reachable()
-        this.albsTable.elements.values().forall(
-            (elem: Tuple[DWFlags, Alb]) => {
-                val art_version = this.artsTable.getVersion(elem.snd.artFK)
-                if (elem.fst.version == art_version)
-                    true
-                else
-                    //TODO: amortizar caminho ajudará??
-                    false
-            }
-        )
+    /*
+     * GET VERSION
+     * return the version of the album with the given PK
+     * @Pre: the album with the given PK exists
+     * TODO: implementar isto dp pra testar sistemas com varios niveis de FK_Systems
+      */
+//    def getVersion (pk: AlbPK): Int = {
+//        val alb = albsTable.elements.get(pk)
+//        if (alb.fst.flag == 0) //DELETED
+//            return 0
+//        val art_version = artsTable.getVersion(albsTable.elements.get(pk).snd.artFK)
+//        if (alb_version == art_version)
+//            alb.fst.version
+//        else
+//             //amortizar caminho
+//            0
+//       }
+
+
+
+    ///////////////////////////////////////////////////////////////
+    //                 FK_SYSTEM Helper Methods
+    ///////////////////////////////////////////////////////////////
+
+    /*
+     * HAS CORRECT VERSION
+     * return true if the versions of the FKs in the given album are the same as the current versions of those FKs in the original referenced tables
+     * @Pre: the album with the given PK exists
+     */
+    private def hasCorrectVersion(elem: Tuple[DWFlags, Alb]): Boolean = {
+        val art_version = this.artsTable.getVersion(elem.snd.artFK)
+        if (elem.fst.get_fk_version(0) == art_version) // each idx in fk_versions has the version of the referenced element corresponding to the FK_System referenced tables, IN ORDER
+            true
+        else {
+            // To avoid future searches in all depth of the fks tree, we can amortize the path by marking this element as DELETED
+            this.albsTable.setFlag(elem.snd.albPK, 0) //DELETED
+            false
+        }
     }
 
+    /*
+     * REF INTEGRITY HOLDS - ELEMENT
+     * return true if the referential integrity holds for the album with the given PK
+     */
+    def refIntegrityHolds_elem(pk : AlbPK): Boolean =
+        this.hasCorrectVersion(this.albsTable.elements.get(pk))
 
-    def refIntegrityHolds2(): Boolean = {
-            this.albsTable.elements.values().forall(
-                (elem: Tuple[DWFlags, Alb]) => {
-                    val art_version = this.artsTable.getVersion(elem.snd.artFK)
-                    if (elem.fst.version == art_version)
-                        true
-                    else
-                        //TODO: amortizar caminho ajudará??
-                        false
-                }
-            )
-        }
+    /*
+    * REF INTEGRITY HOLDS - TABLE
+    * return true if the referential integrity holds for all elements in the table
+    */
+    def refIntegrityHolds_table(): Boolean =
+        this.albsTable.elements.values().forall(
+            (elem: Tuple[DWFlags, Alb]) => this.hasCorrectVersion(elem) )
 
+
+    /*
+     * DELETE REFERENCED ELEMENT
+     * delete a random element from the referenced tables
+     */
+    def deleteReferencedElement(): Boolean = {
+        //TODO: como ir buscar elementos random a um mapa?? ex:
+        //val artPK = this.artsTable.keys().head
+        val artPK = new ArtPK("0", "0")
+        this.artsTable.deleteRandomElement(artPK)
+    }
 
 }
 
 
 
 /*
- * OBJECT FOR EXTRA PROOFS
+ * OBJECT FOR REFERENTIAL INTEGRITY PROOFS
  */
 object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
 
-	//REFERENTIAL INTEGRITY
-	proof refIntegrityCorrect[Time] {
+	// prova semelhante ao UW system
+	// TODO: mas qual a lógica disto??
+	//        estamos a usar o merge de 2 FK_Systems para representar as operações de delete() e on delete cascade por exemplo???
+	proof genericReferentialIntegrity[Time] {
         forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: AlbPK) {
             ( s1.compatible(s2) &&
               s1.reachable() && s2.reachable() &&
-              s1.refIntegrityHolds(pk) && s2.refIntegrityHolds(pk)
+              s1.refIntegrityHolds_elem(pk) && s2.refIntegrityHolds_elem(pk)
               ) =>: {
-                s1.merge(s2).refIntegrityHolds(pk)
+                s1.merge(s2).refIntegrityHolds_elem(pk)
               }
         }
     }
 
-    proof refIntegrityCorrect2[Time] {
+    //TODO: não devia ser uma prova das FKs em que testa mesmo a apagar e a criar elementos?
+    //  ex, se um sistema era reachable, e apagamos um elemento que era FK, então sistema deixa de ser
+    proof refIntegrityHolds_For_Deletions[Time] {
         forall(s: Alb_FK_System[Time]) {
-            ( s.albsTable.reachable() &&
-              s.artsTable.reachable()
+            ( s.reachable() &&
+              s.deleteReferencedElement()
             ) =>: {
-                s.refIntegrityHolds2()
+                !s.refIntegrityHolds_table()
             }
         }
     }

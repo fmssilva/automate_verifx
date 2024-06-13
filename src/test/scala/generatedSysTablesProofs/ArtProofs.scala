@@ -31,11 +31,11 @@ class ArtProofs extends FlatSpec with Prover {
 
 
 	// WORKS  -  20 seconds
-	"Art" should "merge Correct (element)" in {
-		val startTime = printStartingTime("merge Correct (element)")
-		val p = ("Art", "mergeCorrect")
+	"Art" should "is_a_CvRDT: merge correct e compatible commutes" in {
+		val startTime = printStartingTime("is_a_CvRDT: merge correct e compatible commutes")
+		val p = ("Art", "is_a_CvRDT")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "merge Correct (element)")
+		printProofTime(startTime, System.nanoTime(), "is_a_CvRDT: merge correct e compatible commutes")
 		p
 	}
 
@@ -105,7 +105,7 @@ class ArtProofs extends FlatSpec with Prover {
 		p
 	}
 
-	// WORKS  -   60 seconds
+	// WORKS  -   90 seconds
 	"ArtsTable" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
 		val p = ("ArtsTable", "mergeAssociative") 

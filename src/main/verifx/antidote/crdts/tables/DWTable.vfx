@@ -3,70 +3,83 @@ import antidote.crdts.tables.DWFlags
 
 trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends CvRDT {
 
+
+    ///////////////////////////////////////////////////////////////
+    //                DWTable fields
+    ///////////////////////////////////////////////////////////////
+
     val elements: Map[PK, Tuple[DWFlags, V]]
 
     val before: (Time, Time) => Boolean
 
-    // FORCE TABLES TO HAVE A COPY FUNCTION
+
+
+    ///////////////////////////////////////////////////////////////
+    //   Functions that must be implemented by concrete classes
+    ///////////////////////////////////////////////////////////////
+
     def copy(newElements: Map[PK, Tuple[DWFlags, V]]) : T
 
 
-    // HELPER FUNCTIONS FOR FK SYSTEM
-    def getVersion (pk: PK): Int = {
-        val elem = this.elements.get(pk)
-        if (elem.fst.flag == 0) // DELETED
-            0
-        else
-            elem.fst.version
-    }
 
+    ///////////////////////////////////////////////////////////////
+    //                DWTable  CvRDT  Methods
+    ///////////////////////////////////////////////////////////////
 
-    // DWTable Functions
-
-    override def reachable(): Boolean = {
+    /*
+     * REACHABLE
+     * return true if all elements of this table have valid versions of their PK and FKs, and have a flag != DELETED
+     */
+     override def reachable(): Boolean = {
         this.elements.values().forall(
             (elem: Tuple[DWFlags, V]) =>
-                elem.fst.version >= 1 &&
-                elem.fst.flag != 0 &&  // NOT DELETED
+                elem.fst.reachable() &&
+                elem.fst.flag != 0 &&           // NOT DELETED
                 elem.snd.reachable()
+                //TODO: vale a pena verificar comprimento da fk_versions??
         )
     }
 
-    def merge (that: T) = {
-        val mergedElements = this.elements.combine(
-            that.elements,
-            (elem1: Tuple[DWFlags, V], elem2: Tuple[DWFlags, V]) => {
-                if (elem1.fst.version > elem2.fst.version)
-                    elem1
-                else if (elem2.fst.version > elem1.fst.version)
-                    elem2
-                else // if both flags == I -> merge Values, else if some D -> merge Values anyway even if it doesn't matter anymore
-                    new Tuple(elem1.fst.merge(elem2.fst) , elem1.snd.merge(elem2.snd))
-            })
-        this.copy(mergedElements)
+    /*
+     * EQUALS
+     * return true if
+     *      this.table time function == that.table time function
+     *      && all elements of this table are equal to the elements of that table
+     * » if we do not override this method, the default implementation in CvRDT will be used
+     *      which will compare if (this <= that and that <= this), which is unnecessary work
+     */
+    override def equals(that: T): Boolean = {
+        this.before == that.before &&
+        this.elements.zip(that.elements).values().forall(
+            (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
+                val e1 = elem.fst
+                val e2 = elem.snd
+                e1.fst.equals(e2.fst) && // flags
+                e1.snd.equals(e2.snd)    // Value
+            }
+        )
     }
 
-
-    private def beforeAssumptions(): Boolean = {
-        forall (t1: Time) {
-            !this.before(t1, t1)    // time must be irreflexive
-        } && forall (t1: Time, t2: Time) {
-            this.before(t1, t2) =>: !this.before(t2, t1)    // time must be antisymmetric
-        } && forall (t1: Time, t2: Time, t3: Time) {
-            (this.before(t1, t2) && this.before(t2, t3)) =>: this.before(t1, t3) // time must be transitive
-        }
+    /*
+     * COMPARE
+     * return true if all elements of this table <= then the elements of that table
+     * » this method is never used, if we override the equal method of the CvRDT
+     */
+    def compare(that: T): Boolean = {
+        this.elements.zip(that.elements).values().forall(
+                (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
+                    val e1 = elem.fst
+                    val e2 = elem.snd
+                    e1.fst.compare(e2.fst) && // flags
+                    e1.snd.compare(e2.snd)    // V
+                }
+            )
     }
 
-    private def mergeValuesAssumptions(): Boolean = {
-        forall(v1: V) {
-            v1.merge(v1) == v1 // merge is idempotent
-        } && forall(v1: V, v2: V) {
-            v1.merge(v2) == v2.merge(v1) // merge is commutative
-        } && forall(v1: V, v2: V, v3: V) {
-            v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) // merge is associative
-        }
-    }
-
+    /*
+     * COMPATIBLE
+     * return true if all elements of this table are compatible with the elements of that table
+     */
     override def compatible(that: T): Boolean = {
         this.beforeAssumptions() &&
         this.mergeValuesAssumptions() &&
@@ -81,32 +94,100 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
         )
     }
 
-    //ignore this compare and override equals directly in an efficient way
-    def compare(that: T): Boolean = {
-        false
-//        this.elements.zip(that.elements).values().forall(
-//                (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
-//                    val e1 = elem.fst
-//                    val e2 = elem.snd
-//                    e1.fst.compare(e2.fst) && // flags
-//                    e1.snd.compare(e2.snd)    // V
-//                }
-//            )
+    /*
+     * Compatible helper function
+     * Used to limit the search space to the prover,
+     *      in this case to use only correct time values
+     */
+    private def beforeAssumptions(): Boolean = {
+        forall (t1: Time) {
+            !this.before(t1, t1)    // time must be irreflexive
+        } && forall (t1: Time, t2: Time) {
+            this.before(t1, t2) =>: !this.before(t2, t1)    // time must be antisymmetric
+        } && forall (t1: Time, t2: Time, t3: Time) {
+            (this.before(t1, t2) && this.before(t2, t3)) =>: this.before(t1, t3) // time must be transitive
+        }
     }
 
-    override def equals(that: T): Boolean = {
-        this.before == that.before &&
-        this.elements.zip(that.elements).values().forall(
-            (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
-                val e1 = elem.fst
-                val e2 = elem.snd
-                e1.fst.equals(e2.fst) && // flags
-                e1.snd.equals(e2.snd)    // Value
-            }
-        )
+    /*
+     * Compatible helper function
+     * Used to limit the search space to the prover,
+     *      in this case to use only table versions which follow the merge rules
+     */
+    private def mergeValuesAssumptions(): Boolean = {
+        forall(v1: V) {
+            v1.merge(v1) == v1              // merge is idempotent
+        } && forall(v1: V, v2: V) {
+            v1.merge(v2) == v2.merge(v1)    // merge is commutative
+        } && forall(v1: V, v2: V, v3: V) {
+            v1.merge(v2).merge(v3) == v1.merge(v2.merge(v3)) // merge is associative
+        }
+    }
+
+    /*
+     * MERGE
+     * return a new table with the elements of this table merged with the elements of that table
+     *      (this merge is done according with Delete-Wins Semantics)
+     */
+    def merge (that: T) = {
+        val mergedElements = this.elements.combine(
+            that.elements,
+            (elem1: Tuple[DWFlags, V], elem2: Tuple[DWFlags, V]) => {
+                if (elem1.fst.version > elem2.fst.version)
+                    elem1
+                else if (elem2.fst.version > elem1.fst.version)
+                    elem2
+                else // just merge flags and value: if some flag is Deleted, so we'll merge value even if we didn't need to; if both flags are INSERTED so yes we merge the flags and the Value according to it's own clock
+                    new Tuple(elem1.fst.merge(elem2.fst) , elem1.snd.merge(elem2.snd))
+            })
+        this.copy(mergedElements)
     }
 
 
+
+    ///////////////////////////////////////////////////////////////
+    //            FK_SYSTEM helper methods
+    ///////////////////////////////////////////////////////////////
+
+    /*
+     * GET_VERSION
+     * return the version of the element with the given PK
+     *          or 0 if the element is DELETED
+     * @Pre: the element with the given PK exists in the table
+     */
+    def getVersion (pk: PK): Int = {
+        val elem = this.elements.get(pk)
+        if (elem.fst.flag == 0) // DELETED
+            0
+        else
+            elem.fst.version
+    }
+
+
+    /*
+     * SET FLAG
+     * set the flag of the element with the given PK
+     * @Pre: the element with the given PK exists in the table
+     */
+    def setFlag (pk: PK, flag: Int) = {
+        val elem = this.elements.get(pk)
+        val flags = elem.fst.setFlag(flag)
+        val newElements = this.elements.add(pk, new Tuple(flags, elem.snd))
+        this.copy(newElements)
+    }
+
+    /*
+     * DELETE RANDOM ELEMENT
+     * set the flag of the element with the given PK to DELETED
+     * @Pre: the element with the given PK exists in the table
+     */
+    def deleteRandomElement(pk : PK): Boolean = {
+        val elem = this.elements.get(pk)
+        val deletedFlags = elem.fst.setFlag(0)
+        val newElements = this.elements.add(pk, new Tuple(deletedFlags, elem.snd))
+        this.copy(newElements)
+        true
+    }
 
 }
 

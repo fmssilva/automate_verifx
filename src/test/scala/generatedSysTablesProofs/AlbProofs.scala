@@ -29,11 +29,11 @@ class AlbProofs extends FlatSpec with Prover {
 	}
 
 	// WORKS	-  20 seconds
-	"DWFlags" should "merge Correct" in {
-		val startTime = printStartingTime("merge Correct")
-		val p = ("DWFlags", "mergeCorrect")
+	"DWFlags" should "is_a_CvRDT: merge Correct e compatible commutes" in {
+		val startTime = printStartingTime("is_a_CvRDT: merge Correct e compatible commutes")
+		val p = ("DWFlags", "is_a_CvRDT")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "merge Correct")
+		printProofTime(startTime, System.nanoTime(), "is_a_CvRDT: merge Correct e compatible commutes")
 		p
 	}
 
@@ -62,15 +62,13 @@ class AlbProofs extends FlatSpec with Prover {
 	}
 
 	// WORKS  -  20 seconds
-	"Alb" should "merge Correct (element)" in {
-		val startTime = printStartingTime("merge Correct (element)")
-		val p = ("Alb", "mergeCorrect")
+	"Alb" should "is_a_CvRDT: merge Correct e compatible commutes" in {
+		val startTime = printStartingTime("is_a_CvRDT: merge Correct e compatible commutes")
+		val p = ("Alb", "is_a_CvRDT")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "merge Correct (element)")
+		printProofTime(startTime, System.nanoTime(), "is_a_CvRDT: merge Correct e compatible commutes")
 		p
 	}
-
-
 
 
 //
@@ -143,7 +141,7 @@ class AlbProofs extends FlatSpec with Prover {
 	}
 
 
-	// WORKS  -   40 seconds
+	// WORKS  -   90 seconds
 	"AlbsTable" should "be merge Associative (table)" in {
 		val startTime = printStartingTime("be merge Associative (table)")
 		val p = ("AlbsTable", "mergeAssociative") 
@@ -178,7 +176,7 @@ class AlbProofs extends FlatSpec with Prover {
 	// FK REFERENTIAL PROOFS     
 	////////////////////////////////////////////////////////////
 
-	// WORKS - 40 seconds
+	// WORKS - 60 seconds
 	"Alb_FK_System" should "compareCorrect (equals) (fk_system)" in {
 		val startTime = printStartingTime("compareCorrect (equals) (fk_system)")
 		val p = ("Alb_FK_System", "compareCorrect")
@@ -249,23 +247,25 @@ class AlbProofs extends FlatSpec with Prover {
 	//Referential Integrity - Proof implemented in FK_System Class
 
 	// WORKS - 1 minute 30 seconds
-	"Alb_FK_System" should "ref Integrity Correct (fk_system)" in {
-		val startTime = printStartingTime("ref Integrity Correct (fk_system)")
-		val p = ("Alb_FK_System", "refIntegrityCorrect")
+	"Alb_FK_System" should "genericReferentialIntegrity (fk_system)" in {
+		val startTime = printStartingTime("genericReferentialIntegrity (fk_system)")
+		val p = ("Alb_FK_System", "genericReferentialIntegrity")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "ref Integrity Correct (fk_system)")
+		printProofTime(startTime, System.nanoTime(), "genericReferentialIntegrity (fk_system)")
 		p
 	}
 
 
-	// WORKS - 1 minute 30 seconds
-	"Alb_FK_System" should "ref Integrity Correct 2 (fk_system)" in {
-		val startTime = printStartingTime("ref Integrity Correct 2 (fk_system)")
-		val p = ("Alb_FK_System", "refIntegrityCorrect2")
+	// ???
+	"Alb_FK_System" should "refIntegrityHolds For Deletions (fk_system)" in {
+		val startTime = printStartingTime("refIntegrityHolds For Deletions (fk_system)")
+		val p = ("Alb_FK_System", "refIntegrityHolds_For_Deletions")
 //		prove(p)
 		val res = rejectForModel(p)
 		print(res)
-		printProofTime(startTime, System.nanoTime(), "ref Integrity Correct 2 (fk_system)")
+		printProofTime(startTime, System.nanoTime(), "refIntegrityHolds For Deletions (fk_system)")
 		p
 	}
+
+
 }

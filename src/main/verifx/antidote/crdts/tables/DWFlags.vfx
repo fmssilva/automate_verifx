@@ -1,55 +1,101 @@
 import antidote.crdts.lemmas.CvRDT
 import antidote.crdts.lemmas.CvRDTProof
-import antidote.crdts.LamportClock
-
 
 
 // DELETE = 0; VISIBLE = 1
-class DWFlags(version: Int, flag: Int) extends CvRDT[DWFlags] {
-                                    // , stamp: LamportClock
+class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[DWFlags] {
 
-	// return True if all the CHECK conditions are met
+    ///////////////////////////////////////////////////////////////
+    //            DWFlags CvRDT methods
+    ///////////////////////////////////////////////////////////////
+
+    /*
+    * REACHABLE
+    * return true if all versions and flags are valid values
+    */
 	override def reachable(): Boolean = {
 		this.version >= 1 &&
-		(this.flag == 0 || this.flag == 1)
+		(this.flag == 0 || this.flag == 1) &&
+		//TODO: dp podemos ver tb se o size de fk_versions bate certo... mas não é necessário??
+		this.fk_versions.forall(
+		    (fk_version: Int) => fk_version >= 1
+		)
 	}
 
-	// merge this Alb with that Alb
-	// only concurrently updatable attributes are merged as a CRDT
-	// Returns the LUB of `this` and `that`
+    /*
+	 * EQUALS
+	 * return true if all versions and flags of this DWFlag equals that DWFlag
+	 * » if we do not override this method, the default implementation in CvRDT will be used
+     *      which will compare if (this <= that and that <= this), which is unnecessary work
+     */
+    override def equals (that: DWFlags): Boolean =
+        this.version == that.version &&
+        this.flag == that.flag &&
+        this.fk_versions == that.fk_versions
+
+    /*
+     * COMPARE
+     * return true if this DWFlag <= that DWFlag
+     * » this method is never used, if we override the equal method of the CvRDT
+     */
+    def compare(that: DWFlags): Boolean =
+        false
+//        this.version <= that.version &&
+//        this.flag <= that.flag
+        //TODO: meter tb o fk_versions
+
+
+    /*
+     * COMPATIBLE
+     * return true if all fields are compatible
+     //TODO: estou a fazer os compatibles igual ao equals... qual a logica da coisa??
+     */
+     override def compatible(that: DWFlags): Boolean =
+         this.equals(that) &&
+         this.fk_versions.size == that.fk_versions.size
+
+    /*
+     * MERGE
+     * return a new DWFlag with correct merged fields
+     *      (this merge is done according with Delete-Wins Semantics)
+     */
 	def merge(that: DWFlags): DWFlags = {
         if (this.version > that.version)
             this
         else if (that.version > this.version)
             that
         else { // equal versions
-            if (this.flag == that.flag) // both DELETED or both INSERTED, so just peek one
-                this
-            else { // one is DELETED and the other is INSERTED
+            if (this.flag != that.flag) { // one DELETED and other INSERTED -> keep DELETED
                 if (this.flag == 0) // this is DELETED
                     this
-                else // that is DELETED
+                else                // that is DELETED
                     that
-            }
+            } else // both are DELETED or both are INSERTED -> so just keep one
+                this
         }
 	}
 
-    // compare this Alb with that Alb
-    // only concurrently updatable attributes matter
-    // return True if `this <= that`
-    def compare(that: DWFlags): Boolean =
-        false
-//        this.version <= that.version &&
-//        this.flag <= that.flag
-//        this.stamp.smallerOrEqual(that.stamp)
 
-    override def equals (that: DWFlags): Boolean =
-        this.version == that.version &&
-        this.flag == that.flag
 
-    override def compatible(that: DWFlags): Boolean =
-        this.version == that.version &&
-        this.flag == that.flag
+    ///////////////////////////////////////////////////////////////
+    //     DWFlags helper methods to be called by FK_Systems
+    ///////////////////////////////////////////////////////////////
+
+    def get_fk_version(idx: Int): Int = {
+        //TODO: vector não tem size??
+//        if (idx < 0 || idx >= this.fk_versions.size)
+//            0
+//        else
+            this.fk_versions.get(idx)
+    }
+
+    /*
+     * SET FLAG
+     * return a new DWFlag with the flag set to new_flag
+     */
+    def setFlag(new_flag: Int): DWFlags = {
+        new DWFlags(this.version, new_flag, this.fk_versions)
+    }
 
 }
 
