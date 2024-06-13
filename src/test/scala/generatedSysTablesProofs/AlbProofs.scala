@@ -260,9 +260,7 @@ class AlbProofs extends FlatSpec with Prover {
 	"Alb_FK_System" should "refIntegrityHolds For Deletions (fk_system)" in {
 		val startTime = printStartingTime("refIntegrityHolds For Deletions (fk_system)")
 		val p = ("Alb_FK_System", "refIntegrityHolds_For_Deletions")
-//		prove(p)
-		val res = rejectForModel(p)
-		print(res)
+		prove(p)
 		printProofTime(startTime, System.nanoTime(), "refIntegrityHolds For Deletions (fk_system)")
 		p
 	}

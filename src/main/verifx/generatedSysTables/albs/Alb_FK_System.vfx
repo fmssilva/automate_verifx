@@ -168,7 +168,7 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
             ( s.reachable() &&
               s.deleteReferencedElement()
             ) =>: {
-                !s.refIntegrityHolds_table()
+                s.refIntegrityHolds_table()
             }
         }
     }
