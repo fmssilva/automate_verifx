@@ -97,6 +97,14 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
         new DWFlags(this.version, new_flag, this.fk_versions)
     }
 
+    /*
+     * SET INSERTION
+     * return a new DWFlag with the version incremented by 1 and the flag INSERTED
+     */
+    def set_insertion(): DWFlags = {
+        new DWFlags(this.version + 1, 1, this.fk_versions)
+    }
+
 }
 
 

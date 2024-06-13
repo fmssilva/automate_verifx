@@ -135,7 +135,14 @@ class Alb_FK_System[Time](
         //TODO: como ir buscar elementos random a um mapa?? ex:
         //val artPK = this.artsTable.keys().head
         val artPK = new ArtPK("0", "0")
-        this.artsTable.deleteRandomElement(artPK)
+        this.artsTable.delete(artPK)
+    }
+
+    def deleteAndInsertReferencedElement(): Boolean = {
+        //TODO: ir buscar elem random
+        val artPK = new ArtPK("0", "0")
+        this.artsTable.delete(artPK)
+        this.artsTable.insert(artPK)
     }
 
 }
@@ -173,5 +180,14 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
         }
     }
 
+    proof refIntegrityHolds_For_Deletions_And_Inserts[Time] {
+        forall(s: Alb_FK_System[Time]) {
+            ( s.reachable() &&
+              s.deleteAndInsertReferencedElement()
+            ) =>: {
+                s.refIntegrityHolds_table()
+            }
+        }
+    }
 
 }

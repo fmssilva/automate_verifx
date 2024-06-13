@@ -256,12 +256,21 @@ class AlbProofs extends FlatSpec with Prover {
 	}
 
 
-	// ???
+	// WORKS - 60 seconds
 	"Alb_FK_System" should "refIntegrityHolds For Deletions (fk_system)" in {
 		val startTime = printStartingTime("refIntegrityHolds For Deletions (fk_system)")
 		val p = ("Alb_FK_System", "refIntegrityHolds_For_Deletions")
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "refIntegrityHolds For Deletions (fk_system)")
+		p
+	}
+
+	// WORKS - 60 seconds
+	"Alb_FK_System" should "refIntegrityHolds For Deletions AND INSERTS (fk_system)" in {
+		val startTime = printStartingTime("refIntegrityHolds For Deletions AND INSERTS (fk_system)")
+		val p = ("Alb_FK_System", "refIntegrityHolds_For_Deletions_And_Inserts")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), "refIntegrityHolds For Deletions AND INSERTS (fk_system)")
 		p
 	}
 

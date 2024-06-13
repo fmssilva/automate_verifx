@@ -178,16 +178,33 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
 
     /*
      * DELETE RANDOM ELEMENT
-     * set the flag of the element with the given PK to DELETED
+     * return true if success
+     *       in setting the flag of the element with the given PK to DELETED
      * @Pre: the element with the given PK exists in the table
      */
-    def deleteRandomElement(pk : PK): Boolean = {
+    def delete(pk : PK): Boolean = {
         val elem = this.elements.get(pk)
         val deletedFlags = elem.fst.setFlag(0)
         val newElements = this.elements.add(pk, new Tuple(deletedFlags, elem.snd))
         this.copy(newElements)
         true
     }
+
+    /*
+     * INSERT
+     * return true if success
+     *      in incrementing the version of the element and setting the flag to INSERTED
+     */
+    def insert(pk: PK): Boolean = {
+        //TODO: ver caso inicial que tabela nao contem o elemento
+        val elem = this.elements.get(pk)
+        val newFlags = elem.fst.set_insertion() // neste caso o elem não tem fks, logo não vai ter fk_versions
+        val newElements = this.elements.add(pk, new Tuple(newFlags, elem.snd) )
+        this.copy(newElements)
+        true
+    }
+    
+    //TODO: implementar estes métodos tambem no FK_SYSTEM para depois testar sistemas com varios niveis de FK_Systems
 
 }
 
