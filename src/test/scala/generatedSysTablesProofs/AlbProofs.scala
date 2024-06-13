@@ -257,4 +257,15 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
+
+	// WORKS - 1 minute 30 seconds
+	"Alb_FK_System" should "ref Integrity Correct 2 (fk_system)" in {
+		val startTime = printStartingTime("ref Integrity Correct 2 (fk_system)")
+		val p = ("Alb_FK_System", "refIntegrityCorrect2")
+//		prove(p)
+		val res = rejectForModel(p)
+		print(res)
+		printProofTime(startTime, System.nanoTime(), "ref Integrity Correct 2 (fk_system)")
+		p
+	}
 }

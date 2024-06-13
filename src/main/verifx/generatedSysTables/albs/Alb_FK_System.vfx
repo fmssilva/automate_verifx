@@ -55,6 +55,9 @@ class Alb_FK_System[Time](
 
 
 
+    // HELPER FUNCTION FOR REF INTEGRITY PROOFS
+
+    //TODO: este metodo está a receber a pk mas está a ver toda a tabela... fazer pra ver só esse pk mesmo
     def refIntegrityHolds(pk : AlbPK): Boolean = {
         //@Pre: this FK_System is reachable()
         this.albsTable.elements.values().forall(
@@ -63,12 +66,25 @@ class Alb_FK_System[Time](
                 if (elem.fst.version == art_version)
                     true
                 else
-                    false
                     //TODO: amortizar caminho ajudará??
+                    false
             }
         )
-
     }
+
+
+    def refIntegrityHolds2(): Boolean = {
+            this.albsTable.elements.values().forall(
+                (elem: Tuple[DWFlags, Alb]) => {
+                    val art_version = this.artsTable.getVersion(elem.snd.artFK)
+                    if (elem.fst.version == art_version)
+                        true
+                    else
+                        //TODO: amortizar caminho ajudará??
+                        false
+                }
+            )
+        }
 
 
 }
@@ -89,6 +105,16 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
               ) =>: {
                 s1.merge(s2).refIntegrityHolds(pk)
               }
+        }
+    }
+
+    proof refIntegrityCorrect2[Time] {
+        forall(s: Alb_FK_System[Time]) {
+            ( s.albsTable.reachable() &&
+              s.artsTable.reachable()
+            ) =>: {
+                s.refIntegrityHolds2()
+            }
         }
     }
 
