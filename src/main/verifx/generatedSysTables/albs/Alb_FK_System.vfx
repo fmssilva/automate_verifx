@@ -156,7 +156,7 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
 
 	// prova semelhante ao UW system
 	// TODO: mas qual a lógica disto??
-	//        estamos a usar o merge de 2 FK_Systems para representar as operações de delete() e on delete cascade por exemplo???
+	//       estamos a usar o merge de 2 FK_Systems para representar as operações de delete() e on delete cascade por exemplo???
 	proof genericReferentialIntegrity[Time] {
         forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: AlbPK) {
             ( s1.compatible(s2) &&
@@ -168,8 +168,7 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
         }
     }
 
-    //TODO: não devia ser uma prova das FKs em que testa mesmo a apagar e a criar elementos?
-    //  ex, se um sistema era reachable, e apagamos um elemento que era FK, então sistema deixa de ser
+    // Test ref integrity holds after operations in one replica
     proof refIntegrityHolds_For_Deletions[Time] {
         forall(s: Alb_FK_System[Time]) {
             ( s.reachable() &&
@@ -186,6 +185,19 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
               s.deleteAndInsertReferencedElement()
             ) =>: {
                 s.refIntegrityHolds_table()
+            }
+        }
+    }
+
+
+    // Test ref integrity holds after operations in concurrent replicas
+    proof refIntegrityHolds_For_Concurrent_Deletions[Time] {
+        forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], artsTable: ArtsTable[Time], pk: ArtPK) {
+            ( s1.reachable() && s2.reachable() &&
+              artsTable.reachable() &&
+              artsTable.delete(pk)
+            ) =>: {
+                s1.merge(s2).refIntegrityHolds_table()
             }
         }
     }

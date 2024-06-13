@@ -173,7 +173,7 @@ class AlbProofs extends FlatSpec with Prover {
 
 
 	////////////////////////////////////////////////////////////
-	// FK REFERENTIAL PROOFS     
+	// FK REFERENTIAL CvRDT PROOFS
 	////////////////////////////////////////////////////////////
 
 	// WORKS - 60 seconds
@@ -244,9 +244,11 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-	//Referential Integrity - Proof implemented in FK_System Class
+	////////////////////////////////////////////////////////////
+	// FK REFERENTIAL Ref Integrity PROOFS
+	////////////////////////////////////////////////////////////
 
-	// WORKS - 1 minute 30 seconds
+	// WORKS - 1 minute 10 seconds
 	"Alb_FK_System" should "genericReferentialIntegrity (fk_system)" in {
 		val startTime = printStartingTime("genericReferentialIntegrity (fk_system)")
 		val p = ("Alb_FK_System", "genericReferentialIntegrity")
@@ -255,8 +257,8 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
-
-	// WORKS - 60 seconds
+	// TEST FOR OPERATIONS IN ONE REPLICA:
+	// WORKS - 1 minute 10 seconds
 	"Alb_FK_System" should "refIntegrityHolds For Deletions (fk_system)" in {
 		val startTime = printStartingTime("refIntegrityHolds For Deletions (fk_system)")
 		val p = ("Alb_FK_System", "refIntegrityHolds_For_Deletions")
@@ -274,5 +276,16 @@ class AlbProofs extends FlatSpec with Prover {
 		p
 	}
 
+	// TEST FOR OPERATIONS IN 2 REPLICAS:
+	// REJECTED
+	"Alb_FK_System" should "refIntegrityHolds For Concurrent Deletions (fk_system)" in {
+		val startTime = printStartingTime("refIntegrityHolds For Concurrent Deletions (fk_system)")
+		val p = ("Alb_FK_System", "refIntegrityHolds_For_Concurrent_Deletions")
+		prove(p)
+//		val res = rejectForModel(p)
+//		print(res)
+		printProofTime(startTime, System.nanoTime(), "refIntegrityHolds For Concurrent Deletions (fk_system)")
+		p
+	}
 
 }
