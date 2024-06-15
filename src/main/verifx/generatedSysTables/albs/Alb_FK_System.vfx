@@ -68,32 +68,27 @@ class Alb_FK_System[Time](
 
 
     ///////////////////////////////////////////////////////////////
-    //  FK_SYSTEM helper methods to be called by other FK_Systems
+    //                 FK_SYSTEM Helper Methods
     ///////////////////////////////////////////////////////////////
 
     /*
      * GET VERSION
+     * To be called by other FK_Systems which have Albums as FKs
      * return the version of the album with the given PK
      * @Pre: the album with the given PK exists
-     * TODO: implementar isto dp pra testar sistemas com varios niveis de FK_Systems
       */
-//    def getVersion (pk: AlbPK): Int = {
-//        val alb = albsTable.elements.get(pk)
-//        if (alb.fst.flag == 0) //DELETED
-//            return 0
-//        val art_version = artsTable.getVersion(albsTable.elements.get(pk).snd.artFK)
-//        if (alb_version == art_version)
-//            alb.fst.version
-//        else
-//             //amortizar caminho
-//            0
-//       }
+    def getVersion (pk: AlbPK): Int = {
+        val elem = this.albsTable.elements.get(pk)
+        if (elem.fst.flag == 0) //DELETED
+            0
+        else if (this.hasCorrectVersion(elem))
+            elem.fst.version
+        else{
+            this.albsTable.setFlag(elem.snd.albPK, 0) // Amortize Path - to avoid future searches in all depth of the fks tree, we set this flag as DELETED
+            0
+            }
+       }
 
-
-
-    ///////////////////////////////////////////////////////////////
-    //                 FK_SYSTEM Helper Methods
-    ///////////////////////////////////////////////////////////////
 
     /*
      * HAS CORRECT VERSION
@@ -102,11 +97,13 @@ class Alb_FK_System[Time](
      */
     private def hasCorrectVersion(elem: Tuple[DWFlags, Alb]): Boolean = {
         val art_version = this.artsTable.getVersion(elem.snd.artFK)
+        //TODO: ir buscar logo o vetor todo
+//        val fk_versions = elem.fst.fk_versions
+//        val v = fk_versions[0]
         if (elem.fst.get_fk_version(0) == art_version) // each idx in fk_versions has the version of the referenced element corresponding to the FK_System referenced tables, IN ORDER
             true
         else {
-            // To avoid future searches in all depth of the fks tree, we can amortize the path by marking this element as DELETED
-            this.albsTable.setFlag(elem.snd.albPK, 0) //DELETED
+            this.albsTable.setFlag(elem.snd.albPK, 0) // Amortize Path - to avoid future searches in all depth of the fks tree, we set this flag as DELETED
             false
         }
     }
@@ -127,24 +124,6 @@ class Alb_FK_System[Time](
             (elem: Tuple[DWFlags, Alb]) => this.hasCorrectVersion(elem) )
 
 
-    /*
-     * DELETE REFERENCED ELEMENT
-     * delete a random element from the referenced tables
-     */
-    def deleteReferencedElement(): Boolean = {
-        //TODO: como ir buscar elementos random a um mapa?? ex:
-        //val artPK = this.artsTable.keys().head
-        val artPK = new ArtPK("0", "0")
-        this.artsTable.delete(artPK)
-    }
-
-    def deleteAndInsertReferencedElement(): Boolean = {
-        //TODO: ir buscar elem random
-        val artPK = new ArtPK("0", "0")
-        this.artsTable.delete(artPK)
-        this.artsTable.insert(artPK)
-    }
-
 }
 
 
@@ -154,9 +133,7 @@ class Alb_FK_System[Time](
  */
 object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
 
-	// prova semelhante ao UW system
-	// TODO: mas qual a lógica disto??
-	//       estamos a usar o merge de 2 FK_Systems para representar as operações de delete() e on delete cascade por exemplo???
+    // GENERIC REFERENTIAL INTEGRITY PROOF
 	proof genericReferentialIntegrity[Time] {
         forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], pk: AlbPK) {
             ( s1.compatible(s2) &&
@@ -168,34 +145,11 @@ object Alb_FK_System extends CvRDTProof1[Alb_FK_System] {
         }
     }
 
-    // Test ref integrity holds after operations in one replica
-    proof refIntegrityHolds_For_Deletions[Time] {
-        forall(s: Alb_FK_System[Time]) {
-            ( s.reachable() &&
-              s.deleteReferencedElement()
-            ) =>: {
-                s.refIntegrityHolds_table()
-            }
-        }
-    }
-
-    proof refIntegrityHolds_For_Deletions_And_Inserts[Time] {
-        forall(s: Alb_FK_System[Time]) {
-            ( s.reachable() &&
-              s.deleteAndInsertReferencedElement()
-            ) =>: {
-                s.refIntegrityHolds_table()
-            }
-        }
-    }
-
-
-    // Test ref integrity holds after operations in concurrent replicas
+    // REFERENTIAL INTEGRITY PROOF FOR CONCURRENT DELETIONS
     proof refIntegrityHolds_For_Concurrent_Deletions[Time] {
-        forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], artsTable: ArtsTable[Time], pk: ArtPK) {
+        forall(s1: Alb_FK_System[Time], s2: Alb_FK_System[Time], artPK: ArtPK) {
             ( s1.reachable() && s2.reachable() &&
-              artsTable.reachable() &&
-              artsTable.delete(pk)
+              s1.artsTable.delete(artPK)
             ) =>: {
                 s1.merge(s2).refIntegrityHolds_table()
             }

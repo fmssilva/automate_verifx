@@ -18,6 +18,19 @@ import antidote.crdts.lemmas.CvRDT
 trait CvRDTProof[T <: CvRDT[T]] {
 
     /*
+     * COMPARE CORRECT
+     *  usado pelo equals, o qual é usado nas provas seguintes
+    //TODO: util pra equals, em que temos clocks, e em que para saber se 2 estados são concurrentes, vemos se this <= that e that <= this
+     */
+    proof compareCorrect {
+        forall (x: T, y: T) {
+            ( x.reachable() && y.reachable() && x.compatible(y)
+            ) =>: ( x.equals(y) == (x == y) )
+        }
+    }
+
+
+    /*
      * PROOF THAT is a CvRDT:
      *
      * merge functions converges iff it guarantees:
@@ -48,7 +61,6 @@ trait CvRDTProof[T <: CvRDT[T]] {
      *          Hence, if two registers have the same timestamp but different values they are not compatible since this cannot occur in practice.
      *      » compatible predicate must commute
              * i.e. the outcome should not depend on the order of the arguments.
-
      */
     proof is_a_CvRDT {
         forall(x: T, y: T, z: T) {
@@ -65,28 +77,7 @@ trait CvRDTProof[T <: CvRDT[T]] {
         }
     }
 
-    /*
-     * COMPATIBLE
-     *
-     * compatible predicate must commute
-     * i.e. the outcome should not depend on the order of the arguments.
-     */
-    proof compatibleCommutes {
-        forall (x: T, y: T) {
-            ( x.reachable() && y.reachable()
-            ) =>: ( x.compatible(y) == y.compatible(x) )
-        }
-    }
 
-    /*
-     * TODO... pra que é isto??? e pq não ser um equals normal... ??
-     */
-    proof compareCorrect {
-        forall (x: T, y: T) {
-            ( x.reachable() && y.reachable() && x.compatible(y)
-            ) =>: ( x.equals(y) == (x == y) )
-        }
-    }
 
 
     //////////////////////////////////////////////////////////////
@@ -94,13 +85,10 @@ trait CvRDTProof[T <: CvRDT[T]] {
     // so we can divide that proof in parts and run each part at a time
     //////////////////////////////////////////////////////////////
 
-    proof mergeCommutative {
+    proof compatibleCommutes {
         forall (x: T, y: T) {
-            (x.reachable() && y.reachable() && x.compatible(y)
-            ) =>: {
-                x.merge(y).equals(y.merge(x)) &&
-                x.merge(y).reachable()
-            }
+            ( x.reachable() && y.reachable()
+            ) =>: ( x.compatible(y) == y.compatible(x) )
         }
     }
 
@@ -110,16 +98,46 @@ trait CvRDTProof[T <: CvRDT[T]] {
         }
     }
 
+    proof mergeCommutative {
+        forall (x: T, y: T) {
+            (x.reachable() && y.reachable() && x.compatible(y)
+            ) =>: {
+                x.merge(y).equals(y.merge(x))
+            }
+        }
+    }
+
+
     proof mergeAssociative {
         forall (x: T, y: T, z: T) {
             ( x.reachable() && y.reachable() && z.reachable() &&
                 x.compatible(y) && x.compatible(z) && y.compatible(z)
             ) =>: {
-                x.merge(y).merge(z).equals(x.merge(y.merge(z))) &&
+                x.merge(y).merge(z).equals(x.merge(y.merge(z)))
+            }
+        }
+    }
+
+    proof mergeReachable {
+        forall (x: T, y: T, z: T) {
+            ( x.reachable() && y.reachable() && z.reachable() &&
+              x.compatible(y) && x.compatible(z) && y.compatible(z)
+            ) =>: {
+                x.merge(y).reachable() &&
                 x.merge(y).merge(z).reachable()
             }
         }
     }
 
+    proof mergeCompatible {
+        forall (x: T, y: T, z: T) {
+            ( x.reachable() && y.reachable() && z.reachable() &&
+              x.compatible(y) && x.compatible(z) && y.compatible(z)
+            ) =>: {
+                x.merge(y).compatible(z)
+                x.compatible(y.merge(z))
+            }
+        }
+    }
 
 }

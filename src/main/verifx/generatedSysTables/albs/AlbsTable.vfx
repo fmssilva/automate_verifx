@@ -17,6 +17,7 @@ class AlbsTable[Time]
 	def copy(newElements: Map[AlbPK, Tuple[DWFlags, Alb]]) =
 		    new AlbsTable(this.before, newElements)
 
+    def getNumFKs(): Int = 1
 
 }
 

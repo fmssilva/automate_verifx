@@ -10,6 +10,14 @@ import antidote.crdts.lemmas.CvRDT
  */
 trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
 
+      proof compareCorrect[S] {
+        forall (x: T[S], y: T[S]) {
+          ( x.reachable() && y.reachable() && x.compatible(y)
+          ) =>: ( x.equals(y) == (x == y) )
+        }
+      }
+
+
     // Proof that the data type `T` is a CvRDT
     proof is_a_CvRDT[S] {
         forall (x: T[S], y: T[S], z: T[S]) {
@@ -26,77 +34,67 @@ trait CvRDTProof1[ T[A] <: CvRDT[T[A]] ] {
         }
     }
 
+    //////////////////////////////////////////////////////////////
+    // If the "is_a_CvRDT" proof is too big, and aborts without a result
+    // so we can divide that proof in parts and run each part at a time
+    //////////////////////////////////////////////////////////////
 
-  proof compatibleCommutes[S] {
-    forall (x: T[S], y: T[S]) {
-      ( x.reachable() && y.reachable()
-      ) =>: ( x.compatible(y) == y.compatible(x) )
+
+    proof compatibleCommutes[S] {
+        forall (x: T[S], y: T[S]) {
+            ( x.reachable() && y.reachable()
+            ) =>: ( x.compatible(y) == y.compatible(x) )
+        }
     }
-  }
 
-  // TODO: mudar o nome deste para ser equalsCorrect
-  // e assim verificar tudo para o caso de não ser BD sempre crescente??
-  // O equals estar implementado dessa forma tem a ver com a definição formal de um state-based CRDT
-  // No nosso caso podes fazer o que estás a dizer
-  proof compareCorrect[S] {
-    forall (x: T[S], y: T[S]) {
-      ( x.reachable() && y.reachable() && x.compatible(y)
-      ) =>: ( x.equals(y) == (x == y) )
+    proof mergeIdempotent[S] {
+        forall (x: T[S]) {
+            x.reachable() =>: x.merge(x).equals(x)
+        }
     }
-  }
 
-
-
-
-  proof mergeIdempotent[S] {
-    forall (x: T[S]) {
-      x.reachable() =>: x.merge(x).equals(x)
+    proof mergeCommutative[S] {
+        forall (x: T[S], y: T[S]) {
+            (x.reachable() && y.reachable() &&
+             x.compatible(y)
+            ) =>: {
+                x.merge(y).equals(y.merge(x))
+            }
+        }
     }
-  }
 
-  proof mergeCommutative[S] {
-    forall (x: T[S], y: T[S]) {
-      (x.reachable() && y.reachable() && x.compatible(y)
-      ) =>: {
-        x.merge(y).equals(y.merge(x))
-        x.merge(y).reachable()
-      }
+    proof mergeAssociative[S] {
+        forall (x: T[S], y: T[S], z: T[S]) {
+            ( x.reachable() && y.reachable() && z.reachable() &&
+              x.compatible(y) && x.compatible(z) //&& y.compatible(z)
+            ) =>: {
+                x.merge(y).merge(z).equals(x.merge(y.merge(z)))
+            }
+        }
     }
-  }
 
-  proof mergeAssociative[S] {
-    forall (x: T[S], y: T[S], z: T[S]) {
-      ( x.reachable() && y.reachable() && z.reachable() &&
-        x.compatible(y) && x.compatible(z) && y.compatible(z)
-      ) =>: {
-        x.merge(y).merge(z).equals(x.merge(y.merge(z)))
-      }
+    proof mergeReachable[S] {
+        forall (x: T[S], y: T[S], z: T[S]) {
+            ( x.reachable() && y.reachable() && z.reachable() &&
+              x.compatible(y) && x.compatible(z) //&& y.compatible(z)
+            ) =>: {
+                val xy = x.merge(y)
+                xy.reachable() &&
+                xy.merge(z).reachable()
+            }
+        }
     }
-  }
 
-
-  proof mergeReachable[S] {
-    forall (x: T[S], y: T[S], z: T[S]) {
-      ( x.reachable() && y.reachable() && z.reachable() &&
-        x.compatible(y) && x.compatible(z) && y.compatible(z)
-       ) =>: {
-        x.merge(y).merge(z).reachable()
-      }
+    proof mergeCompatible[S] {
+        forall (x: T[S], y: T[S], z: T[S]) {
+            ( x.reachable() && y.reachable() && z.reachable() &&
+              x.compatible(y) && x.compatible(z) //&& y.compatible(z)
+            ) =>: {
+                x.merge(y).compatible(z)
+                x.compatible(y.merge(z))
+            }
+        }
     }
-  }
-
-
-  proof mergeCompatible[S] {
-    forall (x: T[S], y: T[S], z: T[S]) {
-      ( x.reachable() && y.reachable() && z.reachable() &&
-        x.compatible(y) && x.compatible(z) && y.compatible(z)
-       ) =>: {
-        x.merge(y).compatible(z)
-        x.compatible(y.merge(z))
-      }
-    }
-  }
-
 
 
 }

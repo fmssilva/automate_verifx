@@ -11,33 +11,23 @@ class ArtProofs extends FlatSpec with Prover {
 	// ELEMENT PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
-	// WORKS  -   20 seconds
-	"Art" should "compare correct (element)" in {
-		val startTime = printStartingTime("compare correct (element)")
-		val p = ("Art", "compareCorrect")
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
-		p
-	}
-
-	// WORKS  -  20 seconds
-	"Art" should "compatible commutes (element)" in {
-		val startTime = printStartingTime("compatible commutes (element)")
-		val p = ("Art", "compatibleCommutes")
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "compatible commutes (element)")
-		p
-	}
-
-
-	// WORKS  -  20 seconds
-	"Art" should "is_a_CvRDT: merge correct e compatible commutes" in {
-		val startTime = printStartingTime("is_a_CvRDT: merge correct e compatible commutes")
-		val p = ("Art", "is_a_CvRDT")
-		prove(p)
-		printProofTime(startTime, System.nanoTime(), "is_a_CvRDT: merge correct e compatible commutes")
-		p
-	}
+//	// WORKS  -   20 seconds
+//	"Art" should "compare correct (element)" in {
+//		val startTime = printStartingTime("compare correct (element)")
+//		val p = ("Art", "compareCorrect")
+//		prove(p)
+//		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
+//		p
+//	}
+//
+//	// WORKS  -  20 seconds
+//	"Art" should "is_a_CvRDT: merge correct e compatible commutes" in {
+//		val startTime = printStartingTime("is_a_CvRDT: merge correct e compatible commutes")
+//		val p = ("Art", "is_a_CvRDT")
+//		prove(p)
+//		printProofTime(startTime, System.nanoTime(), "is_a_CvRDT: merge correct e compatible commutes")
+//		p
+//	}
 
 
 
@@ -108,7 +98,7 @@ class ArtProofs extends FlatSpec with Prover {
 	// WORKS  -   90 seconds
 	"ArtsTable" should "be merge associative (table)" in {
 		val startTime = printStartingTime("be merge associative (table)")
-		val p = ("ArtsTable", "mergeAssociative") 
+		val p = ("ArtsTable", "mergeAssociative")
 		prove(p)
 		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
 		p

@@ -20,7 +20,7 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
 
     def copy(newElements: Map[PK, Tuple[DWFlags, V]]) : T
 
-
+    def getNumFKs(): Int
 
     ///////////////////////////////////////////////////////////////
     //                DWTable  CvRDT  Methods
@@ -35,8 +35,8 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
             (elem: Tuple[DWFlags, V]) =>
                 elem.fst.reachable() &&
                 elem.fst.flag != 0 &&           // NOT DELETED
+                elem.fst.fk_versions.size == this.getNumFKs() && // fk_versions vector must have the corresponding versions of each FK
                 elem.snd.reachable()
-                //TODO: vale a pena verificar comprimento da fk_versions??
         )
     }
 
@@ -86,10 +86,8 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
         this.before == that.before &&
         this.elements.zip(that.elements).values().forall(
             (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
-                val e1 = elem.fst
-                val e2 = elem.snd
-                e1.fst.compatible(e2.fst) && // DWFlags
-                e1.snd.compatible(e2.snd)   // Value
+                elem.fst.fst.compatible(elem.snd.fst) && // DWFlags
+                elem.fst.snd.compatible(elem.snd.snd)   // Value
             }
         )
     }
@@ -138,7 +136,7 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
                 else if (elem2.fst.version > elem1.fst.version)
                     elem2
                 else // just merge flags and value: if some flag is Deleted, so we'll merge value even if we didn't need to; if both flags are INSERTED so yes we merge the flags and the Value according to it's own clock
-                    new Tuple(elem1.fst.merge(elem2.fst) , elem1.snd.merge(elem2.snd))
+                    new Tuple(elem1.fst.merge(elem2.fst), elem1.snd.merge(elem2.snd))
             })
         this.copy(mergedElements)
     }

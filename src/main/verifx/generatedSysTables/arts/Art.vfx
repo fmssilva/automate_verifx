@@ -4,20 +4,12 @@ import antidote.crdts.lemmas.CvRDTProof
 import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
-/**
- * Class representing the composite primary key of the element(row):::  ART
- * this is a class of PKs so No Concurrent Updates allowed for the same values of PKs,
- * so no need to extend CvRDT
- */
+
 class ArtPK(name: String, country: String) {
 
     def equals(that: ArtPK): Boolean =
         this.name == that.name &&
         this.country == that.country
-
-    //TODO: meter isto num trait PK e todos extendem ele e este metodo fica la e assim a DWTable não recebe generico PK??? mas sim PK <: PK ??
-    def compatible(that: ArtPK): Boolean =
-        this.equals(that)
 
 }
 
@@ -37,19 +29,10 @@ class ArtPK(name: String, country: String) {
  */
 class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
 
-
-  /*
-   * IMPLEMENTATION OF METHODS DECLARED IN CVRDT TRAIT
-   */
-
-	//merge this Art with that Art (only concurrently updatable attributes are merged as a CRDT)
-	def merge(that: Art) = 
+	def merge(that: Art) =
 		new Art(this.artPK, this.age.merge(that.age), this.ranking.merge(that.ranking))
 
-	//compare this Art with that Art (only concurrently updatable attributes matter)
-	def compare(that: Art) = 
-//		this.age.compare(that.age) &&
-//		this.ranking.compare(that.ranking)
+	def compare(that: Art) =
         false
 
     override def equals (that: Art): Boolean =
@@ -57,21 +40,12 @@ class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extend
         this.age.equals(that.age) &&
         this.ranking.equals(that.ranking)
 
-
-
-
-  /*
-   * OVERRIDE METHODS IMPLEMENTED IN CVRDT TRAIT
-   */
-
-	//this Art is compatible with that Art?
-	override def compatible(that: Art) = 
-		this.artPK == that.artPK &&
+	override def compatible(that: Art) =
+		this.artPK.equals(that.artPK) &&
 		this.age.compatible(that.age) &&
 		this.ranking.compatible(that.ranking)
 
-	//Art is reachable given the CHECK conditions of its attributes?
-	override def reachable() = { 
+	override def reachable() = {
 		 this.age.value >= 0 && this.age.value <= 100 && 
 		 this.ranking.value >= 0 && this.ranking.value <= 100
 	}

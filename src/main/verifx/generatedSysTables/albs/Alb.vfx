@@ -11,16 +11,12 @@ class AlbPK(title: String) {
     def equals(that: AlbPK): Boolean =
         this.title == that.title
 
-    def compatible(that: AlbPK): Boolean =
-        this.equals(that)
-
 }
 
 class Alb(  albPK: AlbPK,   // PK
             artFK: ArtPK,   // FK
             year: LWWRegister[Int], price: LWWRegister[Int] //other atrributes
             ) extends CvRDT[Alb] {
-
 
 
 	// return True if all the CHECK conditions are met
@@ -38,11 +34,16 @@ class Alb(  albPK: AlbPK,   // PK
                     this.year.merge(that.year), this.price.merge(that.price))               // merge other attributes
 
 
-	// return True if 'this is compatible that'
-	// have same attributes of the same types, well formed...
+	/*
+	 * COMPATIBLE
+     * return true if all fields are compatible, i.e. 'this' and 'that' can be merged
+	 *      for 2 elements to be merged:
+	 *          they must be the same element, so they must have the same PK and FKs
+	 *          and all the other attributes must be compatible (ex. LWWRegisters, MVRegisters, etc.)
+	 */
     override def compatible(that: Alb): Boolean =
-        this.albPK.compatible(that.albPK) &&
-        this.artFK.compatible(that.artFK) &&
+        this.albPK.equals(that.albPK) &&
+        this.artFK.equals(that.artFK) &&
 		this.year.compatible(that.year) &&
 		this.price.compatible(that.price)
 
@@ -51,10 +52,10 @@ class Alb(  albPK: AlbPK,   // PK
     // compare this Alb with that Alb
     // only concurrently updatable attributes matter
     // return True if `this <= that`
+    // not used if we override the equal method of the CvRDT
     def compare(that: Alb): Boolean =
-        false
-//        this.year.compare(that.year) &&
-//        this.price.compare(that.price)
+        this.year.compare(that.year) &&
+        this.price.compare(that.price)
 
     override def equals (that: Alb): Boolean =
         this.albPK.equals(that.albPK) &&

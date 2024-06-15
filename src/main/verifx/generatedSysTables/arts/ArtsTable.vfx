@@ -16,6 +16,8 @@ class ArtsTable[Time]
 	def copy(newElements: Map[ArtPK, Tuple[DWFlags, Art]]) =
 		    new ArtsTable(this.before, newElements)
 
+    def getNumFKs(): Int = 0
+
 }
 
 

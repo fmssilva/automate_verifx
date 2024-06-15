@@ -10,15 +10,14 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
     ///////////////////////////////////////////////////////////////
 
     /*
-    * REACHABLE
-    * return true if all versions and flags are valid values
-    */
+     * REACHABLE
+     * return true if all versions and flags are valid values
+     */
 	override def reachable(): Boolean = {
 		this.version >= 1 &&
 		(this.flag == 0 || this.flag == 1) &&
-		//TODO: dp podemos ver tb se o size de fk_versions bate certo... mas não é necessário??
 		this.fk_versions.forall(
-		    (fk_version: Int) => fk_version >= 1
+		    (fk_version: Int) => (fk_version >= 1)
 		)
 	}
 
@@ -35,6 +34,7 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
 
     /*
      * COMPARE
+     TODO -------- mas o compare só interessa para clocks pra ver se é concurrentes... ou não???
      * return true if this DWFlag <= that DWFlag
      * » this method is never used, if we override the equal method of the CvRDT
      */
@@ -47,12 +47,15 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
 
     /*
      * COMPATIBLE
-     * return true if all fields are compatible
-     //TODO: estou a fazer os compatibles igual ao equals... qual a logica da coisa??
+     * return true if all fields are compatible, i.e. 'this' and 'that' can be merged
+     *       we know that both 'this' and 'that' are of the DWFlags type,
+     *       so they both have the same number and types of fields.
+     *       The only thing we could check is if the fk_versions vectors have the same length
+     *       but we don't need to check that, because we know that they are created with same size
      */
      override def compatible(that: DWFlags): Boolean =
-         this.equals(that) &&
-         this.fk_versions.size == that.fk_versions.size
+            true
+
 
     /*
      * MERGE
@@ -60,20 +63,32 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
      *      (this merge is done according with Delete-Wins Semantics)
      */
 	def merge(that: DWFlags): DWFlags = {
+	    // if different versions -> we choose the bigger one
         if (this.version > that.version)
             this
         else if (that.version > this.version)
             that
-        else { // equal versions
-            if (this.flag != that.flag) { // one DELETED and other INSERTED -> keep DELETED
-                if (this.flag == 0) // this is DELETED
-                    this
-                else                // that is DELETED
-                    that
-            } else // both are DELETED or both are INSERTED -> so just keep one
+        else {
+            // if both flags are the same, we merge the fk_versions vector (if both are DELETED we don't even need to merge, but we do it to achieve merge commutative)
+            if (this.flag == that.flag) {
+                val fk_versions = this.fk_versions.zip(that.fk_versions).map(
+                                    (elem: Tuple[Int, Int]) => {
+                                        if (elem.fst > elem.snd)
+                                            elem.fst
+                                        else
+                                            elem.snd
+                                    }
+                                )
+                new DWFlags(this.version, this.flag, fk_versions)
+            }
+            // else the flags are different, and so we keep the DELETED one
+            else if (this.flag == 0)
                 this
+            else // that.flag == 0
+                that
         }
 	}
+
 
 
 
@@ -81,13 +96,14 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
     //     DWFlags helper methods to be called by FK_Systems
     ///////////////////////////////////////////////////////////////
 
-    def get_fk_version(idx: Int): Int = {
-        //TODO: vector não tem size??
-//        if (idx < 0 || idx >= this.fk_versions.size)
-//            0
-//        else
-            this.fk_versions.get(idx)
-    }
+    /*
+     * GET VERSION
+     * return the version of the FK with the given index
+     * @Pre: the index is valid: 0 <= idx < fk_versions.size
+     */
+    def get_fk_version(idx: Int): Int =
+        this.fk_versions.get(idx)
+
 
     /*
      * SET FLAG
