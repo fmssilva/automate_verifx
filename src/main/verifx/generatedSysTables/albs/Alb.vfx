@@ -5,8 +5,11 @@ import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 import generatedSysTables.arts.Art
 
+class AlbPK(title: Int) {  //TODO: meti title Int pra meter restrição de possibilidades limitadas pra ver se ajuda no Z3
 
-class AlbPK(title: String) {
+    // return True if all the CHECK conditions are met
+    def reachable(): Boolean =
+        this.title >= 0 && this.title <= 100
 
     def equals(that: AlbPK): Boolean =
         this.title == that.title
@@ -21,47 +24,46 @@ class Alb(  albPK: AlbPK,   // PK
 
 	// return True if all the CHECK conditions are met
 	override def reachable(): Boolean = {
+	    this.albPK.reachable() &&
+	    this.artFK.reachable() &&  //as FKs tb podem ter CHECKs então verificar
 		this.year.value >= 1900 && this.year.value <= 2022 &&
 		this.price.value >= 0 && this.price.value <= 10000
 	}
 
-	// merge this Alb with that Alb
-	// only concurrently updatable attributes are merged as a CRDT
-	// Returns the LUB of `this` and `that`
-	def merge(that: Alb): Alb =
-	        new Alb(this.albPK,
-	                this.artFK,                                                             // keep FK
-                    this.year.merge(that.year), this.price.merge(that.price))               // merge other attributes
-
-
-	/*
-	 * COMPATIBLE
-     * return true if all fields are compatible, i.e. 'this' and 'that' can be merged
-	 *      for 2 elements to be merged:
-	 *          they must be the same element, so they must have the same PK and FKs
-	 *          and all the other attributes must be compatible (ex. LWWRegisters, MVRegisters, etc.)
-	 */
-    override def compatible(that: Alb): Boolean =
-        this.albPK.equals(that.albPK) &&
-        this.artFK.equals(that.artFK) &&
-		this.year.compatible(that.year) &&
-		this.price.compatible(that.price)
-
-
-
-    // compare this Alb with that Alb
-    // only concurrently updatable attributes matter
-    // return True if `this <= that`
-    // not used if we override the equal method of the CvRDT
-    def compare(that: Alb): Boolean =
-        this.year.compare(that.year) &&
-        this.price.compare(that.price)
-
-    override def equals (that: Alb): Boolean =
+    override def equals (that: Alb): Boolean = {
         this.albPK.equals(that.albPK) &&
         this.artFK.equals(that.artFK) &&
         this.year.equals(that.year) &&
         this.price.equals(that.price)
+    }
+
+    //TODO: compare é em termos de concurrencia, não em termos de valores
+    // returna true if this before that ???
+    def compare(that: Alb): Boolean =
+        //deviamos garantir que as PKs e FKs são iguais pra garantir que é o mesmo elemento??
+        this.year.compare(that.year) &&
+        this.price.compare(that.price)
+
+    	/*
+    	 * COMPATIBLE
+         * return true if all fields are compatible, i.e. 'this' and 'that' can be merged
+    	 *      for 2 elements to be merged:
+    	 *          they must be the same element, so they must have the same PK and FKs
+    	 *          and all the other attributes must be compatible (ex. LWWRegisters, MVRegisters, etc.)
+    	 */
+        override def compatible(that: Alb): Boolean = {
+            this.albPK.equals(that.albPK) &&
+            this.artFK.equals(that.artFK) && //TODO: com isto assume-se que as FKs não podem ser alteradas de forma concurrente, mas na verdade até poderiam ser não?? deviamos ter p.ex. LWWRegister[PK] como FK, em vez de PK diretamente??
+            this.year.compatible(that.year) &&
+    		this.price.compatible(that.price)
+    	}
+
+
+	def merge(that: Alb): Alb = {
+	        new Alb(this.albPK,
+	                this.artFK,                                                             // keep FK
+                    this.year.merge(that.year), this.price.merge(that.price))               // merge other attributes
+    }
 
 }
 

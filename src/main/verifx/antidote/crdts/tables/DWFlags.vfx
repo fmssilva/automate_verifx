@@ -14,10 +14,10 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
      * return true if all versions and flags are valid values
      */
 	override def reachable(): Boolean = {
-		this.version >= 1 &&
+		this.version >= 1 &&  this.version <= 10 &&  //TODO: meti este limite pra ver se ajuda no Z3
 		(this.flag == 0 || this.flag == 1) &&
 		this.fk_versions.forall(
-		    (fk_version: Int) => (fk_version >= 1)
+		    (fk_version: Int) => (fk_version >= 1 && fk_version <= 10 ) //TODO: ver se limite ajuda
 		)
 	}
 
@@ -34,7 +34,6 @@ class DWFlags(version: Int, flag: Int, fk_versions: Vector[Int]) extends CvRDT[D
 
     /*
      * COMPARE
-     TODO -------- mas o compare só interessa para clocks pra ver se é concurrentes... ou não???
      * return true if this DWFlag <= that DWFlag
      * » this method is never used, if we override the equal method of the CvRDT
      */

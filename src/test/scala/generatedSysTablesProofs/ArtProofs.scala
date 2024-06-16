@@ -7,27 +7,30 @@ import generatedSysTablesProofs.ProverUtils._
 class ArtProofs extends FlatSpec with Prover {
 
 
+
 	////////////////////////////////////////////////////////////
 	// ELEMENT PROOFS  - specified in CvRDTProof trait 
 	////////////////////////////////////////////////////////////
 
-//	// WORKS  -   20 seconds
-//	"Art" should "compare correct (element)" in {
-//		val startTime = printStartingTime("compare correct (element)")
-//		val p = ("Art", "compareCorrect")
-//		prove(p)
-//		printProofTime(startTime, System.nanoTime(), "compare correct (element)")
-//		p
-//	}
-//
-//	// WORKS  -  20 seconds
-//	"Art" should "is_a_CvRDT: merge correct e compatible commutes" in {
-//		val startTime = printStartingTime("is_a_CvRDT: merge correct e compatible commutes")
-//		val p = ("Art", "is_a_CvRDT")
-//		prove(p)
-//		printProofTime(startTime, System.nanoTime(), "is_a_CvRDT: merge correct e compatible commutes")
-//		p
-//	}
+	// WORKS  -   20 seconds
+	 val elemCompare = "compare correct (element)"
+	"Art" should  elemCompare in {
+		val startTime = printStartingTime(elemCompare)
+		val p = ("Art", "compareCorrect")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), elemCompare)
+		p
+	}
+
+	// WORKS  -  20 seconds
+	val elemCvRDT = "is_a_CvRDT (merge correct e compatible commutes)"
+	"Art" should  elemCvRDT in {
+		val startTime = printStartingTime(elemCvRDT)
+		val p = ("Art", "is_a_CvRDT")
+		prove(p)
+		printProofTime(startTime, System.nanoTime(), elemCvRDT)
+		p
+	}
 
 
 
@@ -60,65 +63,73 @@ class ArtProofs extends FlatSpec with Prover {
 	////////////////////////////////////////////////////////////
 
 	// WORKS  -   20 seconds
-	"ArtsTable" should "compare Correct (table)" in {
-		val startTime = printStartingTime("compare Correct (table)")
+	val tabCompare = "compare correct (ArtsTable)"
+	"ArtsTable" should tabCompare in {
+		val startTime = printStartingTime(tabCompare)
 		val p = ("ArtsTable", "compareCorrect")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "compare Correct (table)")
+		printProofTime(startTime, System.nanoTime(), tabCompare)
 		p
 	}
 
 	// WORKS  -   40 seconds
-	"ArtsTable" should "compatible commutes (table)" in {
-		val startTime = printStartingTime("compatible commutes (table)")
+	val tabCompatible = "compatible commutes (ArtsTable)"
+	"ArtsTable" should tabCompatible in {
+		val startTime = printStartingTime(tabCompatible)
 		val p = ("ArtsTable", "compatibleCommutes")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "compatible commutes (table)")
+		printProofTime(startTime, System.nanoTime(), tabCompatible)
 		p
 	}
 
 	// WORKS  -   20 seconds
-	"ArtsTable" should "be merge idempotent (table)" in {
-		val startTime = printStartingTime("be merge idempotent (table)")
+	val tabMergIdemp = "be merge idempotent (ArtsTable)"
+	"ArtsTable" should tabMergIdemp in {
+		val startTime = printStartingTime(tabMergIdemp)
 		val p = ("ArtsTable", "mergeIdempotent")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge idempotent (table)")
+		printProofTime(startTime, System.nanoTime(), tabMergIdemp)
 		p
 	}
 
 	// WORKS  -   20 seconds
-	"ArtsTable" should "be merge commutative (table)" in {
-		val startTime = printStartingTime("be merge commutative (table)")
+	val tabMergComute = "be merge commutative (ArtsTable)"
+	"ArtsTable" should tabMergComute in {
+		val startTime = printStartingTime(tabMergComute)
 		val p = ("ArtsTable", "mergeCommutative")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge commutative (table)")
+		printProofTime(startTime, System.nanoTime(), tabMergComute)
 		p
 	}
 
+
 	// WORKS  -   90 seconds
-	"ArtsTable" should "be merge associative (table)" in {
-		val startTime = printStartingTime("be merge associative (table)")
+	val tabMergAssoc = "be merge associative (ArtsTable)"
+	"ArtsTable" should tabMergAssoc in {
+		val startTime = printStartingTime(tabMergAssoc)
 		val p = ("ArtsTable", "mergeAssociative")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge associative (table)")
+		printProofTime(startTime, System.nanoTime(), tabMergAssoc)
 		p
 	}
 
 	// WORKS  -   30 seconds
-	"ArtsTable" should "be merge Reachable (table)" in {
-		val startTime = printStartingTime("be merge Reachable (table)")
+	val tabMergReach = "be merge Reachable (ArtsTable)"
+	"ArtsTable" should tabMergReach in {
+		val startTime = printStartingTime(tabMergReach)
 		val p = ("ArtsTable", "mergeReachable")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge Reachable (table)")
+		printProofTime(startTime, System.nanoTime(), tabMergReach)
 		p
 	}
 
-	// WORKS  -   80 seconds
-	"ArtsTable" should "be merge Compatible (table)" in {
-		val startTime = printStartingTime("be merge Compatible (table)")
+	// WORKS  -   40 seconds
+	val tabMergCompat = "be merge Compatible (ArtsTable)"
+	"ArtsTable" should tabMergCompat in {
+		val startTime = printStartingTime(tabMergCompat)
 		val p = ("ArtsTable", "mergeCompatible")
 		prove(p)
-		printProofTime(startTime, System.nanoTime(), "be merge Compatible (table)")
+		printProofTime(startTime, System.nanoTime(), tabMergCompat)
 		p
 	}
 

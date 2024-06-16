@@ -48,6 +48,7 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
      * » if we do not override this method, the default implementation in CvRDT will be used
      *      which will compare if (this <= that and that <= this), which is unnecessary work
      */
+    //TODO: equals é pra comparar objetos ou é pra ver se são concurrentes???
     override def equals(that: T): Boolean = {
         this.before == that.before &&
         this.elements.zip(that.elements).values().forall(
@@ -65,6 +66,7 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
      * return true if all elements of this table <= then the elements of that table
      * » this method is never used, if we override the equal method of the CvRDT
      */
+     //TODO: compare é pra comparar objetos ou é pra ver se são concurrentes???
     def compare(that: T): Boolean = {
         this.elements.zip(that.elements).values().forall(
                 (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
@@ -81,9 +83,9 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
      * return true if all elements of this table are compatible with the elements of that table
      */
     override def compatible(that: T): Boolean = {
+        this.before == that.before &&
         this.beforeAssumptions() &&
         this.mergeValuesAssumptions() &&
-        this.before == that.before &&
         this.elements.zip(that.elements).values().forall(
             (elem: Tuple[Tuple[DWFlags, V], Tuple[DWFlags, V]]) => {
                 elem.fst.fst.compatible(elem.snd.fst) && // DWFlags

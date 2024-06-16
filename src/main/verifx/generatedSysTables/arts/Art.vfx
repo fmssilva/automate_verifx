@@ -5,11 +5,14 @@ import antidote.crdts.registers.LWWRegister
 import antidote.crdts.LamportClock
 
 
-class ArtPK(name: String, country: String) {
+class ArtPK(name: Int) { //TODO: meti name Int pra meter restrição de possibilidades limitadas pra ver se ajuda no Z3
+
+    // return True if all the CHECK conditions are met
+    def reachable(): Boolean =
+        this.name >= 0 && this.name <= 100
 
     def equals(that: ArtPK): Boolean =
-        this.name == that.name &&
-        this.country == that.country
+        this.name == that.name
 
 }
 
@@ -29,29 +32,31 @@ class ArtPK(name: String, country: String) {
  */
 class Art(artPK: ArtPK, age: LWWRegister[Int], ranking: LWWRegister[Int]) extends CvRDT[Art] {
 
-	def merge(that: Art) =
-		new Art(this.artPK, this.age.merge(that.age), this.ranking.merge(that.ranking))
+	override def reachable() = {
+	    this.artPK.reachable() &&
+		this.age.value >= 0 && this.age.value <= 100 &&
+		this.ranking.value >= 0 && this.ranking.value <= 100
+	}
+
+    override def equals (that: Art): Boolean = {
+        this.artPK.equals(that.artPK) &&
+        this.age.equals(that.age) &&
+        this.ranking.equals(that.ranking)
+    }
 
 	def compare(that: Art) =
         false
 
-    override def equals (that: Art): Boolean =
-        this.artPK.equals(that.artPK) &&
-        this.age.equals(that.age) &&
-        this.ranking.equals(that.ranking)
-
-	override def compatible(that: Art) =
+	override def compatible(that: Art) = {
 		this.artPK.equals(that.artPK) &&
 		this.age.compatible(that.age) &&
 		this.ranking.compatible(that.ranking)
+    }
 
-	override def reachable() = {
-		 this.age.value >= 0 && this.age.value <= 100 && 
-		 this.ranking.value >= 0 && this.ranking.value <= 100
-	}
+	def merge(that: Art) = {
+		new Art(this.artPK, this.age.merge(that.age), this.ranking.merge(that.ranking))
+    }
 
 }
-
-
 
 object Art extends CvRDTProof[Art] { }

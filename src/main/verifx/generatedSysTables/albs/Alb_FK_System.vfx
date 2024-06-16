@@ -27,7 +27,7 @@ class Alb_FK_System[Time](
         this.albsTable.reachable() &&
         this.artsTable.reachable() &&
         this.albsTable.elements.values().forall(
-            (elem: Tuple[DWFlags, Alb]) => this.hasCorrectVersion(elem) )
+            (elem: Tuple[DWFlags, Alb]) => this.hasVisibleFKsVersions(elem) )
     }
 
     /*
@@ -71,6 +71,35 @@ class Alb_FK_System[Time](
     //                 FK_SYSTEM Helper Methods
     ///////////////////////////////////////////////////////////////
 
+
+    /*
+     * AMORTIZE PATH
+     * To avoid future searches in all depth of the FKs Tree,
+     * we set the flag of this album as DELETED
+     * return 0 to denote that the FKs are not visible anymore
+     */
+    def amortizePath (pk: AlbPK): Int = {
+        this.albsTable.setFlag(pk, 0)
+        0
+    }
+    /*
+     * HAS VISIBLE FKs VERSIONS
+     * return - false if some FK is not visible anymore (the version of the FK in this Album does not match the version of the FK in the original referenced table)
+     *          (check one FK at a time, so if the first is not visible for example, we don't need to check the others)
+     *          true if all FKs are still visible
+     * @Pre: the album with the given PK exists
+     */
+    private def hasVisibleFKsVersions(elem: Tuple[DWFlags, Alb]): Boolean = {
+        if (this.artsTable.getVersion(elem.snd.artFK) != elem.fst.get_fk_version(0)) { // each idx in fk_versions has the version of the referenced element corresponding to the FK_System referenced tables, IN ORDER
+            this.amortizePath(elem.snd.albPK)
+            false
+        }
+        // else if ... check all other FKs if there are more
+        else
+            true
+    }
+
+
     /*
      * GET VERSION
      * To be called by other FK_Systems which have Albums as FKs
@@ -81,39 +110,20 @@ class Alb_FK_System[Time](
         val elem = this.albsTable.elements.get(pk)
         if (elem.fst.flag == 0) //DELETED
             0
-        else if (this.hasCorrectVersion(elem))
+        else if (this.hasVisibleFKsVersions(elem))
             elem.fst.version
-        else{
-            this.albsTable.setFlag(elem.snd.albPK, 0) // Amortize Path - to avoid future searches in all depth of the fks tree, we set this flag as DELETED
-            0
-            }
-       }
-
-
-    /*
-     * HAS CORRECT VERSION
-     * return true if the versions of the FKs in the given album are the same as the current versions of those FKs in the original referenced tables
-     * @Pre: the album with the given PK exists
-     */
-    private def hasCorrectVersion(elem: Tuple[DWFlags, Alb]): Boolean = {
-        val art_version = this.artsTable.getVersion(elem.snd.artFK)
-        //TODO: ir buscar logo o vetor todo
-//        val fk_versions = elem.fst.fk_versions
-//        val v = fk_versions[0]
-        if (elem.fst.get_fk_version(0) == art_version) // each idx in fk_versions has the version of the referenced element corresponding to the FK_System referenced tables, IN ORDER
-            true
-        else {
-            this.albsTable.setFlag(elem.snd.albPK, 0) // Amortize Path - to avoid future searches in all depth of the fks tree, we set this flag as DELETED
-            false
-        }
+        else
+            this.amortizePath(elem.snd.albPK)
     }
+
 
     /*
      * REF INTEGRITY HOLDS - ELEMENT
      * return true if the referential integrity holds for the album with the given PK
      */
     def refIntegrityHolds_elem(pk : AlbPK): Boolean =
-        this.hasCorrectVersion(this.albsTable.elements.get(pk))
+        this.hasVisibleFKsVersions(this.albsTable.elements.get(pk))
+
 
     /*
     * REF INTEGRITY HOLDS - TABLE
@@ -121,7 +131,7 @@ class Alb_FK_System[Time](
     */
     def refIntegrityHolds_table(): Boolean =
         this.albsTable.elements.values().forall(
-            (elem: Tuple[DWFlags, Alb]) => this.hasCorrectVersion(elem) )
+            (elem: Tuple[DWFlags, Alb]) => this.hasVisibleFKsVersions(elem) )
 
 
 }
