@@ -11,7 +11,7 @@ trait Prover {
   val pc = ProjectCompiler(files)
   //val proofResults = pc.checkProofs()
 
-  def prove(proof: ProofName, maxTries: Int = 5, timeoutInSeconds: Int = 500): ProofResult = {
+  def prove(proof: ProofName, maxTries: Int = 1, timeoutInSeconds: Int = 2000): ProofResult = {
     val proofRes = pc.checkProof(proof, maxTries, timeoutInSeconds*1000)
     val reason = proofRes match {
       case _: Rejected => "rejected"

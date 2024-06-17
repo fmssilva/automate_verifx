@@ -31,6 +31,8 @@ trait DWTable[  PK  , V <: CvRDT[V], Time, T <: DWTable[PK, V, Time, T]] extends
      * return true if all elements of this table have valid versions of their PK and FKs, and have a flag != DELETED
      */
      override def reachable(): Boolean = {
+//        this.elements.size <= 100 && //TODO: ver se é assim mesmo
+//        var counter = 0
         this.elements.values().forall(
             (elem: Tuple[DWFlags, V]) =>
                 elem.fst.reachable() &&

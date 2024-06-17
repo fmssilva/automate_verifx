@@ -11,8 +11,8 @@ class ArtsTable[Time]
 					  ) extends DWTable[ArtPK, Art, Time, ArtsTable[Time]] {
 
 	/*
-	* Implement Methods DECLARED in DWTable trait
-	*/
+	 * Implement Methods DECLARED in DWTable trait
+	 */
 	def copy(newElements: Map[ArtPK, Tuple[DWFlags, Art]]) =
 		    new ArtsTable(this.before, newElements)
 
